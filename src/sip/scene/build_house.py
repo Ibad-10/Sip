@@ -93,7 +93,7 @@ def _items(world):
                mass=0.25, friction=[1.5, 0.05, 0.01])
     b.add_geom(name="straw", type=CAP, fromto=[0, 0, 0.0, 0.0, -0.03, 0.14], size=[0.004, 0, 0],
                rgba=[1, 0.3, 0.3, 1], mass=0.001, contype=0, conaffinity=0)
-    b.add_site(name="straw_tip", pos=[0, -0.03, 0.14], size=[0.006, 0, 0])
+    b.add_site(name="straw_tip", pos=[0, -0.03, 0.14], size=[0.006, 0, 0], group=4)
     b = world.add_body(name="organiser", pos=[-1.9, 2.6, 0.92])
     b.add_freejoint(name="organiser_free")
     _box(b, "organiser_geom", (0, 0, 0), (0.14, 0.06, 0.02), (0.9, 0.9, 0.3, 1), mass=0.3)
@@ -117,7 +117,7 @@ def _person(spec, world):
     h.add_geom(name="head", type=SPH, size=[0.1, 0, 0], rgba=list(skin), mass=4.0)
     h.add_geom(name="face_plate", type=BOX, pos=[0.085, 0, 0], size=[0.012, 0.07, 0.08],
                rgba=[0.95, 0.8, 0.7, 1], contype=0, conaffinity=0, mass=0.01)
-    h.add_site(name="mouth", pos=[0.1, 0, -0.045], size=[0.01, 0, 0], rgba=[0.8, 0.2, 0.2, 1])
+    h.add_site(name="mouth", pos=[0.1, 0, -0.045], size=[0.01, 0, 0], rgba=[0.8, 0.2, 0.2, 1], group=4)
     a = spec.add_actuator(name="head_yaw_act", target="head_yaw", trntype=mujoco.mjtTrn.mjTRN_JOINT)
     a.set_to_position(kp=20.0)
     a.ctrlrange = [-1.2, 1.2]
@@ -139,7 +139,7 @@ def build_spec() -> mujoco.MjSpec:
     world.add_geom(name="floor", type=PLANE, size=[5, 4, 0.1], rgba=[0.75, 0.7, 0.62, 1])
     world.add_light(name="sun", pos=[0, 0, 5], dir=[0, 0, -1], diffuse=[0.8, 0.8, 0.8])
     for name, (x, y) in ROOMS.items():
-        world.add_site(name=name, pos=[x, y, 0.01], size=[0.05, 0, 0], rgba=[0, 0, 0, 0])
+        world.add_site(name=name, pos=[x, y, 0.01], size=[0.05, 0, 0], rgba=[0, 0, 0, 0], group=4)
     _walls(world)
     _furniture(world)
     _items(world)
