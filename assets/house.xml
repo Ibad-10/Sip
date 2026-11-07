@@ -474,22 +474,22 @@
     <body name="glass" pos="-2.6 2.6 0.96">
       <joint name="glass_free" type="free"/>
       <geom name="glass_geom" size="0.035 0.06" type="cylinder" friction="1.5 0.05 0.01" rgba="0.6 0.85 1 0.7" mass="0.25"/>
-      <geom name="straw" size="0.004 0.0715891" pos="0 -0.015 0.07" quat="0.105351 -0.994435 0 0" type="capsule" contype="0" conaffinity="0" rgba="1 0.3 0.3 1" mass="0.001"/>
-      <site name="straw_tip" size="0.006" pos="0 -0.03 0.14" group="4"/>
+      <geom name="straw" size="0.004 0.0782624" pos="0.035 0 0.07" quat="0.229753 0 -0.973249 0" type="capsule" contype="0" conaffinity="0" rgba="1 0.3 0.3 1" mass="0.001"/>
+      <site name="straw_tip" size="0.006" pos="0.07 0 0.14" group="4"/>
     </body>
     <body name="organiser" pos="-1.9 2.6 0.92">
       <joint name="organiser_free" type="free"/>
       <geom name="organiser_geom" size="0.14 0.06 0.02" type="box" rgba="0.9 0.9 0.3 1" mass="0.3"/>
     </body>
     <body name="person" pos="3 2.35 0.5" mocap="true">
-      <geom name="torso" size="0.14 0.2" pos="0 0 0.25" quat="0 1 0 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
+      <geom name="torso" size="0.12 0.2" pos="0 0 0.25" quat="0 1 0 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
       <geom name="thigh-1" size="0.07 0.21" pos="0.21 -0.1 0.02" quat="0.707107 0 -0.707107 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
       <geom name="shin-1" size="0.05 0.210535" pos="0.435 -0.1 -0.21" quat="0.999364 0 -0.0356462 0" type="capsule" rgba="0.87 0.72 0.6 1"/>
       <geom name="uarm-1" size="0.045 0.137659" pos="0.025 -0.21 0.285" quat="0.995159 -0.0364983 -0.0912458 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
       <geom name="thigh1" size="0.07 0.21" pos="0.21 0.1 0.02" quat="0.707107 0 -0.707107 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
       <geom name="shin1" size="0.05 0.210535" pos="0.435 0.1 -0.21" quat="0.999364 0 -0.0356462 0" type="capsule" rgba="0.87 0.72 0.6 1"/>
       <geom name="uarm1" size="0.045 0.137659" pos="0.025 0.21 0.285" quat="0.995159 0.0364983 -0.0912458 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
-      <body name="person_head" pos="0 0 0.6">
+      <body name="person_head" pos="0.06 0 0.6">
         <joint name="head_yaw" range="-1.2 1.2" damping="2"/>
         <geom name="head" size="0.1" rgba="0.87 0.72 0.6 1" mass="4"/>
         <geom name="face_plate" size="0.012 0.07 0.08" pos="0.085 0 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.8 0.7 1" mass="0.01"/>

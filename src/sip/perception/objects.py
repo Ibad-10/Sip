@@ -7,10 +7,10 @@ from sip.types import Detection
 CAM = "d435i_camera_rgb"
 
 
-def render_head(model, data, renderer: mujoco.Renderer, cam: str = CAM):
-    """Returns rgb (h,w,3 uint8), depth (h,w metres), seg (h,w geom id, -1 = none)."""
+def render_head(model, data, renderer: mujoco.Renderer, cam: str = CAM, rgb: bool = True):
+    """Returns rgb (h,w,3 uint8, or None if rgb=False), depth (h,w metres), seg (h,w geom id, -1 = none)."""
     renderer.update_scene(data, camera=cam)
-    rgb = renderer.render().copy()
+    rgb = renderer.render().copy() if rgb else None
     renderer.enable_depth_rendering()
     depth = renderer.render().copy()
     renderer.disable_depth_rendering()
@@ -26,12 +26,13 @@ def _focal(model, cam: str, h: int) -> float:
     return (h / 2) / np.tan(fovy / 2)
 
 
-def pixel_to_world(model, data, cam: str, u: float, v: float, depth_m: float,
-                   w: int = 320, h: int = 240) -> np.ndarray:
+def pixel_to_world(model, data, cam: str, u, v, depth_m, w: int = 320, h: int = 240) -> np.ndarray:
+    """Scalars -> (3,); arrays of N -> (N, 3)."""
     f = _focal(model, cam, h)
     c = model.camera(cam).id
-    local = np.array([(u - w / 2) / f * depth_m, -(v - h / 2) / f * depth_m, -depth_m])
-    return data.cam_xpos[c] + data.cam_xmat[c].reshape(3, 3) @ local
+    u, v, z = np.asarray(u, float), np.asarray(v, float), np.asarray(depth_m, float)
+    local = np.stack([(u - w / 2) / f * z, -(v - h / 2) / f * z, -z], axis=-1)
+    return data.cam_xpos[c] + local @ data.cam_xmat[c].reshape(3, 3).T
 
 
 def project(model, data, cam: str, xyz: np.ndarray, w: int = 320, h: int = 240):
@@ -54,10 +55,15 @@ def _view_error(model, data, target, cam=CAM):
     return np.array([yaw_err, pitch_err])
 
 
+_SCRATCH: dict[int, mujoco.MjData] = {}
+
+
 def aim_head(model, data, io, target: np.ndarray, snap: bool = True) -> tuple[float, float]:
     """Point the head camera at a world point. Solves pan/tilt kinematically on a scratch copy
     (numeric Jacobian), then commands the head actuators (and snaps the joints if snap)."""
-    scratch = mujoco.MjData(model)
+    scratch = _SCRATCH.get(id(model))
+    if scratch is None:
+        scratch = _SCRATCH[id(model)] = mujoco.MjData(model)
     scratch.qpos[:] = data.qpos
     jp, jt = model.joint("joint_head_pan").qposadr[0], model.joint("joint_head_tilt").qposadr[0]
     lo_p, hi_p = model.jnt_range[model.joint("joint_head_pan").id]
@@ -121,8 +127,7 @@ class SegDetector:
             if n < self.MIN_PIXELS:
                 continue
             vs, us = np.nonzero(mask)
-            pts = np.array([pixel_to_world(model, data, self.cam, u, v, depth[v, u], w, h)
-                            for u, v in zip(us[::4], vs[::4])])
+            pts = pixel_to_world(model, data, self.cam, us, vs, depth[vs, us], w, h)
             xyz = np.median(pts, axis=0) + self.rng.normal(0, self.noise, 3)
             out.append(Detection(label, min(1.0, n / 200), (int(us.min()), int(vs.min()),
                                                             int(us.max()), int(vs.max())), xyz))

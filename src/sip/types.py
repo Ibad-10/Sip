@@ -47,3 +47,10 @@ class Detection:
     box: tuple[int, int, int, int]  # u0, v0, u1, v1
     xyz: np.ndarray | None
     source: str = "seg"
+
+
+@dataclass
+class Event:
+    t: float
+    kind: str   # state | plan | say | safety | perceive | alert | dose
+    text: str

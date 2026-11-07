@@ -91,9 +91,10 @@ def _items(world):
     b.add_freejoint(name="glass_free")
     b.add_geom(name="glass_geom", type=CYL, size=[0.035, 0.06, 0], rgba=[0.6, 0.85, 1.0, 0.7],
                mass=0.25, friction=[1.5, 0.05, 0.01])
-    b.add_geom(name="straw", type=CAP, fromto=[0, 0, 0.0, 0.0, -0.03, 0.14], size=[0.004, 0, 0],
+    # straw leans out along the glass's local +x; the robot turns the glass so +x faces the arm
+    b.add_geom(name="straw", type=CAP, fromto=[0, 0, 0.0, 0.07, 0, 0.14], size=[0.004, 0, 0],
                rgba=[1, 0.3, 0.3, 1], mass=0.001, contype=0, conaffinity=0)
-    b.add_site(name="straw_tip", pos=[0, -0.03, 0.14], size=[0.006, 0, 0], group=4)
+    b.add_site(name="straw_tip", pos=[0.07, 0, 0.14], size=[0.006, 0, 0], group=4)
     b = world.add_body(name="organiser", pos=[-1.9, 2.6, 0.92])
     b.add_freejoint(name="organiser_free")
     _box(b, "organiser_geom", (0, 0, 0), (0.14, 0.06, 0.02), (0.9, 0.9, 0.3, 1), mass=0.3)
@@ -102,7 +103,7 @@ def _items(world):
 def _person(spec, world):
     skin, cloth = (0.87, 0.72, 0.6, 1), (0.3, 0.5, 0.35, 1)
     p = world.add_body(name="person", pos=[3.0, 2.35, 0.5], mocap=True)
-    p.add_geom(name="torso", type=CAP, fromto=[0, 0, 0.05, 0, 0, 0.45], size=[0.14, 0, 0], rgba=list(cloth),
+    p.add_geom(name="torso", type=CAP, fromto=[0, 0, 0.05, 0, 0, 0.45], size=[0.12, 0, 0], rgba=list(cloth),
                contype=1, conaffinity=1)
     for s in (-1, 1):
         p.add_geom(name=f"thigh{s}", type=CAP, fromto=[0, 0.1 * s, 0.02, 0.42, 0.1 * s, 0.02],
@@ -111,7 +112,7 @@ def _person(spec, world):
                    size=[0.05, 0, 0], rgba=list(skin))
         p.add_geom(name=f"uarm{s}", type=CAP, fromto=[0, 0.2 * s, 0.42, 0.05, 0.22 * s, 0.15],
                    size=[0.045, 0, 0], rgba=list(cloth))
-    h = p.add_body(name="person_head", pos=[0, 0, 0.6])
+    h = p.add_body(name="person_head", pos=[0.06, 0, 0.6])  # head slightly forward of the chest
     h.add_joint(name="head_yaw", type=mujoco.mjtJoint.mjJNT_HINGE, axis=[0, 0, 1], range=[-1.2, 1.2],
                 damping=2.0)
     h.add_geom(name="head", type=SPH, size=[0.1, 0, 0], rgba=list(skin), mass=4.0)
@@ -162,6 +163,14 @@ def build_house(path: str = "assets/house.xml") -> str:
     xml = xml.replace('meshdir="assets"', f'meshdir="{rel}"').replace('texturedir="assets"', f'texturedir="{rel}"')
     out.write_text(xml, encoding="utf-8")
     return str(out)
+
+
+def room_at(x: float, y: float) -> str:
+    if y > 0.8:
+        return "kitchen" if x < 0 else "living"
+    if y < -0.8:
+        return "bedroom" if x > 0 else "store"
+    return "hall"
 
 
 def seat_person(model, data, where: str) -> float:

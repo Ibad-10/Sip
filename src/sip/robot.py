@@ -59,10 +59,10 @@ class StretchIO:
 
     def attach(self, body: str) -> None:
         eq = self.m.equality(f"grasp_weld_{body}").id
-        # weld at the current relative pose. MuJoCo weld relpose = pose of body1 (grasp centre)
-        # expressed in body2 (object) frame.
-        bpos, bquat = self.d.body(body).xpos, self.d.body(body).xquat
-        opos, oquat = self.d.xpos[self.gc], self.d.xquat[self.gc]
+        # weld at the current relative pose: relpose = object (body2) pose in the grasp (body1)
+        # frame, anchor at the body origin (the spec default anchor is not zero).
+        bpos, bquat = self.d.xpos[self.gc], self.d.xquat[self.gc]
+        opos, oquat = self.d.body(body).xpos, self.d.body(body).xquat
         inv = np.zeros(4)
         mujoco.mju_negQuat(inv, bquat)
         rel_pos = np.zeros(3)
@@ -70,14 +70,24 @@ class StretchIO:
         rel_quat = np.zeros(4)
         mujoco.mju_mulQuat(rel_quat, inv, oquat)
         # eq_data layout for weld: anchor(3), relpos(3), relquat(4), torquescale(1)
+        self.m.eq_data[eq, 0:3] = 0.0
         self.m.eq_data[eq, 3:6] = rel_pos
         self.m.eq_data[eq, 6:10] = rel_quat
         self.d.eq_active[eq] = 1
         self._held = body
+        # carried object must not collide with the robot (it rides over the base when stowed)
+        self._saved_contype = {}
+        root = self.m.body(body).id
+        for g in range(self.m.ngeom):
+            if self.m.geom_bodyid[g] == root:
+                self._saved_contype[g] = (self.m.geom_contype[g], self.m.geom_conaffinity[g])
+                self.m.geom_contype[g] = self.m.geom_conaffinity[g] = 0
 
     def release(self) -> None:
         if self._held:
             self.d.eq_active[self.m.equality(f"grasp_weld_{self._held}").id] = 0
+            for g, (ct, ca) in getattr(self, "_saved_contype", {}).items():
+                self.m.geom_contype[g], self.m.geom_conaffinity[g] = ct, ca
         self._held = None
 
     @property
