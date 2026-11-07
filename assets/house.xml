@@ -1,0 +1,574 @@
+<mujoco model="sip_house">
+  <compiler angle="radian" meshdir="../third_party/mujoco_menagerie/hello_robot_stretch_3/assets/" texturedir="../third_party/mujoco_menagerie/hello_robot_stretch_3/assets/"/>
+
+  <option impratio="10" integrator="implicitfast" cone="elliptic" noslip_iterations="3"/>
+
+  <size nkey="2"/>
+
+  <default>
+    <default class="stretch">
+      <geom solref="0.005"/>
+      <general biastype="affine"/>
+      <default class="wheel">
+        <joint stiffness="0.02" armature="0.1" damping="30" frictionloss="1"/>
+        <general ctrlrange="-6 6" forcerange="-100 100" gear="3" input="vel" gainprm="100" biasprm="0 0 -100"/>
+      </default>
+      <default class="lift">
+        <joint type="slide" stiffness="0.03" range="0 1.1" armature="0.01" damping="35" frictionloss="1.5"/>
+        <general ctrlrange="0 1.1" forcerange="-70 70" gainprm="400" biasprm="0 -200 -100"/>
+      </default>
+      <default class="telescope">
+        <joint type="slide" stiffness="0.02" range="0 0.13" armature="0.01" damping="50" frictionloss="1.5"/>
+        <general ctrlrange="0 0.52" forcerange="-56 56" gainprm="150" biasprm="0 -100 -10"/>
+      </default>
+      <default class="head">
+        <joint damping="1"/>
+        <general input="pos" gainprm="10" biasprm="0 -10"/>
+        <default class="head_pan">
+          <joint range="-4.04 1.73"/>
+          <general ctrlrange="-4.04 1.73"/>
+        </default>
+        <default class="head_tilt">
+          <joint range="-1.53 0.79"/>
+          <general ctrlrange="-1.53 0.79"/>
+        </default>
+      </default>
+      <default class="wrist">
+        <joint damping="1"/>
+        <general input="pos" gainprm="10" biasprm="0 -10"/>
+        <default class="wrist_yaw">
+          <joint range="-1.39 4.42" armature="0.01" damping="7" frictionloss="0.1" axis="0 0 -1"/>
+          <general ctrlrange="-1.39 4.42" gainprm="20" biasprm="0 -20"/>
+        </default>
+        <default class="wrist_pitch">
+          <joint range="-1.57 0.56" armature="0.01" frictionloss="0.1"/>
+          <general ctrlrange="-1.57 0.56" gainprm="50" biasprm="0 -50"/>
+        </default>
+        <default class="wrist_roll">
+          <joint range="-3.14 3.14" armature="0.01" frictionloss="0.1"/>
+          <general ctrlrange="-3.14 3.14" gainprm="20" biasprm="0 -20"/>
+        </default>
+        <default class="finger_open">
+          <joint range="-0.6 0.6" armature="0.01" damping="0.0001" frictionloss="0.1" axis="0 -1 0"/>
+          <general ctrlrange="-0.6 0.6" gainprm="4000" biasprm="0 -4000 -124"/>
+        </default>
+        <default class="finger_slide">
+          <joint type="slide" range="-0.02 0.04" armature="0.1" damping="0.0001"/>
+          <general ctrlrange="-0.02 0.04" gainprm="4000" biasprm="0 -4000 -124"/>
+        </default>
+      </default>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+      </default>
+      <default class="collision">
+        <geom type="mesh" group="3"/>
+        <default class="caster">
+          <geom size="0.02 0 0" type="sphere" condim="1" priority="1"/>
+        </default>
+        <default class="rubber">
+          <geom condim="6" priority="1" friction="2 0.02 0.1" solref="0.02" solimp="0.99 0.99 0.01"/>
+        </default>
+      </default>
+    </default>
+  </default>
+
+  <asset>
+    <texture type="2d" colorspace="linear" name="hand_crush" file="hand_crush.png"/>
+    <texture type="2d" colorspace="linear" name="serial" file="serial.png"/>
+    <texture type="2d" colorspace="linear" name="mobile_base_right_corner_aruco_sticker" file="mobile_base_right_corner_aruco_sticker.png"/>
+    <texture type="2d" colorspace="linear" name="mobile_base_left_corner_aruco_sticker" file="mobile_base_left_corner_aruco_sticker.png"/>
+    <texture type="2d" colorspace="linear" name="hand_pinch" file="hand_pinch.png"/>
+    <texture type="2d" colorspace="linear" name="arm_inner_wrist_aruco_sticker" file="arm_inner_wrist_aruco_sticker.png"/>
+    <texture type="2d" colorspace="linear" name="arm_top_wrist_aruco_sticker" file="arm_top_wrist_aruco_sticker.png"/>
+    <texture type="2d" colorspace="linear" name="shoulder_aruco_sticker" file="shoulder_aruco_sticker.png"/>
+    <texture type="2d" colorspace="linear" name="right_finger_aruco" file="right_finger_aruco.png"/>
+    <texture type="2d" colorspace="linear" name="left_finger_aruco" file="left_finger_aruco.png"/>
+    <texture type="2d" colorspace="linear" name="gripper_cam_aruco_sticker" file="gripper_cam_aruco_sticker.png"/>
+    <material name="Caster_Rollers_Red" rgba="0.8 0.001381 0 1"/>
+    <material name="Generic_Black" rgba="0.036889 0.036889 0.036889 1"/>
+    <material name="3D_Print_Black" rgba="0.114435 0.114435 0.114435 1"/>
+    <material name="Pantone_Black_6_U" rgba="0.072272 0.076185 0.093059 1"/>
+    <material name="Plug_White"/>
+    <material name="Pure_Black" rgba="0 0 0 1"/>
+    <material name="Gray_Lens" reflectance="0.3" rgba="0.3 0.3 0.3 1"/>
+    <material name="Reflective_Metal" shininess="0.25" reflectance="0.3" rgba="0.8 0.8 0.8 1"/>
+    <material name="Respeaker_Blue_Glow" rgba="0.006995 0.05448 0.799103 1"/>
+    <material name="Runstop_White_Glow" rgba="0.8 0.8 0.8 1"/>
+    <material name="Speaker_Housing_Black" rgba="0.003642 0.003642 0.003642 1"/>
+    <material name="Wheel_Rubber_Gray" rgba="0.418986 0.424087 0.429225 1"/>
+    <material name="Lightbar_Green" rgba="0 0.8 0.002964 1"/>
+    <material name="Pantone_705_U" rgba="1 0.723054 0.760525 1"/>
+    <material name="Pantone_Cool_Gray_4_U" rgba="0.473531 0.47932 0.48515 1"/>
+    <material name="Power_Button_Green" rgba="0.010852 0.02365 0.002724 1"/>
+    <material name="USB_Blue" rgba="0.000557 0.010166 0.8 1"/>
+    <material name="White_Plastic" shininess="0.25"/>
+    <material name="Laser_Black" rgba="0.03741 0.03741 0.03741 1"/>
+    <material name="Hand_Crush_Sticker" texture="hand_crush"/>
+    <material name="Stretch_Serial_Sticker" texture="serial"/>
+    <material name="Aruco_Right_Base_Sticker" texture="mobile_base_right_corner_aruco_sticker"/>
+    <material name="Aruco_Left_Base_Sticker" texture="mobile_base_left_corner_aruco_sticker"/>
+    <material name="Hand_Pinch_Sticker" texture="hand_pinch"/>
+    <material name="Carbon_Fiber" rgba="0.061246 0.061246 0.061246 1"/>
+    <material name="Aruco_Inner_Wrist_Sticker" texture="arm_inner_wrist_aruco_sticker"/>
+    <material name="Aruco_Top_Wrist_Sticker" texture="arm_top_wrist_aruco_sticker"/>
+    <material name="suction_rubber" rgba="0.25098 0.25098 0.25098 1"/>
+    <material name="Aruco_Shoulder_Sticker" texture="shoulder_aruco_sticker"/>
+    <material name="Aruco_right_finger_Sticker" texture="right_finger_aruco"/>
+    <material name="Aruco_left_finger_Sticker" texture="left_finger_aruco"/>
+    <material name="Aruco_gripper_cam_Sticker" texture="gripper_cam_aruco_sticker"/>
+    <mesh name="base_link_0" content_type="model/obj" file="base_link_0.obj"/>
+    <mesh name="base_link_2" content_type="model/obj" file="base_link_2.obj" inertia="shell"/>
+    <mesh name="base_link_3" content_type="model/obj" file="base_link_3.obj"/>
+    <mesh name="base_link_4" content_type="model/obj" file="base_link_4.obj"/>
+    <mesh name="base_link_5" content_type="model/obj" file="base_link_5.obj"/>
+    <mesh name="base_link_6" content_type="model/obj" file="base_link_6.obj" inertia="shell"/>
+    <mesh name="base_link_7" content_type="model/obj" file="base_link_7.obj"/>
+    <mesh name="base_link_8" content_type="model/obj" file="base_link_8.obj"/>
+    <mesh name="base_link_collision" content_type="model/stl" file="base_link_casterless.stl"/>
+    <mesh name="link_aruco_right_base" content_type="model/obj" file="link_aruco_right_base.obj" inertia="shell"/>
+    <mesh name="link_aruco_left_base" content_type="model/obj" file="link_aruco_left_base.obj" inertia="shell"/>
+    <mesh name="respeaker_base" content_type="model/obj" file="respeaker_base.obj"/>
+    <mesh name="link_mast" content_type="model/obj" file="link_mast.obj"/>
+    <mesh name="link_head_0" content_type="model/obj" file="link_head_0.obj"/>
+    <mesh name="link_head_1" content_type="model/obj" file="link_head_1.obj"/>
+    <mesh name="link_head_2" content_type="model/obj" file="link_head_2.obj"/>
+    <mesh name="link_head_3" content_type="model/obj" file="link_head_3.obj"/>
+    <mesh name="link_head_4" content_type="model/obj" file="link_head_4.obj"/>
+    <mesh name="link_head_5" content_type="model/obj" file="link_head_5.obj"/>
+    <mesh name="link_head_6" content_type="model/obj" file="link_head_6.obj"/>
+    <mesh name="link_head_7" content_type="model/obj" file="link_head_7.obj"/>
+    <mesh name="link_head_8" content_type="model/obj" file="link_head_8.obj"/>
+    <mesh name="link_head_9" content_type="model/obj" file="link_head_9.obj"/>
+    <mesh name="link_head_10" content_type="model/obj" file="link_head_10.obj"/>
+    <mesh name="link_head_11" content_type="model/obj" file="link_head_11.obj"/>
+    <mesh name="link_head_pan_0" content_type="model/obj" file="link_head_pan_0.obj"/>
+    <mesh name="link_head_pan_1" content_type="model/obj" file="link_head_pan_1.obj"/>
+    <mesh name="link_head_tilt_0" content_type="model/obj" file="link_head_tilt_0.obj"/>
+    <mesh name="link_head_tilt_1" content_type="model/obj" file="link_head_tilt_1.obj"/>
+    <mesh name="link_right_wheel_0" content_type="model/obj" file="link_right_wheel_0.obj"/>
+    <mesh name="link_right_wheel_1" content_type="model/obj" file="link_right_wheel_1.obj"/>
+    <mesh name="link_left_wheel_0" content_type="model/obj" file="link_left_wheel_0.obj"/>
+    <mesh name="link_left_wheel_1" content_type="model/obj" file="link_left_wheel_1.obj"/>
+    <mesh name="link_lift_0" content_type="model/obj" file="link_lift_0.obj"/>
+    <mesh name="link_lift_1" content_type="model/obj" file="link_lift_1.obj" inertia="shell"/>
+    <mesh name="link_lift_2" content_type="model/obj" file="link_lift_2.obj"/>
+    <mesh name="link_lift_3" content_type="model/obj" file="link_lift_3.obj"/>
+    <mesh name="link_lift_4" content_type="model/obj" file="link_lift_4.obj"/>
+    <mesh name="link_lift_5" content_type="model/obj" file="link_lift_5.obj"/>
+    <mesh name="link_lift_6" content_type="model/obj" file="link_lift_6.obj"/>
+    <mesh name="link_lift_7" content_type="model/obj" file="link_lift_7.obj"/>
+    <mesh name="link_lift_8" content_type="model/obj" file="link_lift_8.obj"/>
+    <mesh name="link_lift_9" content_type="model/obj" file="link_lift_9.obj"/>
+    <mesh name="link_aruco_shoulder" content_type="model/obj" file="link_aruco_shoulder.obj" inertia="shell"/>
+    <mesh name="link_arm_l4_0" content_type="model/obj" file="link_arm_l4_0.obj"/>
+    <mesh name="link_arm_l4_1" content_type="model/obj" file="link_arm_l4_1.obj"/>
+    <mesh name="link_arm_l3_0" content_type="model/obj" file="link_arm_l3_0.obj"/>
+    <mesh name="link_arm_l3_1" content_type="model/obj" file="link_arm_l3_1.obj"/>
+    <mesh name="link_arm_l2_0" content_type="model/obj" file="link_arm_l2_0.obj"/>
+    <mesh name="link_arm_l2_1" content_type="model/obj" file="link_arm_l2_1.obj"/>
+    <mesh name="link_arm_l1_0" content_type="model/obj" file="link_arm_l1_0.obj"/>
+    <mesh name="link_arm_l1_1" content_type="model/obj" file="link_arm_l1_1.obj"/>
+    <mesh name="link_arm_l0_0" content_type="model/obj" file="link_arm_l0_0.obj"/>
+    <mesh name="link_arm_l0_1" content_type="model/obj" file="link_arm_l0_1.obj"/>
+    <mesh name="link_arm_l0_2" content_type="model/obj" file="link_arm_l0_2.obj"/>
+    <mesh name="link_aruco_inner_wrist" content_type="model/obj" file="link_aruco_inner_wrist.obj" inertia="shell"/>
+    <mesh name="link_aruco_top_wrist" content_type="model/obj" file="link_aruco_top_wrist.obj" inertia="shell"/>
+    <mesh name="laser" content_type="model/obj" file="laser.obj"/>
+    <mesh name="link_gripper_finger_left_0" content_type="model/obj" file="link_gripper_finger_left_0.obj" scale="0.9 1 1"/>
+    <mesh name="link_gripper_finger_left_1" content_type="model/obj" file="link_gripper_finger_left_1.obj" scale="0.9 1 1"/>
+    <mesh name="link_gripper_finger_right_0" content_type="model/obj" file="link_gripper_finger_right_0.obj" scale="0.9 1 1"/>
+    <mesh name="link_gripper_finger_right_1" content_type="model/obj" file="link_gripper_finger_right_1.obj" scale="0.9 1 1"/>
+    <mesh name="link_gripper_0" content_type="model/obj" file="link_gripper_0.obj"/>
+    <mesh name="link_gripper_1" content_type="model/obj" file="link_gripper_1.obj"/>
+    <mesh name="link_wrist_yaw" content_type="model/obj" file="link_wrist_yaw.obj"/>
+    <mesh name="link_DW3_wrist_pitch" content_type="model/stl" file="link_DW3_wrist_pitch.stl"/>
+    <mesh name="link_DW3_wrist_quick_connect" content_type="model/stl" file="link_DW3_wrist_quick_connect.stl"/>
+    <mesh name="link_DW3_wrist_yaw_bottom" content_type="model/stl" file="link_DW3_wrist_yaw_bottom.stl"/>
+    <mesh name="link_SE3_head_nav_cam" content_type="model/stl" file="link_SE3_head_nav_cam.stl"/>
+    <mesh name="link_SG3_aruco_d405" content_type="model/obj" file="link_SG3_aruco_d405.obj" inertia="shell"/>
+    <mesh name="link_SG3_gripper_body" content_type="model/obj" file="link_SG3_gripper_body.obj"/>
+    <mesh name="link_d405" content_type="model/stl" file="link_d405.stl"/>
+    <mesh name="link_d405_lens" content_type="model/stl" file="link_d405_lens.stl"/>
+    <mesh name="link_d405_front_plate" content_type="model/stl" file="link_d405_front_plate.stl"/>
+    <mesh name="link_SG3_gripper_left_finger_0" content_type="model/obj" file="link_SG3_gripper_left_finger_0.obj"/>
+    <mesh name="link_SG3_gripper_right_finger_0" content_type="model/obj" file="link_SG3_gripper_right_finger_0.obj"/>
+    <mesh name="link_SG3_gripper_left_finger_1" content_type="model/obj" file="link_SG3_gripper_left_finger_1.obj"/>
+    <mesh name="link_SG3_gripper_right_finger_1" content_type="model/obj" file="link_SG3_gripper_right_finger_1.obj"/>
+    <mesh name="link_SG3_gripper_left_inner_finger" content_type="model/stl" file="link_SG3_gripper_left_inner_finger.stl"/>
+    <mesh name="link_SG3_gripper_right_inner_finger" content_type="model/stl" file="link_SG3_gripper_right_inner_finger.stl"/>
+    <mesh name="link_SG3_gripper_inner_finger" content_type="model/stl" file="link_SG3_gripper_inner_finger.stl"/>
+    <mesh name="link_SG3_gripper_left_finger_aruco" content_type="model/obj" file="link_SG3_gripper_left_finger_aruco.obj" inertia="shell"/>
+    <mesh name="link_SG3_gripper_right_finger_aruco" content_type="model/obj" file="link_SG3_gripper_right_finger_aruco.obj" inertia="shell"/>
+    <mesh name="link_SG3_gripper_right_fingertip" content_type="model/stl" file="link_SG3_gripper_right_fingertip.stl"/>
+    <mesh name="link_SG3_gripper_left_fingertip" content_type="model/stl" file="link_SG3_gripper_left_fingertip.stl"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" size="5 4 0.1" type="plane" rgba="0.75 0.7 0.62 1"/>
+    <geom name="wall_n" size="4 0.05 1.2" pos="0 3 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_s" size="4 0.05 1.2" pos="0 -3 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_w" size="0.05 3 1.2" pos="-4 0 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_e" size="0.05 3 1.2" pos="4 0 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_k1" size="0.75 0.05 1.2" pos="-3.25 0.8 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_k2" size="1.5 0.05 1.2" pos="0 0.8 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_k3" size="0.75 0.05 1.2" pos="3.25 0.8 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_b1" size="2.75 0.05 1.2" pos="-1.25 -0.8 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_b2" size="0.75 0.05 1.2" pos="3.25 -0.8 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_kl1" size="0.05 0.35 1.2" pos="0 1.15 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_kl2" size="0.05 0.25 1.2" pos="0 2.75 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="wall_bs" size="0.05 1.1 1.2" pos="0 -1.9 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <site name="kitchen" size="0.05" pos="-2 1.9 0.01" rgba="0 0 0 0"/>
+    <site name="living" size="0.05" pos="2 1.9 0.01" rgba="0 0 0 0"/>
+    <site name="bedroom" size="0.05" pos="2 -1.9 0.01" rgba="0 0 0 0"/>
+    <site name="hall" size="0.05" pos="-1 0 0.01" rgba="0 0 0 0"/>
+    <light name="sun" pos="0 0 5" diffuse="0.8 0.8 0.8"/>
+    <body name="base_link" childclass="stretch">
+      <joint type="free"/>
+      <geom class="visual" pos="1.60982e-15 -1.33505e-17 -1.70003e-16" quat="1 0 0 0" mass="0" material="Caster_Rollers_Red" mesh="base_link_0"/>
+      <geom class="visual" pos="9.99201e-16 1.73472e-18 -8.60423e-16" quat="1 0 0 0" mass="0" material="Lightbar_Green" mesh="base_link_2"/>
+      <geom class="visual" pos="2.27596e-15 3.1225e-17 -1.01308e-15" quat="1 0 0 0" mass="0" material="Power_Button_Green" mesh="base_link_3"/>
+      <geom class="visual" pos="1.249e-15 6.72205e-18 -5.41234e-16" quat="1 0 0 0" mass="0" material="USB_Blue" mesh="base_link_4"/>
+      <geom class="visual" pos="1.1241e-15 -2.94903e-17 -4.57967e-16" quat="1 0 0 0" mass="0" material="Generic_Black" mesh="base_link_5"/>
+      <geom class="visual" pos="7.77156e-16 -1.08247e-15 -1.27676e-15" quat="1 0 0 0" mass="0" material="Hand_Crush_Sticker" mesh="base_link_6"/>
+      <geom class="visual" mass="0" material="Pantone_705_U" mesh="base_link_7"/>
+      <geom class="visual" pos="8.74301e-16 1.64799e-17 -8.32667e-16" quat="1 0 0 0" mass="0" material="Pantone_Cool_Gray_4_U" mesh="base_link_8"/>
+      <geom class="collision" pos="6.52256e-16 -1.0842e-17 -5.82867e-16" quat="1 0 0 0" mass="15" mesh="base_link_collision"/>
+      <geom class="caster" pos="-0.24 0 0.02" mass="0"/>
+      <body name="base_imu" pos="-0.12838 0.0031592 0.1474" quat="-2.59734e-06 -0.707105 0.707108 -2.59735e-06">
+        <site name="base_imu"/>
+      </body>
+      <body name="link_mast" pos="-0.067 0.135 0.0284" quat="0.707107 0.707107 0 0">
+        <geom class="visual" pos="0 -1.88738e-15 0" quat="1 0 0 0" mass="0" material="Generic_Black" mesh="link_mast"/>
+        <geom class="collision" pos="0 -1.88738e-15 0" quat="1 0 0 0" mass="1.8285" mesh="link_mast"/>
+      </body>
+      <body name="link_head" pos="-0.067 0.134995 1.3584" quat="-0.707107 0 0 0.707107">
+        <geom class="visual" quat="1 0 0 0" mass="0" material="Runstop_White_Glow" mesh="link_head_0"/>
+        <geom class="visual" mass="0" material="Generic_Black" mesh="link_head_1"/>
+        <geom class="visual" pos="-1.66533e-16 -4.16334e-16 -1.2837e-16" quat="1 0 0 0" mass="0" material="Speaker_Housing_Black" mesh="link_head_2"/>
+        <geom class="visual" pos="-2.91434e-16 -4.85723e-16 -1.35308e-16" quat="1 0 0 0" mass="0" material="Reflective_Metal" mesh="link_head_3"/>
+        <geom class="visual" pos="-8.84709e-17 -5.27356e-16 -1.49186e-16" quat="1 0 0 0" mass="0" material="Reflective_Metal" mesh="link_head_4"/>
+        <geom class="visual" pos="-2.77556e-16 -4.30211e-16 -2.498e-16" quat="1 0 0 0" mass="0" material="Pure_Black" mesh="link_head_5"/>
+        <geom class="visual" pos="-2.498e-16 -4.71845e-16 -2.84495e-16" quat="1 0 0 0" mass="0" material="Reflective_Metal" mesh="link_head_6"/>
+        <geom class="visual" pos="-2.498e-16 -5.13478e-16 -3.19189e-16" quat="1 0 0 0" mass="0" material="Plug_White" mesh="link_head_7"/>
+        <geom class="visual" pos="-1.66533e-16 -5.55112e-16 -4.02456e-16" quat="1 0 0 0" mass="0" material="3D_Print_Black" mesh="link_head_8"/>
+        <geom class="visual" pos="-2.90566e-17 2.28699e-20 -5.06539e-16" quat="1 0 0 0" mass="0" material="Respeaker_Blue_Glow" mesh="link_head_9"/>
+        <geom class="visual" pos="-3.60822e-16 -3.53884e-16 -2.77556e-16" quat="1 0 0 0" mass="0" material="Pantone_Black_6_U" mesh="link_head_10"/>
+        <geom class="visual" pos="-3.1225e-16 -3.46945e-16 -4.25007e-17" quat="1 0 0 0" mass="0" material="Generic_Black" mesh="link_head_11"/>
+        <geom class="collision" pos="-3.60822e-16 -3.53884e-16 -2.77556e-16" quat="1 0 0 0" mass="0.833027" mesh="link_head_10"/>
+      </body>
+      <body name="link_aruco_right_base" pos="-0.0015028 -0.130497 0.159748" quat="0.707107 0 0 -0.707107">
+        <geom class="visual" quat="1 0 0 0" mass="3.6e-06" material="Aruco_Right_Base_Sticker" mesh="link_aruco_right_base"/>
+        <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_aruco_right_base"/>
+      </body>
+      <body name="link_aruco_left_base" pos="-0.0015028 0.130497 0.159748" quat="0.707107 0 0 -0.707107">
+        <geom class="visual" quat="1 0 0 0" mass="3.6e-06" material="Aruco_Left_Base_Sticker" mesh="link_aruco_left_base"/>
+        <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_aruco_left_base"/>
+      </body>
+      <body name="laser" pos="0.004 0 0.1664" quat="0 0 0 1">
+        <geom class="visual" quat="1 0 0 0" mass="0.24" material="Laser_Black" mesh="laser"/>
+        <geom class="collision" quat="1 0 0 0" mass="0" mesh="laser"/>
+      </body>
+      <body name="link_right_wheel" pos="0 -0.17035 0.0508" quat="0.707107 -0.707107 0 0">
+        <joint name="joint_right_wheel" class="wheel"/>
+        <geom class="visual" quat="1 0 0 0" mass="0.15" material="Wheel_Rubber_Gray" mesh="link_right_wheel_0"/>
+        <geom class="visual" quat="1 0 0 0" mass="0" material="Generic_Black" mesh="link_right_wheel_1"/>
+        <geom class="collision" size="0.05 0.0125" pos="0 0 0.0125" type="cylinder" mass="0"/>
+      </body>
+      <body name="link_left_wheel" pos="0 0.17035 0.0508" quat="0.707107 -0.707107 0 0">
+        <joint name="joint_left_wheel" class="wheel"/>
+        <geom class="visual" quat="1 0 0 0" mass="0.15" material="Wheel_Rubber_Gray" mesh="link_left_wheel_0"/>
+        <geom class="visual" quat="1 0 0 0" mass="0" material="Generic_Black" mesh="link_left_wheel_1"/>
+        <geom class="collision" size="0.05 0.0125" pos="0 0 -0.0125" type="cylinder" mass="0"/>
+      </body>
+      <body name="link_lift" pos="-0.104385 0.134999 0.2" quat="0.707107 0 0 0.707107" gravcomp="1">
+        <joint name="joint_lift" class="lift"/>
+        <geom class="visual" quat="1 0 0 0" mass="0" material="Pantone_705_U" mesh="link_lift_0"/>
+        <geom class="visual" pos="3.1225e-16 -8.04912e-16 -1.97758e-16" quat="1 0 0 0" mass="0" material="Pure_Black" mesh="link_lift_2"/>
+        <geom class="visual" pos="1.80411e-16 -5.68989e-16 -1.31839e-16" quat="1 0 0 0" mass="0" material="Reflective_Metal" mesh="link_lift_3"/>
+        <geom class="visual" pos="1.83881e-16 -6.66134e-16 -1.49186e-16" quat="1 0 0 0" mass="0" material="Plug_White" mesh="link_lift_4"/>
+        <geom class="visual" pos="2.08167e-16 -5.41234e-16 -1.2837e-16" quat="1 0 0 0" mass="0" material="Pantone_Black_6_U" mesh="link_lift_5"/>
+        <geom class="visual" pos="1.94289e-16 -4.85723e-16 -1.17961e-16" quat="1 0 0 0" mass="0" material="Generic_Black" mesh="link_lift_6"/>
+        <geom class="visual" quat="1 0 0 0" mass="0" material="Generic_Black" mesh="link_lift_7"/>
+        <geom class="visual" quat="1 0 0 0" mass="0" material="3D_Print_Black" mesh="link_lift_8"/>
+        <geom class="visual" pos="1.76942e-16 -2.56739e-16 -2.28983e-16" quat="1 0 0 0" mass="0" material="Pantone_Black_6_U" mesh="link_lift_9"/>
+        <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_lift_0"/>
+        <geom class="collision" pos="3.1225e-16 -8.04912e-16 -1.97758e-16" quat="1 0 0 0" mass="0" mesh="link_lift_2"/>
+        <geom class="collision" pos="1.80411e-16 -5.68989e-16 -1.31839e-16" quat="1 0 0 0" mass="0" mesh="link_lift_3"/>
+        <geom class="collision" pos="1.83881e-16 -6.66134e-16 -1.49186e-16" quat="1 0 0 0" mass="0" mesh="link_lift_4"/>
+        <geom class="collision" pos="2.08167e-16 -5.41234e-16 -1.2837e-16" quat="1 0 0 0" mass="0" mesh="link_lift_5"/>
+        <geom class="collision" pos="1.94289e-16 -4.85723e-16 -1.17961e-16" quat="1 0 0 0" mass="0" mesh="link_lift_6"/>
+        <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_lift_7"/>
+        <geom class="collision" quat="1 0 0 0" mass="1.5" mesh="link_lift_8"/>
+        <geom class="collision" pos="1.76942e-16 -2.56739e-16 -2.28983e-16" quat="1 0 0 0" mass="1.5" mesh="link_lift_9"/>
+        <body name="link_arm_l4" gravcomp="1">
+          <geom class="visual" pos="-0.2547 0 0" quat="0.5 0.5 -0.5 -0.5" mass="0" material="Carbon_Fiber" mesh="link_arm_l4_0"/>
+          <geom class="visual" pos="-0.2547 0 0" quat="0.5 0.5 -0.5 -0.5" mass="0" material="3D_Print_Black" mesh="link_arm_l4_1"/>
+          <geom class="collision" pos="-0.2547 0 0" quat="0.5 0.5 -0.5 -0.5" mass="0.168095" mesh="link_arm_l4_0"/>
+          <geom class="collision" pos="-0.2547 0 0" quat="0.5 0.5 -0.5 -0.5" mass="0" mesh="link_arm_l4_1"/>
+          <body name="link_arm_l3" pos="-0.2677 0 0" quat="0.5 0.5 -0.5 -0.5" gravcomp="1">
+            <joint name="joint_arm_l3" class="telescope"/>
+            <geom class="visual" mass="0.162893" material="Carbon_Fiber" mesh="link_arm_l3_0"/>
+            <geom class="visual" quat="1 0 0 0" mass="0" material="3D_Print_Black" mesh="link_arm_l3_1"/>
+            <geom class="collision" mass="0" mesh="link_arm_l3_0"/>
+            <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_arm_l3_1"/>
+            <body name="link_arm_l2" pos="0 0 0.013" gravcomp="1">
+              <joint name="joint_arm_l2" class="telescope"/>
+              <geom class="visual" mass="0.157139" material="Carbon_Fiber" mesh="link_arm_l2_0"/>
+              <geom class="visual" quat="1 0 0 0" mass="0" material="3D_Print_Black" mesh="link_arm_l2_1"/>
+              <geom class="collision" mass="0" mesh="link_arm_l2_0"/>
+              <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_arm_l2_1"/>
+              <body name="link_arm_l1" pos="0 0 0.013" gravcomp="1">
+                <joint name="joint_arm_l1" class="telescope"/>
+                <geom class="visual" mass="0.151382" material="Carbon_Fiber" mesh="link_arm_l1_0"/>
+                <geom class="visual" quat="1 0 0 0" mass="0" material="3D_Print_Black" mesh="link_arm_l1_1"/>
+                <geom class="collision" mass="0" mesh="link_arm_l1_0"/>
+                <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_arm_l1_1"/>
+                <body name="link_arm_l0" pos="0 0 -0.01375" gravcomp="1">
+                  <joint name="joint_arm_l0" class="telescope"/>
+                  <geom class="visual" quat="1 0 0 0" mass="0" material="3D_Print_Black" mesh="link_arm_l0_0"/>
+                  <geom class="visual" mass="0.28501" material="Carbon_Fiber" mesh="link_arm_l0_1"/>
+                  <geom class="visual" pos="-4.71845e-16 3.03577e-17 -1.10589e-17" quat="1 0 0 0" mass="0" material="Generic_Black" mesh="link_arm_l0_2"/>
+                  <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_arm_l0_0"/>
+                  <geom class="collision" mass="0" mesh="link_arm_l0_1"/>
+                  <geom class="collision" pos="-4.71845e-16 3.03577e-17 -1.10589e-17" quat="1 0 0 0" mass="0" mesh="link_arm_l0_2"/>
+                  <body name="link_aruco_top_wrist" pos="0.04725 0.029285 0" quat="0 0 0.707107 0.707107">
+                    <geom class="visual" quat="1 0 0 0" mass="3.6e-06" material="Aruco_Top_Wrist_Sticker" mesh="link_aruco_top_wrist"/>
+                    <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_aruco_top_wrist"/>
+                  </body>
+                  <body name="link_aruco_inner_wrist" pos="0.04725 -0.0119 -0.02725" quat="0 0 1 0">
+                    <geom class="visual" quat="1 0 0 0" mass="3.6e-06" material="Aruco_Inner_Wrist_Sticker" mesh="link_aruco_inner_wrist"/>
+                    <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_aruco_inner_wrist"/>
+                  </body>
+                  <body name="link_wrist_yaw" pos="0.083 -0.03075 0" quat="-0.707107 -0.707107 0 0" gravcomp="1">
+                    <joint name="joint_wrist_yaw" class="wrist_yaw"/>
+                    <geom class="visual" quat="1 0 0 0" mass="0.1445" material="Generic_Black" mesh="link_wrist_yaw"/>
+                    <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_wrist_yaw"/>
+                    <geom class="visual" pos="3.60822e-16 1.2837e-16 -2.08167e-16" quat="0 0.707107 0.707107 0" mass="0" material="Generic_Black" mesh="link_DW3_wrist_yaw_bottom"/>
+                    <geom class="collision" pos="1.249e-16 3.53884e-16 2.01228e-16" quat="1 0 0 0" mass="0" mesh="link_DW3_wrist_yaw_bottom"/>
+                    <body name="link_DW3_wrist_pitch" pos="-0.01946 0 0.0305" quat="0.500398 -0.499602 0.5 -0.5" gravcomp="1">
+                      <joint name="joint_wrist_pitch" class="wrist_pitch" axis="0 0 -1"/>
+                      <geom class="visual" quat="1 0 0 0" mass="0.1165" material="Generic_Black" mesh="link_DW3_wrist_pitch"/>
+                      <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_DW3_wrist_pitch"/>
+                      <geom class="visual" pos="-0.0265 -0.024 0.0196" quat="0.707107 0 0 0.707107" mass="0" material="Generic_Black" mesh="link_DW3_wrist_quick_connect"/>
+                      <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_DW3_wrist_quick_connect"/>
+                      <body name="link_SG3_gripper_body" pos="-0.0399 -0.024 0.0196" quat="0.707107 0 -0.707107 0" gravcomp="1">
+                        <joint name="joint_wrist_roll" class="wrist_roll"/>
+                        <geom class="visual" quat="1 0 0 0" mass="0.29" material="Generic_Black" mesh="link_SG3_gripper_body"/>
+                        <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_SG3_gripper_body"/>
+                        <body name="link_SG3_aruco_d405" pos="0 0.0671264 0.0297716" quat="0.000167007 -0.0012771 0.765787 -0.643093" gravcomp="1">
+                          <geom class="visual" quat="1 0 0 0" mass="3.6e-06" material="Aruco_gripper_cam_Sticker" mesh="link_SG3_aruco_d405"/>
+                          <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_SG3_aruco_d405"/>
+                          <body name="link_d405" pos="0 -0.03068 0" quat="0.707388 0.706825 0 0">
+                            <geom class="visual" quat="1 0 0 0" mass="0.29" material="Reflective_Metal" mesh="link_d405"/>
+                            <geom class="visual" quat="1 0 0 0" mass="3.6e-06" material="Gray_Lens" mesh="link_d405_lens"/>
+                            <geom class="visual" quat="1 0 0 0" mass="3.6e-06" material="Pantone_Black_6_U" mesh="link_d405_front_plate"/>
+                            <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_d405"/>
+                            <body name="d405_cam" quat="0.000796327 0 0 1">
+                              <camera name="d405_rgb" quat="6.34136e-07 -0.000796326 -0.999999 -0.000796326" fovy="58"/>
+                              <camera name="d405_depth" quat="6.34136e-07 -0.000796326 -0.999999 -0.000796326"/>
+                            </body>
+                          </body>
+                        </body>
+                        <body name="link_grasp_center" pos="0 0 0.23" quat="0.5 -0.5 -0.5 0.5"/>
+                        <body name="link_gripper_slider" gravcomp="1">
+                          <joint name="joint_gripper_slide" class="finger_slide"/>
+                          <geom class="visual" size="0.03 0.005 0.005" type="box" rgba="0 0 0 0" mass="0.05"/>
+                          <body name="link_gripper_finger_left" pos="0.02292 0.0020217 0.035297" quat="-2.59838e-06 -0.706825 2.59631e-06 0.707388" gravcomp="1">
+                            <joint name="joint_gripper_finger_left_open" class="finger_open" stiffness="1"/>
+                            <geom class="visual" pos="9.99201e-16 -2.60209e-17 5.55112e-17" quat="0.707388 0.706825 0 0" mass="0.05" material="Generic_Black" mesh="link_SG3_gripper_left_finger_0"/>
+                            <geom class="collision" pos="9.99201e-16 -2.60209e-17 5.55112e-17" quat="0.707388 0.706825 0 0" mass="0" mesh="link_SG3_gripper_left_finger_0"/>
+                            <geom class="visual" pos="3.60822e-16 -9.6494e-18 5.20417e-17" quat="0.707388 0.706825 0 0" mass="0" material="White_Plastic" mesh="link_SG3_gripper_left_finger_1"/>
+                            <geom class="collision" pos="3.60822e-16 -9.6494e-18 5.20417e-17" quat="0.707388 0.706825 0 0" mass="0" mesh="link_SG3_gripper_left_finger_1"/>
+                            <geom class="visual" pos="-0.17777 0.0018452 -0.011272" quat="-3.63727e-06 0.990216 -5.1257e-07 0.139543" mass="0.05" material="Reflective_Metal" mesh="link_SG3_gripper_inner_finger"/>
+                            <body name="rubber_tip_left" pos="-0.17777 0.0018452 -0.011272" quat="0.991431 0.000677364 -0.130525 -0.00514508">
+                              <joint name="rubber_left_x" stiffness="1" damping="0.01" axis="1 0 0"/>
+                              <joint name="rubber_left_y" stiffness="1" damping="0.01" axis="0 1 0"/>
+                              <geom class="visual" quat="1 0 0 0" mass="0.005" material="suction_rubber" mesh="link_SG3_gripper_left_fingertip"/>
+                              <geom class="rubber" size="0.02 0.02 0.01" pos="0 0 0.01" type="box" mass="0"/>
+                            </body>
+                            <body name="link_SG3_gripper_left_finger_aruco" pos="-0.14425 0.0014877 -0.005189" quat="-0.0396689 0.460058 -0.0826284 0.883145">
+                              <geom class="visual" quat="1 0 0 0" mass="3.6e-06" material="Aruco_left_finger_Sticker" mesh="link_SG3_gripper_left_finger_aruco"/>
+                              <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_SG3_gripper_left_finger_aruco"/>
+                            </body>
+                          </body>
+                          <body name="link_gripper_finger_right" pos="-0.023281 0 0.035287" quat="-0.706825 5.1947e-06 0.707388 -5.1947e-06" gravcomp="1">
+                            <joint name="joint_gripper_finger_right_open" class="finger_open" stiffness="1"/>
+                            <geom class="visual" pos="-9.99201e-16 1.19262e-18 -6.59195e-17" quat="0.707388 0.706825 0 0" mass="0.05" material="Generic_Black" mesh="link_SG3_gripper_right_finger_0"/>
+                            <geom class="collision" pos="-9.99201e-16 1.19262e-18 -6.59195e-17" quat="0.707388 0.706825 0 0" mass="0" mesh="link_SG3_gripper_right_finger_0"/>
+                            <geom class="visual" pos="-4.44089e-16 -5.97666e-18 -5.20417e-17" quat="0.707388 0.706825 0 0" mass="0.05" material="White_Plastic" mesh="link_SG3_gripper_right_finger_1"/>
+                            <geom class="collision" pos="-4.44089e-16 -5.97666e-18 -5.20417e-17" quat="0.707388 0.706825 0 0" mass="0" mesh="link_SG3_gripper_right_finger_1"/>
+                            <geom class="visual" pos="0.17778 0 0.011272" quat="-5.12557e-07 0.139539 3.63727e-06 -0.990217" mass="0.05" material="Reflective_Metal" mesh="link_SG3_gripper_inner_finger"/>
+                            <body name="rubber_tip_right" pos="0.17778 0 0.011272" quat="-0.130526 4.12123e-06 -0.991445 4.12123e-06" gravcomp="1">
+                              <joint name="rubber_right_x" stiffness="1" damping="0.01" axis="1 0 0"/>
+                              <joint name="rubber_right_y" stiffness="1" damping="0.01" axis="0 1 0"/>
+                              <geom class="visual" quat="1 0 0 0" mass="0.005" material="suction_rubber" mesh="link_SG3_gripper_right_fingertip"/>
+                              <geom class="rubber" size="0.02 0.02 0.01" pos="0 0 0.01" type="box" mass="0"/>
+                            </body>
+                            <body name="link_SG3_gripper_right_finger_aruco" pos="0.14426 0 0.005189" quat="-0.459623 -0.0442548 0.882927 0.0850174">
+                              <geom class="visual" quat="1 0 0 0" mass="3.6e-06" material="Aruco_right_finger_Sticker" mesh="link_SG3_gripper_right_finger_aruco"/>
+                              <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_SG3_gripper_right_finger_aruco"/>
+                            </body>
+                          </body>
+                        </body>
+                      </body>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+        <body name="link_aruco_shoulder" pos="-0.0133769 0.0558541 0.0865">
+          <geom class="visual" quat="1 0 0 0" mass="3.6e-06" material="Aruco_Shoulder_Sticker" mesh="link_aruco_shoulder"/>
+          <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_aruco_shoulder"/>
+        </body>
+      </body>
+      <body name="link_head_pan" pos="0.00610002 0 1.3552" quat="-1 0 0 0">
+        <joint name="joint_head_pan" class="head_pan"/>
+        <geom class="visual" quat="1 0 0 0" mass="0" material="3D_Print_Black" mesh="link_head_pan_0"/>
+        <geom class="visual" quat="1 0 0 0" mass="0.127376" material="Generic_Black" mesh="link_head_pan_1"/>
+        <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_head_pan_0"/>
+        <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_head_pan_1"/>
+        <body name="link_head_tilt" pos="-0.0013 0.0277625 -0.0533108" quat="0.707107 0.707107 0 0">
+          <joint name="joint_head_tilt" class="head_tilt"/>
+          <geom class="visual" quat="1 0 0 0" mass="0.131108" material="Pantone_Cool_Gray_4_U" mesh="link_head_tilt_0"/>
+          <geom class="visual" quat="1 0 0 0" mass="0.131108" material="3D_Print_Black" mesh="link_head_tilt_1"/>
+          <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_head_tilt_0"/>
+          <geom class="collision" quat="1 0 0 0" mass="0" mesh="link_head_tilt_1"/>
+          <body name="realsense" pos="0.0406 0.0053 0.0307">
+            <camera name="d435i_camera_rgb" quat="0.5 -0.5 -0.5 0.5" pos="0 0.015 0" fovy="58"/>
+            <camera name="d435i_camera_depth" quat="0.5 -0.5 -0.5 0.5"/>
+          </body>
+          <body name="link_SE3_head_nav_cam" pos="0.04 -0.0412 -0.0246" quat="0.707107 0 0.707107 0">
+            <joint name="joint_head_nav_cam" class="head_tilt" stiffness="10"/>
+            <geom class="visual" quat="1 0 0 0" mass="0.0283462" material="Generic_Black" mesh="link_SE3_head_nav_cam"/>
+            <body name="head_nav_cam">
+              <camera name="nav_camera_rgb" quat="0 -2.67949e-08 1 2.67949e-08" fovy="74"/>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="kitchen_counter" pos="-2.5 2.7 0">
+      <geom name="counter_top" size="1.1 0.3 0.45" pos="0 0 0.45" type="box" rgba="0.95 0.95 0.95 1"/>
+    </body>
+    <body name="side_table" pos="2.35 2.45 0">
+      <geom name="side_table_top" size="0.2 0.2 0.3" pos="0 0 0.3" type="box" rgba="0.55 0.38 0.24 1"/>
+    </body>
+    <body name="armchair" pos="3 2.45 0">
+      <geom name="armchair_seat" size="0.38 0.35 0.225" pos="0 0 0.225" type="box" rgba="0.35 0.45 0.6 1"/>
+      <geom name="armchair_back" size="0.38 0.08 0.4" pos="0 0.3 0.6" type="box" rgba="0.35 0.45 0.6 1"/>
+    </body>
+    <body name="bed" pos="3.45 -1.95 0">
+      <geom name="bed_base" size="0.5 0.95 0.25" pos="0 0 0.25" type="box" rgba="0.9 0.9 1 1"/>
+    </body>
+    <body name="chair_hall" pos="-3.6 -0.5 0">
+      <joint name="chair_hall_free" type="free"/>
+      <geom name="chair_seat" size="0.22 0.22 0.03" pos="0 0 0.45" type="box" rgba="0.55 0.38 0.24 1" mass="3"/>
+      <geom name="chair_back" size="0.22 0.02 0.25" pos="0 0.2 0.7" type="box" rgba="0.55 0.38 0.24 1" mass="1"/>
+      <geom name="chair_leg0" size="0.02 0.02 0.21" pos="-0.19 -0.19 0.21" type="box" rgba="0.55 0.38 0.24 1" mass="0.3"/>
+      <geom name="chair_leg1" size="0.02 0.02 0.21" pos="-0.19 0.19 0.21" type="box" rgba="0.55 0.38 0.24 1" mass="0.3"/>
+      <geom name="chair_leg2" size="0.02 0.02 0.21" pos="0.19 -0.19 0.21" type="box" rgba="0.55 0.38 0.24 1" mass="0.3"/>
+      <geom name="chair_leg3" size="0.02 0.02 0.21" pos="0.19 0.19 0.21" type="box" rgba="0.55 0.38 0.24 1" mass="0.3"/>
+    </body>
+    <body name="glass" pos="-2.6 2.6 0.96">
+      <joint name="glass_free" type="free"/>
+      <geom name="glass_geom" size="0.035 0.06" type="cylinder" friction="1.5 0.05 0.01" rgba="0.6 0.85 1 0.7" mass="0.25"/>
+      <geom name="straw" size="0.004 0.0715891" pos="0 -0.015 0.07" quat="0.105351 -0.994435 0 0" type="capsule" contype="0" conaffinity="0" rgba="1 0.3 0.3 1" mass="0.001"/>
+      <site name="straw_tip" size="0.006" pos="0 -0.03 0.14"/>
+    </body>
+    <body name="organiser" pos="-1.9 2.6 0.92">
+      <joint name="organiser_free" type="free"/>
+      <geom name="organiser_geom" size="0.14 0.06 0.02" type="box" rgba="0.9 0.9 0.3 1" mass="0.3"/>
+    </body>
+    <body name="person" pos="3 2.35 0.5" mocap="true">
+      <geom name="torso" size="0.14 0.2" pos="0 0 0.25" quat="0 1 0 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
+      <geom name="thigh-1" size="0.07 0.21" pos="0.21 -0.1 0.02" quat="0.707107 0 -0.707107 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
+      <geom name="shin-1" size="0.05 0.210535" pos="0.435 -0.1 -0.21" quat="0.999364 0 -0.0356462 0" type="capsule" rgba="0.87 0.72 0.6 1"/>
+      <geom name="uarm-1" size="0.045 0.137659" pos="0.025 -0.21 0.285" quat="0.995159 -0.0364983 -0.0912458 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
+      <geom name="thigh1" size="0.07 0.21" pos="0.21 0.1 0.02" quat="0.707107 0 -0.707107 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
+      <geom name="shin1" size="0.05 0.210535" pos="0.435 0.1 -0.21" quat="0.999364 0 -0.0356462 0" type="capsule" rgba="0.87 0.72 0.6 1"/>
+      <geom name="uarm1" size="0.045 0.137659" pos="0.025 0.21 0.285" quat="0.995159 0.0364983 -0.0912458 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
+      <body name="person_head" pos="0 0 0.6">
+        <joint name="head_yaw" range="-1.2 1.2" damping="2"/>
+        <geom name="head" size="0.1" rgba="0.87 0.72 0.6 1" mass="4"/>
+        <geom name="face_plate" size="0.012 0.07 0.08" pos="0.085 0 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.8 0.7 1" mass="0.01"/>
+        <site name="mouth" size="0.01" pos="0.1 0 -0.045" rgba="0.8 0.2 0.2 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <contact>
+    <exclude body1="link_head" body2="link_head_pan"/>
+    <exclude body1="base_link" body2="link_left_wheel"/>
+    <exclude body1="base_link" body2="link_right_wheel"/>
+    <exclude body1="link_mast" body2="link_lift"/>
+    <exclude body1="link_head" body2="link_lift"/>
+    <exclude body1="link_arm_l4" body2="link_arm_l0"/>
+    <exclude body1="link_arm_l1" body2="link_arm_l0"/>
+    <exclude body1="link_arm_l4" body2="link_arm_l1"/>
+    <exclude body1="link_arm_l4" body2="link_arm_l2"/>
+    <exclude body1="link_arm_l4" body2="link_arm_l3"/>
+    <exclude body1="link_arm_l2" body2="link_arm_l0"/>
+    <exclude body1="link_arm_l3" body2="link_arm_l0"/>
+    <exclude body1="link_lift" body2="link_arm_l0"/>
+    <exclude body1="link_arm_l3" body2="link_arm_l1"/>
+    <exclude body1="link_lift" body2="link_arm_l1"/>
+    <exclude body1="link_lift" body2="link_arm_l2"/>
+    <exclude body1="link_arm_l0" body2="link_wrist_yaw"/>
+    <exclude body1="link_arm_l1" body2="link_wrist_yaw"/>
+    <exclude body1="link_arm_l2" body2="link_wrist_yaw"/>
+    <exclude body1="link_arm_l3" body2="link_wrist_yaw"/>
+    <exclude body1="link_arm_l4" body2="link_wrist_yaw"/>
+    <exclude body1="link_DW3_wrist_pitch" body2="link_gripper_finger_left"/>
+    <exclude body1="link_DW3_wrist_pitch" body2="link_gripper_finger_right"/>
+    <exclude body1="link_wrist_yaw" body2="link_gripper_finger_left"/>
+    <exclude body1="link_wrist_yaw" body2="link_gripper_finger_right"/>
+    <exclude body1="link_SG3_gripper_body" body2="link_gripper_finger_left"/>
+    <exclude body1="link_SG3_gripper_body" body2="link_gripper_finger_right"/>
+    <exclude body1="rubber_tip_left" body2="rubber_tip_right"/>
+  </contact>
+
+  <tendon>
+    <fixed name="extend" springlength="0">
+      <joint joint="joint_arm_l0" coef="1"/>
+      <joint joint="joint_arm_l1" coef="1"/>
+      <joint joint="joint_arm_l2" coef="1"/>
+      <joint joint="joint_arm_l3" coef="1"/>
+    </fixed>
+  </tendon>
+
+  <equality>
+    <joint joint1="joint_arm_l0" joint2="joint_arm_l1"/>
+    <joint joint1="joint_arm_l1" joint2="joint_arm_l2"/>
+    <joint joint1="joint_arm_l2" joint2="joint_arm_l3"/>
+    <joint joint1="joint_gripper_finger_left_open" joint2="joint_gripper_slide" polycoef="0 10 0 0 0" solref="0.005"/>
+    <joint joint1="joint_gripper_finger_right_open" joint2="joint_gripper_slide" polycoef="0 10 0 0 0" solref="0.005"/>
+    <weld name="grasp_weld_glass" body1="link_grasp_center" body2="glass" anchor="0 1 0" active="false"/>
+    <weld name="grasp_weld_organiser" body1="link_grasp_center" body2="organiser" anchor="0 1 0" active="false"/>
+  </equality>
+
+  <actuator>
+    <general name="left_wheel_vel" class="wheel" joint="joint_left_wheel"/>
+    <general name="right_wheel_vel" class="wheel" joint="joint_right_wheel"/>
+    <general name="lift" class="lift" joint="joint_lift" input="pos" biasprm="0 -400"/>
+    <general name="arm" class="telescope" tendon="extend" input="pos" biasprm="0 -150"/>
+    <general name="wrist_yaw" class="wrist_yaw" joint="joint_wrist_yaw"/>
+    <general name="wrist_pitch" class="wrist_pitch" joint="joint_wrist_pitch"/>
+    <general name="wrist_roll" class="wrist_roll" joint="joint_wrist_roll"/>
+    <general name="gripper" class="finger_slide" joint="joint_gripper_slide"/>
+    <general name="head_pan" class="head_pan" joint="joint_head_pan"/>
+    <general name="head_tilt" class="head_tilt" joint="joint_head_tilt"/>
+    <general name="head_yaw_act" joint="head_yaw" ctrlrange="-1.2 1.2" input="pos" biastype="affine" gainprm="20" biasprm="0 -20"/>
+  </actuator>
+
+  <sensor>
+    <gyro site="base_imu" name="base_gyro"/>
+    <accelerometer site="base_imu" name="base_accel"/>
+  </sensor>
+
+  <keyframe>
+    <key name="home" ctrl="0 0 0.6 0.1 0 0 0 0 0 0 0"/>
+    <key name="stow" ctrl="0 0 0.23 0 3.14 -0.4 0 0 0 0 0"/>
+  </keyframe>
+</mujoco>
