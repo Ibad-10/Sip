@@ -42,6 +42,11 @@ class StretchIO:
         self._set("wrist_yaw", wrist_yaw)
         self._set("gripper", gripper)
 
+    def stow(self, lift: float | None = None) -> None:
+        """Tuck the gripper over the base (wrist yaw pi) for driving through doorways."""
+        cur = self.d.ctrl[self.act["lift"]]
+        self.set_arm(lift=max(0.3, cur if lift is None else lift), arm=0.0, wrist_yaw=np.pi)
+
     def arm_targets(self) -> dict[str, float]:
         return {k: float(self.d.ctrl[self.act[k]]) for k in ("lift", "arm", "wrist_yaw", "gripper")}
 

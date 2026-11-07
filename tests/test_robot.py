@@ -86,3 +86,12 @@ def test_load_profile_default_dev(monkeypatch):
     monkeypatch.delenv("SIP_PROFILE", raising=False)
     p = load_profile()
     assert p.name == "dev" and p.detector == "seg" and p.cloud in (True, False)
+
+
+def test_stow_tucks_gripper(sim):
+    model, data, io = sim
+    io.stow()
+    run(model, data, 3.0)
+    p = io.base_pose()
+    g = io.grasp_center()
+    assert np.hypot(g[0] - p.x, g[1] - p.y) < 0.25
