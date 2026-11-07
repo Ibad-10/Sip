@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.superpowers/
+third_party/
+runs/
+*.rrd
+.env

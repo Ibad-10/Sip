@@ -1,0 +1,23 @@
+[project]
+name = "sip"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Ibad Ullah Zuberi", email = "99681549+Ibad-10@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "mediapipe>=1.2.2",
+    "mujoco>=4.0.0",
+    "numpy>=2.5.4",
+    "opencv-python>=5.0.0.93",
+    "pytest>=9.2.0",
+    "rerun-sdk>=0.42.0",
+]
+
+[project.scripts]
+sip = "sip:main"
+
+[build-system]
+requires = ["uv_build>=0.13.1,<0.14.0"]
+build-backend = "uv_build"
