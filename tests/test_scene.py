@@ -47,7 +47,7 @@ def _park_and_reach(model, where):
     data.qpos[0:3] = [x, y, 0.0]
     data.qpos[3:7] = [np.cos(yaw / 2), 0, 0, np.sin(yaw / 2)]
     data.ctrl[lift], data.ctrl[arm] = 0.6, 0.1
-    for _ in range(6):
+    for _ in range(10):
         for _ in range(500):
             mujoco.mj_step(model, data)
         err = mouth - data.xpos[gc]
