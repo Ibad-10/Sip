@@ -1,0 +1,91 @@
+"""Thin control interface over the Stretch 3 model."""
+import mujoco
+import numpy as np
+
+from sip.types import Pose2D
+
+WHEEL_R = 0.05
+WHEEL_SEP = 0.34
+WHEEL_SIGN = 1.0  # set from the model: +1 if positive wheel velocity drives forward
+
+
+class StretchIO:
+    def __init__(self, model: mujoco.MjModel, data: mujoco.MjData):
+        self.m, self.d = model, data
+        self.act = {model.actuator(i).name: i for i in range(model.nu)}
+        self.base = model.body("base_link").id
+        self.gc = model.body("link_grasp_center").id
+        self._held: str | None = None
+
+    def base_pose(self) -> Pose2D:
+        q = self.d.qpos
+        w, z = q[3], q[6]
+        return Pose2D(float(q[0]), float(q[1]), float(2 * np.arctan2(z, w)))
+
+    def drive(self, v: float, w: float) -> None:
+        left = (v - w * WHEEL_SEP / 2) / WHEEL_R
+        right = (v + w * WHEEL_SEP / 2) / WHEEL_R
+        for name, omega in (("left_wheel_vel", left), ("right_wheel_vel", right)):
+            a = self.act[name]
+            lo, hi = self.m.actuator_ctrlrange[a]
+            self.d.ctrl[a] = np.clip(WHEEL_SIGN * omega * self.m.actuator_gear[a, 0], lo, hi)
+
+    def _set(self, name: str, value: float | None) -> None:
+        if value is None:
+            return
+        lo, hi = self.m.actuator_ctrlrange[self.act[name]]
+        self.d.ctrl[self.act[name]] = float(np.clip(value, lo, hi))
+
+    def set_arm(self, lift=None, arm=None, wrist_yaw=None, gripper=None) -> None:
+        self._set("lift", lift)
+        self._set("arm", arm)
+        self._set("wrist_yaw", wrist_yaw)
+        self._set("gripper", gripper)
+
+    def arm_targets(self) -> dict[str, float]:
+        return {k: float(self.d.ctrl[self.act[k]]) for k in ("lift", "arm", "wrist_yaw", "gripper")}
+
+    def grasp_center(self) -> np.ndarray:
+        return self.d.xpos[self.gc].copy()
+
+    def arm_dir(self) -> np.ndarray:
+        """World direction the arm extends (base -y)."""
+        return -self.d.xmat[self.base].reshape(3, 3)[:, 1].copy()
+
+    def attach(self, body: str) -> None:
+        eq = self.m.equality(f"grasp_weld_{body}").id
+        # weld at the current relative pose. MuJoCo weld relpose = pose of body1 (grasp centre)
+        # expressed in body2 (object) frame.
+        bpos, bquat = self.d.body(body).xpos, self.d.body(body).xquat
+        opos, oquat = self.d.xpos[self.gc], self.d.xquat[self.gc]
+        inv = np.zeros(4)
+        mujoco.mju_negQuat(inv, bquat)
+        rel_pos = np.zeros(3)
+        mujoco.mju_rotVecQuat(rel_pos, opos - bpos, inv)
+        rel_quat = np.zeros(4)
+        mujoco.mju_mulQuat(rel_quat, inv, oquat)
+        # eq_data layout for weld: anchor(3), relpos(3), relquat(4), torquescale(1)
+        self.m.eq_data[eq, 3:6] = rel_pos
+        self.m.eq_data[eq, 6:10] = rel_quat
+        self.d.eq_active[eq] = 1
+        self._held = body
+
+    def release(self) -> None:
+        if self._held:
+            self.d.eq_active[self.m.equality(f"grasp_weld_{self._held}").id] = 0
+        self._held = None
+
+    @property
+    def held(self) -> str | None:
+        return self._held
+
+    def freeze(self) -> None:
+        self.drive(0.0, 0.0)
+        for name in ("lift", "arm", "wrist_yaw"):
+            j = {"lift": "joint_lift", "wrist_yaw": "joint_wrist_yaw"}.get(name)
+            if j:
+                self._set(name, self.d.joint(j).qpos[0])
+        self._set("arm", self.arm_extension())
+
+    def arm_extension(self) -> float:
+        return float(sum(self.d.joint(f"joint_arm_l{i}").qpos[0] for i in range(4)))

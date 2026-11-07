@@ -269,13 +269,13 @@
         <geom class="collision" quat="1 0 0 0" mass="0" mesh="laser"/>
       </body>
       <body name="link_right_wheel" pos="0 -0.17035 0.0508" quat="0.707107 -0.707107 0 0">
-        <joint name="joint_right_wheel" class="wheel"/>
+        <joint name="joint_right_wheel" class="wheel" damping="2"/>
         <geom class="visual" quat="1 0 0 0" mass="0.15" material="Wheel_Rubber_Gray" mesh="link_right_wheel_0"/>
         <geom class="visual" quat="1 0 0 0" mass="0" material="Generic_Black" mesh="link_right_wheel_1"/>
         <geom class="collision" size="0.05 0.0125" pos="0 0 0.0125" type="cylinder" mass="0"/>
       </body>
       <body name="link_left_wheel" pos="0 0.17035 0.0508" quat="0.707107 -0.707107 0 0">
-        <joint name="joint_left_wheel" class="wheel"/>
+        <joint name="joint_left_wheel" class="wheel" damping="2"/>
         <geom class="visual" quat="1 0 0 0" mass="0.15" material="Wheel_Rubber_Gray" mesh="link_left_wheel_0"/>
         <geom class="visual" quat="1 0 0 0" mass="0" material="Generic_Black" mesh="link_left_wheel_1"/>
         <geom class="collision" size="0.05 0.0125" pos="0 0 -0.0125" type="cylinder" mass="0"/>
@@ -549,8 +549,8 @@
   </equality>
 
   <actuator>
-    <general name="left_wheel_vel" class="wheel" joint="joint_left_wheel"/>
-    <general name="right_wheel_vel" class="wheel" joint="joint_right_wheel"/>
+    <general name="left_wheel_vel" class="wheel" joint="joint_left_wheel" ctrlrange="-20 20" gainprm="30" biasprm="0 0 -30"/>
+    <general name="right_wheel_vel" class="wheel" joint="joint_right_wheel" ctrlrange="-20 20" gainprm="30" biasprm="0 0 -30"/>
     <general name="lift" class="lift" joint="joint_lift" input="pos" biasprm="0 -400"/>
     <general name="arm" class="telescope" tendon="extend" input="pos" biasprm="0 -150"/>
     <general name="wrist_yaw" class="wrist_yaw" joint="joint_wrist_yaw"/>

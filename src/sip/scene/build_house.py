@@ -126,6 +126,15 @@ def _person(spec, world):
 def build_spec() -> mujoco.MjSpec:
     spec = mujoco.MjSpec.from_file(str(STRETCH))
     spec.modelname = "sip_house"
+    # Menagerie wheel damping (30) with a 100 N.m force limit caps the base near 0.1 m/s;
+    # real Stretch drives ~0.3 m/s, so soften it.
+    for j in spec.joints:
+        if j.name in ("joint_left_wheel", "joint_right_wheel"):
+            j.damping = [2.0, 0.0, 0.0]
+    for a in spec.actuators:
+        if a.name in ("left_wheel_vel", "right_wheel_vel"):
+            a.ctrlrange = [-20.0, 20.0]  # gear 3: 20 -> 6.7 rad/s -> 0.33 m/s
+            a.gainprm[0], a.biasprm[2] = 30.0, -30.0  # kv 100 rings and skids in turns
     world = spec.worldbody
     world.add_geom(name="floor", type=PLANE, size=[5, 4, 0.1], rgba=[0.75, 0.7, 0.62, 1])
     world.add_light(name="sun", pos=[0, 0, 5], dir=[0, 0, -1], diffuse=[0.8, 0.8, 0.8])
