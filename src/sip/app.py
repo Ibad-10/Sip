@@ -12,6 +12,7 @@ import threading
 import time
 
 import mujoco
+import mujoco.viewer
 
 from sip.blackboard import Blackboard
 from sip.config import load_profile
@@ -166,7 +167,7 @@ def main(argv=None):
             while sim.t < a.seconds:
                 tick()
         else:
-            import mujoco.viewer
+
             with mujoco.viewer.launch_passive(sim.m, sim.d) as v:
                 while v.is_running() and sim.t < a.seconds:
                     t0 = time.time()
