@@ -35,7 +35,8 @@ def _park_and_reach(model, where):
     data = mujoco.MjData(model)
     facing = seat_person(model, data, where)
     mujoco.mj_forward(model, data)
-    mouth = data.site("mouth").xpos.copy()
+    # target: 5 cm in front of the lips (the gripper cannot occupy the face)
+    mouth = data.site("mouth").xpos.copy() + 0.05 * np.array([np.cos(facing), np.sin(facing), 0.0])
     gc = model.body("link_grasp_center").id
     lift, arm = _act(model, "lift"), _act(model, "arm")
     lo, hi = model.actuator_ctrlrange[lift], model.actuator_ctrlrange[arm]
@@ -43,10 +44,10 @@ def _park_and_reach(model, where):
     # Arm extends along the base's -y axis. Place the base so that axis points at the mouth.
     from sip.scene.build_house import park_pose_for
     from sip.scene.build_house import SEATS
-    x, y, yaw = park_pose_for(mouth, standoff=0.45, facing=facing, approach_deg=SEATS[where][2])
+    x, y, yaw = park_pose_for(mouth, standoff=0.30, facing=facing, approach_deg=SEATS[where][2])
     data.qpos[0:3] = [x, y, 0.0]
     data.qpos[3:7] = [np.cos(yaw / 2), 0, 0, np.sin(yaw / 2)]
-    data.ctrl[lift], data.ctrl[arm] = 0.6, 0.1
+    data.ctrl[lift], data.ctrl[arm] = np.clip(mouth[2] - 0.1, *lo), 0.0  # lift first, arm retracted
     for _ in range(10):
         for _ in range(500):
             mujoco.mj_step(model, data)
@@ -60,8 +61,13 @@ def _park_and_reach(model, where):
         yaw += np.arctan2(g[0] * mth[1] - g[1] * mth[0], g @ mth)
         data.qpos[3:7] = [np.cos(yaw / 2), 0, 0, np.sin(yaw / 2)]
         data.qvel[:6] = 0
-    for _ in range(1500):  # 3 s settle
-        mujoco.mj_step(model, data)
+    for _ in range(12):  # 3 s hold, closed loop on lift/arm only (as the real approach does)
+        for _ in range(125):
+            mujoco.mj_step(model, data)
+        err = mouth - data.xpos[gc]
+        arm_dir = -data.xmat[model.body("base_link").id].reshape(3, 3)[:, 1]
+        data.ctrl[lift] = np.clip(data.ctrl[lift] + 0.5 * err[2], *lo)
+        data.ctrl[arm] = np.clip(data.ctrl[arm] + 0.5 * np.dot(err, arm_dir), *hi)
     return np.linalg.norm(mouth - data.xpos[gc]), data, lift, arm, lo, hi
 
 
