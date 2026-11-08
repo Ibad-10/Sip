@@ -50,6 +50,12 @@ def box_depth(depth: np.ndarray, box) -> float:
     return float(np.median(near))
 
 
+def _iou(a, b) -> float:
+    x1, y1, x2, y2 = max(a[0], b[0]), max(a[1], b[1]), min(a[2], b[2]), min(a[3], b[3])
+    inter = max(0, x2 - x1) * max(0, y2 - y1)
+    return inter / ((a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter + 1e-9)
+
+
 def unrotate_box(box, w: int) -> tuple[int, int, int, int]:
     """Box in the upright (np.rot90 k=1) image -> box in the raw camera image of width w."""
     x1, y1, x2, y2 = box
@@ -104,11 +110,17 @@ class YoloDetector:
             up = np.ascontiguousarray(np.rot90(rgb, 1)[:, :, ::-1])
             res = self.model.predict(up, conf=0.05, verbose=False, imgsz=640)[0]
             best: dict[str, tuple] = {}
+            cand = []
             for box, cls, conf in zip(res.boxes.xyxy.cpu().numpy(), res.boxes.cls.cpu().numpy(),
                                       res.boxes.conf.cpu().numpy()):
                 label, thr = self.by_prompt[self.prompts[int(cls)]]
-                if conf < thr:
-                    continue
+                if conf >= thr:
+                    cand.append((float(conf / thr), box, label, float(conf)))
+            kept = []   # one object gets one label: the most confident (relative to its threshold)
+            for score, box, label, conf in sorted(cand, key=lambda c: -c[0]):
+                if all(_iou(box, k[1]) < 0.5 for k in kept):
+                    kept.append((score, box, label, conf))
+            for _, box, label, conf in kept:
                 if label not in best or conf > best[label][1]:
                     best[label] = (unrotate_box(box, w), float(conf))
             dets, boxes = [], {}

@@ -95,3 +95,49 @@ def video(scenario: str = "chaos", seconds: float = 240):
     out.parent.mkdir(exist_ok=True)
     out.write_bytes(data)
     print("saved", out, len(data) // 1_000_000, "MB")
+
+
+# ---------- learned straw-reach policy (PPO, many parallel simulations) ----------
+train_image = image.pip_install("gymnasium", "stable-baselines3")
+
+
+@app.function(image=train_image, cpu=32, memory=16384, timeout=3600)
+def train_policy(steps: int = 3_000_000) -> tuple[bytes, dict]:
+    import sys
+    sys.path.insert(0, "/root/sip/src")
+    import numpy as np
+    from stable_baselines3 import PPO
+    from stable_baselines3.common.vec_env import SubprocVecEnv
+    from sip.learn.reach_env import NEAR, StrawReachEnv
+
+    envs = SubprocVecEnv([lambda i=i: StrawReachEnv(seed=i) for i in range(32)])
+    model = PPO("MlpPolicy", envs, n_steps=256, batch_size=4096, learning_rate=3e-4, gamma=0.98,
+                ent_coef=0.002, policy_kwargs={"net_arch": [128, 128]}, verbose=1, seed=0)
+    model.learn(total_timesteps=steps)
+    # evaluate on fresh targets: success rate and closing speed near the face
+    env, ok, fast, n = StrawReachEnv(seed=999), 0, [], 200
+    for _ in range(n):
+        o, _ = env.reset()
+        for _ in range(300):
+            a, _ = model.predict(o, deterministic=True)
+            o, r, done, trunc, info = env.step(a)
+            if info["dist"] < NEAR:
+                fast.append(env.speed)
+            if done or trunc:
+                break
+        ok += int(done)
+    model.save("/tmp/straw_reach")
+    stats = {"success_rate": ok / n, "max_close_speed_near_face": float(np.max(fast)) if fast else 0.0,
+             "p95_close_speed_near_face": float(np.percentile(fast, 95)) if fast else 0.0, "steps": steps}
+    return Path("/tmp/straw_reach.zip").read_bytes(), stats
+
+
+@app.local_entrypoint()
+def train(steps: int = 3_000_000):
+    import json
+    data, stats = train_policy.remote(steps)
+    out = ROOT / "assets" / "policy"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "straw_reach.zip").write_bytes(data)
+    (out / "straw_reach_stats.json").write_text(json.dumps(stats, indent=1))
+    print("saved", out / "straw_reach.zip", stats)

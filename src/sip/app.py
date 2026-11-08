@@ -76,9 +76,16 @@ class Sim:
         seat_person(self.m, self.d, "armchair")
         mujoco.mj_forward(self.m, self.d)
         self.io = StretchIO(self.m, self.d)
-        self.task = WaterTask(self.io, self.bb, grid_from_model(self.m), ObjectMemory(),
-                              SegDetector(["glass", "organiser", "jug", "straw2"], noise_m=0.005),
-                              FaceTracker("sim"), prepare=os.environ.get("SIP_PREPARE", "1") == "1")
+        if os.environ.get("SIP_DETECTOR", "yolo") == "yolo":   # real models on camera images
+            from sip.perception.vision import MediaPipeFace, YoloDetector
+            if not hasattr(Sim, "_models"):
+                Sim._models = (YoloDetector(), MediaPipeFace())
+            det, face = Sim._models
+        else:                                                  # simulator oracle (fast tests only)
+            det = SegDetector(["glass", "organiser", "jug", "straw2"], noise_m=0.005)
+            face = FaceTracker("sim")
+        self.task = WaterTask(self.io, self.bb, grid_from_model(self.m), ObjectMemory(), det, face,
+                              prepare=os.environ.get("SIP_PREPARE", "1") == "1")
         from sip.person import Person
         self.person = Person(self.m, self.d, self.bb)
         self.t = 0.0

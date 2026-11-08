@@ -57,7 +57,17 @@ class StretchIO:
         """World direction the arm extends (base -y)."""
         return -self.d.xmat[self.base].reshape(3, 3)[:, 1].copy()
 
-    def attach(self, body: str) -> None:
+    def can_grasp(self, body: str, tol: float = 0.06) -> bool:
+        """Physical check: the fingers must actually reach the object's surface (like finger contact).
+        Distance is to the object's centre, so its radius is allowed for."""
+        b = self.m.body(body).id
+        radius = max((self.m.geom_size[g][0] for g in range(self.m.ngeom)
+                      if self.m.geom_bodyid[g] == b and self.m.geom_contype[g]), default=0.0)
+        return float(np.linalg.norm(self.d.body(body).xpos - self.grasp_center())) < tol + radius
+
+    def attach(self, body: str) -> bool:
+        if not self.can_grasp(body):
+            return False
         eq = self.m.equality(f"grasp_weld_{body}").id
         # weld at the current relative pose: relpose = object (body2) pose in the grasp (body1)
         # frame, anchor at the body origin (the spec default anchor is not zero).
@@ -83,6 +93,7 @@ class StretchIO:
             if self.m.geom_bodyid[g] == root:
                 self._saved_contype[g] = (self.m.geom_contype[g], self.m.geom_conaffinity[g])
                 self.m.geom_contype[g] = self.m.geom_conaffinity[g] = 0
+        return True
 
     # gripper command that visibly closes the fingers on each object (the weld does the holding)
     GRIP = {"glass": 0.01, "jug": 0.03, "straw2": -0.015, "organiser": 0.0}

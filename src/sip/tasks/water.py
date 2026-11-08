@@ -161,6 +161,11 @@ class WaterTask:
             if np.hypot(p.x - p0.x, p.y - p0.y) > 0.05 or abs(wrap(p.yaw - p0.yaw)) > 0.1:
                 nav["progress"] = (self.t, p)
             elif self.t - t0 > 2.0:  # stuck: back off, then re-plan from here
+                nav["stuck"] = nav.get("stuck", 0) + 1
+                if nav["stuck"] > 3:
+                    self.io.drive(0, 0)
+                    self.log("plan", "stuck 3 times on this route -> asking for help")
+                    return "blocked"
                 self.log("plan", "stuck, backing up and re-planning")
                 nav["backup_until"] = self.t + 1.0
                 nav["progress"] = (self.t + 1.0, p)
@@ -492,10 +497,14 @@ class WaterTask:
             arm = self.io.arm_targets()["arm"] + float(np.clip(err @ self.io.arm_dir(), -0.15 * dt, 0.15 * dt))
             self.io.set_arm(arm=arm, lift=self.io.arm_targets()["lift"] + 0.5 * err[2])
             self._base_bearing_fix(obj)
-            if np.linalg.norm(err) < 0.03:
+            if np.linalg.norm(err) < 0.03 or self.io.can_grasp(self.label, tol=0.02):
                 self.io.drive(0, 0)
+                if not self.io.attach(self.label):
+                    self.io.drive(0, 0)
+                    self.log("perceive", f"fingers closed on nothing: the {self.label} is not where I saw it")
+                    self.io.set_arm(arm=0.0)
+                    return self.goto("VERIFY", "grasp missed, looking again")
                 self._turn_straw_to_arm()
-                self.io.attach(self.label)
                 self.log("plan", f"grasped the {self.label}")
                 self.io.set_arm(lift=self.io.arm_targets()["lift"] + 0.08)
                 self._sub, self._timer = 2, self.t
@@ -546,7 +555,8 @@ class WaterTask:
         try:
             next(self._gen)
         except StopIteration:
-            self.goto("GRASP", "drink ready")
+            if self.state == "PREPARE":     # the sequence may have asked for help instead
+                self.goto("GRASP", "drink ready")
 
     def _g_wait(self, seconds: float):
         t0 = self.t
@@ -568,8 +578,15 @@ class WaterTask:
                 return
             yield
 
-    def _g_reach(self, xyz: np.ndarray, tol: float = 0.03, timeout: float = 12.0, wrist_yaw: float = 0.0):
+    def _g_reach(self, xyz: np.ndarray, tol: float = 0.03, timeout: float = 12.0, wrist_yaw: float = 0.0,
+                 touch: str | None = None):
         dt = TICK_STEPS * self.m.opt.timestep
+        if abs(self.io.arm_targets()["wrist_yaw"] - wrist_yaw) > 0.3:
+            # swing the wrist out above everything on the table, then come down to the object
+            self.io.set_arm(lift=max(self.io.arm_targets()["lift"], xyz[2] - LIFT_TO_GRASP_Z + 0.18), arm=0.0)
+            yield from self._g_wait(1.2)
+            self.io.set_arm(wrist_yaw=wrist_yaw)
+            yield from self._g_wait(1.2)
         self.io.set_arm(lift=xyz[2] - LIFT_TO_GRASP_Z, arm=0.0, wrist_yaw=wrist_yaw,
                         gripper=None if self.io.held else 0.04)
         t0 = self.t
@@ -578,7 +595,7 @@ class WaterTask:
         t0 = self.t
         while self.t - t0 < timeout:
             err = xyz - self.io.grasp_center()
-            if np.linalg.norm(err) < tol:
+            if np.linalg.norm(err) < tol or (touch and self.io.can_grasp(touch, tol=0.02)):  # fingers touch it
                 self.io.drive(0, 0)
                 return
             arm = self.io.arm_targets()["arm"] + float(np.clip(err @ self.io.arm_dir(), -0.15 * dt, 0.15 * dt))
@@ -595,21 +612,57 @@ class WaterTask:
         while self.io.arm_extension() > 0.03 and self.t - t0 < 4.0:
             yield
 
-    def _see(self, label: str, fallback: np.ndarray) -> np.ndarray:
-        return np.array(self.seen.get(label, fallback), float).copy()
+    def _g_find(self, label: str, what: str):
+        """Look around (head sweep, then turn on the spot) until the camera has seen `label`."""
+        if label in self.seen:
+            return
+        self.log("perceive", f"looking for the {what}")
+        spun, y0 = 0.0, self.pose().yaw
+        while label not in self.seen and spun < 2 * np.pi:
+            p = self.pose()
+            spun += abs(wrap(p.yaw - y0))
+            y0 = p.yaw
+            aim_head(self.m, self.d, self.io, np.array([p.x + 1.0 * np.cos(p.yaw), p.y + 1.0 * np.sin(p.yaw), 0.9]), snap=False)
+            self.io.drive(0, SPIN_W)
+            yield
+        self.io.drive(0, 0)
+
+    def _g_grab(self, label: str, what: str, offset=(0, 0, 0)):
+        """Reach where the camera saw it and close the fingers; on a miss, look again (twice)."""
+        for attempt in range(3):
+            target = self.seen[label] + np.array(offset)
+            yield from self._g_reach(target, touch=label)
+            if self.io.attach(label):
+                self.log("plan", f"picked up the {what}")
+                return
+            self.log("perceive", f"missed the {what}; looking again")
+            yield from self._g_retract(lift_up=0.0)
+            self.seen.pop(label, None)
+            aim_head(self.m, self.d, self.io, target, snap=False)
+            yield from self._g_wait(0.8)
+            if label not in self.seen:
+                yield from self._g_find(label, what)
+            if label not in self.seen:
+                break
+        self._grab_failed = what
 
     def _prepare_seq(self):
         glass = self.obj_xyz.copy()
-        jug_home = self._see("jug", self.d.body("jug").xpos)
-        # 1. jug
+        self._grab_failed = None
         self.say("Your glass is empty. Let me pour you some water.")
+        yield from self._g_find("jug", "jug of water")
+        if "jug" not in self.seen:
+            self._ask("I can't see the water jug. Where is it?", resume="LOCATE")
+            return
+        jug_home = self.seen["jug"].copy()
+        # 1. jug
         yield from self._g_nav_to_pick(jug_home, "fetching the jug")
         aim_head(self.m, self.d, self.io, jug_home, snap=False)
         yield from self._g_wait(0.6)
-        jug = self._see("jug", jug_home)
-        yield from self._g_reach(jug)
-        self.io.attach("jug")
-        self.log("plan", "picked up the jug")
+        yield from self._g_grab("jug", "jug")
+        if self._grab_failed:
+            self._ask("I can't pick up the jug. Could you help me?", resume="LOCATE")
+            return
         yield from self._g_retract(lift_up=0.2)
         # 2. pour: hold the jug just above the glass and tilt it
         yield from self._g_nav_to_pick(glass, "pouring into the glass")
@@ -634,14 +687,18 @@ class WaterTask:
         self.io.release()
         yield from self._g_retract(lift_up=0.04)
         # 4. straw from the holder into the glass
-        straw_home = self._see("straw2", self.d.body("straw2").xpos)
+        yield from self._g_find("straw2", "straws")
+        if "straw2" not in self.seen:
+            self._ask("I can't see the straws. Where are they?", resume="LOCATE")
+            return
+        straw_home = self.seen["straw2"].copy()
         yield from self._g_nav_to_pick(straw_home, "getting a straw")
         aim_head(self.m, self.d, self.io, straw_home, snap=False)
         yield from self._g_wait(0.6)
-        straw = self._see("straw2", straw_home)
-        yield from self._g_reach(straw + np.array([0, 0, 0.05]))
-        self.io.attach("straw2")
-        self.log("plan", "took a straw")
+        yield from self._g_grab("straw2", "straw")
+        if self._grab_failed:
+            self._ask("I can't pick up a straw. Could you help me?", resume="LOCATE")
+            return
         yield from self._g_retract(lift_up=0.15)
         yield from self._g_nav_to_pick(glass, "putting the straw in")
         yield from self._g_reach(glass + np.array([0, 0, 0.16]), tol=0.04)
@@ -722,8 +779,8 @@ class WaterTask:
     def _s_nav_to_person(self):
         if self.tick_n % 40 == 0:
             goal, yaw, _, where = self._person_park()
-            if np.linalg.norm(goal - self._person_target) > 0.3:
-                self.log("plan", f"person moved to the {where} -> new target")
+            if np.linalg.norm(goal - self._person_target) > (0.1 if self.mouth.visible else 0.3):
+                self.log("plan", f"person moved / seen better at the {where} -> new target")
                 self._person_target = goal
                 if not self._start_nav(goal, yaw, "person moved"):
                     return self._ask("I can't reach you there. Could you help?", resume="NAV_TO_PERSON")
