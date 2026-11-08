@@ -223,7 +223,9 @@ class YoloDetector:
                     crop = np.ascontiguousarray(np.rot90(rgb[max(0, v0 - pad):v1 + pad, max(0, u0 - pad):u1 + pad], 1))
                     ranked = self._clip_cache.get(key)
                     if ranked is None and crop.size:
-                        ranked = self._clip_cache[key] = self.clip(crop)   # once per object position
+                        ranked = self.clip(crop)
+                        if ranked[0][1] >= 0.8:                 # remember only confident answers; else re-check
+                            self._clip_cache[key] = ranked
                     if ranked:
                         (top, pt), (_, p2) = ranked[0], ranked[1]
                         why += f"; CLIP: {top} {pt:.2f}, next {ranked[1][0]} {p2:.2f}"

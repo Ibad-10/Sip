@@ -41,6 +41,9 @@ class Localiser:
     def update(self) -> Pose2D:
         ql, qr = float(self.d.qpos[self.jl]), float(self.d.qpos[self.jr])
         dl, dr = (ql - self.last[0]) * WHEEL_R * self.sign, (qr - self.last[1]) * WHEEL_R * self.sign
+        if not (np.isfinite(dl) and np.isfinite(dr)) or max(abs(dl), abs(dr)) > 0.2:   # glitch / wheel spin-out
+            self.last = (ql, qr)
+            return self.pose
         self.last = (ql, qr)
         ds, dth = (dl + dr) / 2, (dr - dl) / WHEEL_SEP
         dt = float(self.d.time) - self.t_last
@@ -96,7 +99,13 @@ class Localiser:
                         if sc > best[0]:
                             best = (sc, dx, dy, da)
         _, dx, dy, da = best
-        if fit(dx, dy, da) < 0.45:        # even the best pose does not explain the scan: do not trust it
+        f_best = fit(dx, dy, da)
+        if f_best < 0.45:                 # even the best pose does not explain the scan: do not trust it
+            return
+        big = np.hypot(dx, dy) > 0.08 or abs(da) > np.deg2rad(4)
+        if big and (f_best < here + 0.15 or np.hypot(dx, dy) > 0.3):
+            return                        # a big jump must fit clearly better, and never more than 30 cm at once
+        if not (np.isfinite(dx) and np.isfinite(dy) and np.isfinite(da)):
             return
         if dx or dy or da:
             self.pose = Pose2D(p.x + dx, p.y + dy, p.yaw + da)
