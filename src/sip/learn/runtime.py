@@ -12,6 +12,8 @@ from sip.learn.reach_env import MAX_DELTA
 
 POLICY_DIR = Path(__file__).resolve().parents[3] / "assets" / "policy"
 NAMES = ("lift", "arm", "wrist_yaw")
+# what each learned skill really does (the "pour" skill only learns to put the jug above the glass)
+DISPLAY = {"pour": "reach-above-glass", "grasp": "reach-to-grasp", "straw": "straw-to-lips", "offer": "offer-at-chest"}
 
 
 def best_policy(skill: str) -> Path | None:
@@ -29,6 +31,7 @@ class PolicyArm:
     def __init__(self, skill: str, path: Path | None = None):
         from stable_baselines3 import PPO
         self.skill = skill
+        self.name = DISPLAY.get(skill, skill)
         self.path = path or best_policy(skill)
         if self.path is None:
             raise FileNotFoundError(f"no trained policy for {skill}")

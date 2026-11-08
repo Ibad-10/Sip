@@ -707,9 +707,9 @@ class WaterTask:
         t0 = self.t
         pol = self._policy(skill or ("grasp" if touch else "pour"))
         best, best_t = 9.0, self.t
-        self.arm_driver = f"learned policy ({pol.skill}, {pol.path.parent.name or 'v1'})" if pol else "classic controller"
+        self.arm_driver = f"learned policy ({pol.name}, {pol.path.parent.name or 'v1'})" if pol else "classic controller"
         if pol:
-            self.log("plan", f"arm driven by the trained {pol.skill} policy ({pol.path.name}); safety layer caps speed")
+            self.log("plan", f"arm driven by the trained {pol.name} policy ({pol.path.parent.name}/{pol.path.name}); safety layer caps speed")
         while self.t - t0 < timeout:
             err = xyz - self.io.grasp_center()
             d = float(np.linalg.norm(err))
@@ -719,7 +719,7 @@ class WaterTask:
             if d < best - 0.01:
                 best, best_t = d, self.t
             if pol and self.t - best_t > 3.0:            # policy stalled: hand over to the classic controller
-                self.log("plan", f"{pol.skill} policy stalled at {d * 100:.0f} cm -> classic controller takes over")
+                self.log("plan", f"{pol.name} policy stalled at {d * 100:.0f} cm -> classic controller takes over")
                 pol, self.arm_driver = None, "classic controller (policy stalled)"
             p = self.pose()
             ad = self.io.arm_dir()

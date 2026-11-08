@@ -34,7 +34,8 @@ UNSURE_CONF, UNSURE_MARGIN = 0.30, 0.15     # below / closer than this: ask Gemi
 # labels YOLO-World confuses in our own evaluation (it calls the glass "mug" at 0.77): always get a second
 # opinion from a second local model (CLIP) on the crop, with its probabilities as the explanation
 CONFUSABLE = {"glass": "a clear drinking glass with water", "mug": "an opaque ceramic coffee mug",
-              "jug": "a tall metal water jug", "straw2": "a small cup holding drinking straws"}
+              "jug": "a tall metal water jug", "straw2": "a small cup holding drinking straws",
+              "organiser": "a weekly pill organiser box"}
 
 
 class ClipCheck:
@@ -50,13 +51,28 @@ class ClipCheck:
             self.text = self.model.encode_text(clip.tokenize(list(CONFUSABLE.values())))
             self.text /= self.text.norm(dim=-1, keepdim=True)
 
-    def __call__(self, crop_rgb: np.ndarray) -> list[tuple[str, float]]:
+        self.probe = None
+        probe_path = MODELS / "clip_probe.pt"
+        if probe_path.exists():                      # few-shot classifier trained on labelled crops
+            ck = torch.load(probe_path, map_location="cpu")
+            self.probe = torch.nn.Linear(self.text.shape[1], len(ck["classes"]))
+            self.probe.load_state_dict(ck["state"])
+            self.probe_classes = ck["classes"]
+
+    def embed(self, crop_rgb: np.ndarray) -> np.ndarray:
         from PIL import Image
         with self.torch.no_grad():
-            im = self.pre(Image.fromarray(crop_rgb)).unsqueeze(0)
-            f = self.model.encode_image(im)
+            f = self.model.encode_image(self.pre(Image.fromarray(crop_rgb)).unsqueeze(0)).float()
             f /= f.norm(dim=-1, keepdim=True)
-            p = (100.0 * f @ self.text.T).softmax(dim=-1)[0].tolist()
+        return f[0].numpy()
+
+    def __call__(self, crop_rgb: np.ndarray) -> list[tuple[str, float]]:
+        f = self.torch.tensor(self.embed(crop_rgb))[None]
+        with self.torch.no_grad():
+            if self.probe is not None:
+                p = self.probe(f).softmax(dim=-1)[0].tolist()
+                return sorted(zip(self.probe_classes, p), key=lambda x: -x[1])
+            p = (100.0 * f @ self.text.float().T).softmax(dim=-1)[0].tolist()
         return sorted(zip(self.labels, p), key=lambda x: -x[1])
 
 
