@@ -216,3 +216,32 @@ def train_spawn(steps: int = 3_000_000, version: str = "v4", worlds: int = 16, d
         for s in (0, 1, 2):
             call = train_policy.spawn((t, s, steps, worlds, dr, version))
             print("spawned", t, s, call.object_id, flush=True)
+
+
+@app.function(timeout=2400, cpu=4, memory=6144, volumes={"/results": results})
+def bench_one(job) -> dict:
+    import json
+    import os
+    import subprocess
+    seed, real = job
+    env = {**os.environ, "SIP_SEEDS": str(seed), **({"SIP_REAL": "1"} if real else {})}
+    r = subprocess.run(["python", "-m", "pytest", "-q", "-s", "-p", "no:cacheprovider", "tests/test_benchmark.py"],
+                       cwd="/root/sip", capture_output=True, text=True, env=env)
+    line = next((l for l in r.stdout.splitlines() if l.startswith("BENCH ")), None)
+    res = json.loads(line[6:]) if line else {"seed": seed, "success": False, "error": (r.stdout + r.stderr)[-800:]}
+    res["real_models"] = real
+    os.makedirs("/results/bench", exist_ok=True)
+    json.dump(res, open(f"/results/bench/{'real' if real else 'oracle'}_seed{seed}.json", "w"))
+    results.commit()
+    return res
+
+
+@app.local_entrypoint()
+def bench(seeds: int = 12, real: bool = True):
+    """Randomised homes in parallel; prints a success table."""
+    import json
+    rows = list(bench_one.map([(s, real) for s in range(seeds)], return_exceptions=True))
+    ok = [r for r in rows if isinstance(r, dict) and r.get("success")]
+    for r in rows:
+        print(json.dumps(r)[:400] if isinstance(r, dict) else f"error: {r}")
+    print(f"{len(ok)}/{len(rows)} random homes succeeded (real models={real})")
