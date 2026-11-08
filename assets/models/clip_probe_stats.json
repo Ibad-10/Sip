@@ -1,0 +1,16 @@
+{
+ "train_homes": 10,
+ "test_homes": 4,
+ "train_crops": 761,
+ "test_crops": 284,
+ "train_accuracy": 0.926,
+ "held_out_accuracy": 0.894,
+ "per_class_recall": {
+  "glass": 0.90625,
+  "jug": 1.0,
+  "straw2": 0.9354838728904724,
+  "organiser": 0.0,
+  "mug": 0.8965517282485962,
+  "other": 0.8819875717163086
+ }
+}

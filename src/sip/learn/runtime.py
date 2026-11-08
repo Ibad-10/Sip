@@ -16,15 +16,33 @@ NAMES = ("lift", "arm", "wrist_yaw")
 DISPLAY = {"pour": "reach-above-glass", "grasp": "reach-to-grasp", "straw": "straw-to-lips", "offer": "offer-at-chest"}
 
 
+MIN_SUCCESS = 0.90    # a learned skill only drives the robot if it succeeded this often on held-out tests
+
+
+def _success(zip_path: Path) -> float:
+    """Held-out success rate recorded at training time (per-seed json, or v1's training_results.json)."""
+    import json
+    js = zip_path.with_suffix(".json")
+    if js.exists():
+        return float(json.loads(js.read_text())["success_rate"])
+    table = zip_path.parent / "training_results.json"
+    if table.exists():
+        skill, seed = zip_path.stem.rsplit("_seed", 1)
+        for row in json.loads(table.read_text()):
+            if row["task"] == skill and int(row["seed"]) == int(seed):
+                return float(row["success_rate"])
+    return 0.0
+
+
 def best_policy(skill: str) -> Path | None:
-    """Prefer the newest trained version that exists (v4 > v3 > v2 > v1 > flat files)."""
-    for ver in ("v4", "v3", "v2", "v1", ""):
-        d = POLICY_DIR / ver if ver else POLICY_DIR
-        for seed in (2, 0, 1):
-            p = d / f"{skill}_seed{seed}.zip"
-            if p.exists():
-                return p
-    return None
+    """Best seed across trained versions, only if it passed MIN_SUCCESS on held-out targets."""
+    best = (0.0, None)
+    for ver in ("v5", "v4", "v3", "v2", "v1"):
+        for p in (POLICY_DIR / ver).glob(f"{skill}_seed*.zip"):
+            s = _success(p)
+            if s > best[0]:
+                best = (s, p)
+    return best[1] if best[0] >= MIN_SUCCESS else None
 
 
 class PolicyArm:

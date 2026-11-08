@@ -34,8 +34,8 @@ UNSURE_CONF, UNSURE_MARGIN = 0.30, 0.15     # below / closer than this: ask Gemi
 # labels YOLO-World confuses in our own evaluation (it calls the glass "mug" at 0.77): always get a second
 # opinion from a second local model (CLIP) on the crop, with its probabilities as the explanation
 CONFUSABLE = {"glass": "a clear drinking glass with water", "mug": "an opaque ceramic coffee mug",
-              "jug": "a tall metal water jug", "straw2": "a small cup holding drinking straws",
-              "organiser": "a weekly pill organiser box"}
+              "jug": "a tall metal water jug", "straw2": "a small cup holding drinking straws"}
+# (the pill organiser is NOT re-checked by the classifier: too few training crops, 0% held-out recall)
 
 
 class ClipCheck:
