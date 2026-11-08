@@ -36,6 +36,10 @@ class Panel:
                     with panel.lock:
                         img = panel.frames.get(name)
                     return self._send(200, img, "image/jpeg") if img else self._send(204, b"", "text/plain")
+                if self.path.startswith("/speech.wav"):
+                    with panel.lock:
+                        snd = panel.frames.get("speech_wav")
+                    return self._send(200, snd, "audio/wav") if snd else self._send(204, b"", "text/plain")
                 if self.path.startswith("/state"):
                     with panel.lock:
                         body = json.dumps(panel.state).encode()
@@ -56,7 +60,8 @@ class Panel:
                     return self._send(204, b"", "text/plain")
                 self._send(404, b"not found", "text/plain")
 
-        self.server = ThreadingHTTPServer(("127.0.0.1", port), H)
+        import os
+        self.server = ThreadingHTTPServer((os.environ.get("SIP_PANEL_HOST", "127.0.0.1"), port), H)
         self.url = f"http://127.0.0.1:{port}/"
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
 

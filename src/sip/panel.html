@@ -35,7 +35,7 @@ main{display:flex;flex-wrap:wrap;gap:16px;padding:16px 0 40px}
 .card h2{margin:0 0 10px;font:600 13px var(--sans);color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
 .view{position:relative;border-radius:.5rem;overflow:hidden;background:#000;aspect-ratio:4/3}.view img{width:100%;height:100%;object-fit:contain;display:block}
 .view .tag{position:absolute;left:10px;top:10px}
-.thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.thumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:8px}
 .thumbs button{padding:0;min-height:0;aspect-ratio:4/3;overflow:hidden;border-radius:6px;background:#000;position:relative}
 .thumbs button img{width:100%;height:100%;object-fit:cover;display:block}.thumbs button span{position:absolute;left:6px;bottom:4px;font:500 11px var(--mono);color:#fff;text-shadow:0 1px 2px #000}
 .thumbs button[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:1px}
@@ -92,6 +92,7 @@ dialog ul{margin:0;padding-left:18px}dialog li{margin:3px 0}kbd{font:500 12px va
         <button aria-pressed="true" data-cam="head"><img id="t_head" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACADs=" alt=""><span>Robot head</span></button>
         <button aria-pressed="false" data-cam="wrist"><img id="t_wrist" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACADs=" alt=""><span>Robot wrist</span></button>
         <button aria-pressed="false" data-cam="person"><img id="t_person" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACADs=" alt=""><span>Her view</span></button>
+        <button aria-pressed="false" data-cam="room"><img id="t_room" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACADs=" alt=""><span>Room camera</span></button>
       </div>
     </section>
     <section class="card" aria-label="Decision timeline">
@@ -183,9 +184,9 @@ async function startTalk(){try{const st=await navigator.mediaDevices.getUserMedi
  rec.start();$('talk').textContent='● Listening… tap to send';$('talk').setAttribute('aria-pressed','true')}catch(e){$('heard').textContent='microphone not available'}}
 function stopTalk(){if(rec&&rec.state==='recording'){rec.stop();$('talk').textContent='🎙 Tap to talk';$('talk').setAttribute('aria-pressed','false')}}
 $('talk').onclick=()=>{if(rec&&rec.state==='recording')stopTalk();else startTalk()};
-let cam='head';const names={head:'Robot head camera: what it sees',wrist:'Robot wrist camera: close-up at the face',person:'Her view: what she sees'};
+let cam='head';const names={head:'Robot head camera: what it sees',wrist:'Robot wrist camera: close-up at the face',person:'Her view: what she sees',room:'Room camera: the robot in the house'};
 document.querySelectorAll('.thumbs button').forEach(b=>b.onclick=()=>{cam=b.dataset.cam;document.querySelectorAll('.thumbs button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('viewName').textContent=names[cam]});
-let n=0;setInterval(()=>{n++;$('big').src='/frame/'+cam+'.jpg?'+n;if(n%3==0)for(const k of ['head','wrist','person'])$('t_'+k).src='/frame/'+k+'.jpg?'+n},350);
+let n=0;setInterval(()=>{n++;$('big').src='/frame/'+cam+'.jpg?'+n;if(n%3==0)for(const k of ['head','wrist','person','room'])$('t_'+k).src='/frame/'+k+'.jpg?'+n},350);
 const AG={perceive:'perception',plan:'planner',state:'planner',safety:'safety',cloud:'gemini',say:'voice',alert:'alert',heard:'voice',dose:'planner'};
 const NICE={IDLE:'Waiting',LOCATE:'Recalling where things are',SEARCH:'Searching the rooms',NAV_TO_OBJECT:'Driving to the glass',VERIFY:'Checking with the camera',
 PREPARE:'Preparing the drink',GRASP:'Picking up the glass',FIND_PERSON:'Looking for her',NAV_TO_PERSON:'Bringing the drink',APPROACH:'Bringing the straw to her lips',
@@ -221,14 +222,15 @@ async function poll(){try{const s=await(await fetch('/state')).json();
  $('state').textContent=s.state;$('state').className='chip '+(s.state==='HALT'||s.state==='ASK'?'bad':s.state==='IDLE'?'':'warn');
  $('net').textContent=!s.cloud_configured?'cloud off: all on device':s.online===false?'offline: all on device':s.online?'online: Gemini ok':'cloud on standby';
  $('net').className='chip '+(s.online?'ok':s.online===false?'warn':'');
- $('voice').textContent='voice: '+(s.voice||'-');$('drv').textContent='arm: '+(s.driver||'controller');$('dose').textContent='next dose: '+(s.next_dose||'-');lastT=Date.now();
+ $('voice').textContent='voice: '+(s.voice||'-');$('drv').textContent='arm: '+(s.driver||'controller');$('dose').textContent='next dose: '+(s.next_dose||'-');
+ if(s.speech_id&&s.speech_id!==lastSpeech){lastSpeech=s.speech_id;try{new Audio('/speech.wav?'+s.speech_id).play()}catch(e){}}lastT=Date.now();
  $('perc').textContent=s.perception||'perception';lamps(s.decision);
  $('dist').textContent=s.sensed<1?'straw to mouth '+(s.sensed*100).toFixed(1)+' cm':'';
  $('water').textContent=Math.round(s.water*100)+'%';$('t').textContent=s.t.toFixed(0)+'s';$('hz').textContent=s.hz.toFixed(0)+' Hz';$('gem').textContent=s.gemini_calls||0;
  renderTimeline(s.events);
  if(s.alert){$('alert').style.display='block';$('alert').innerHTML='<b>Alert for the carer:</b> '+esc(s.alert)+' <button data-ack="1">Acknowledge</button><br><img src="/frame/alert.jpg?'+Math.floor(s.t)+'" alt="Evidence snapshot saved with the alert">'}else $('alert').style.display='none';
  draw(s)}catch(e){}}
-let lastT=0;setInterval(()=>{const off=Date.now()-lastT>3000;$('offline').style.display=off?'block':'none'},1000);
+let lastT=0,lastSpeech=0;setInterval(()=>{const off=Date.now()-lastT>3000;$('offline').style.display=off?'block':'none'},1000);
 document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.ack)cmd('/ack')});
 setInterval(poll,400);poll();
 </script>

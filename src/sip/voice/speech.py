@@ -119,4 +119,8 @@ def synth_wav(text: str, path: str) -> bool:
                             "Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
                             f"$s.SetOutputToWaveFile('{p}'); $s.Speak('{safe}'); $s.Dispose()"], capture_output=True, timeout=30)
         return r.returncode == 0 and os.path.exists(path)
+    import shutil
+    if shutil.which("espeak-ng"):                      # Linux offline voice (cloud demo machine)
+        r = subprocess.run(["espeak-ng", "-v", "en-gb", "-s", "150", "-w", path, text], capture_output=True, timeout=30)
+        return r.returncode == 0 and os.path.exists(path)
     return False

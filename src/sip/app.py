@@ -182,7 +182,11 @@ def publish_panel(panel, sim, st) -> None:
     _PANEL_R["n"] = _PANEL_R.get("n", 0) + 1
     views = [("head", "d435i_camera_rgb")]
     if _PANEL_R["n"] % 3 == 1:                       # side views refresh every third update
-        views += [("wrist", "d405_rgb"), ("person", "person_eyes")]
+        from sip.scene.build_house import room_at
+        tp = sim.io.true_pose()                       # display only: which room camera films the robot
+        room_cam = {"kitchen": "cam_kitchen", "living": "cam_living", "bedroom": "cam_bedroom"}.get(
+            room_at(tp.x, tp.y), "cam_hall")
+        views += [("wrist", "d405_rgb"), ("person", "person_eyes"), ("room", room_cam)]
     for name, cam in views:
         if name == "head" and tk.last_frame is not None:
             img = tk.last_frame[:, :, ::-1].copy()     # the robot's own latest frame: no extra render
@@ -238,6 +242,7 @@ def publish_panel(panel, sim, st) -> None:
         "voice": __import__("sip.voice.speech", fromlist=["x"]).last_engine["name"],
         "bounds": [-tk.grid.w / 2, tk.grid.w / 2, -tk.grid.h / 2, tk.grid.h / 2],
         "driver": getattr(tk, "arm_driver", "controller"),
+        "speech_id": st.get("speech_id", 0),
         "next_dose": __import__("sip.home", fromlist=["x"]).next_dose(st.setdefault("home", __import__("sip.home", fromlist=["x"]).load())),
         "perception": (f"YOLO-World {tk.det.ms:.0f} ms + MediaPipe" if perc else "sim oracle (test mode)"),
         "decision": {"action": tk.decision.action, "reason": tk.decision.reason,
@@ -266,6 +271,7 @@ def main(argv=None):
     ap.add_argument("--no-rerun", action="store_true")
     ap.add_argument("--request", default=None, help="start with a request, e.g. water")
     ap.add_argument("--no-panel", action="store_true", help="disable the web control panel")
+    ap.add_argument("--realtime", action="store_true", help="pace the headless sim to the wall clock")
     a = ap.parse_args(argv)
     sim = Sim()
     prof = load_profile()
@@ -350,7 +356,19 @@ def main(argv=None):
         say = sim.bb.get("say")
         if say:
             print(f"[robot] {say}", flush=True)
-            if not a.headless:
+            if os.environ.get("SIP_VOICE_BROWSER") == "1" and panel is not None:
+                # cloud mode: synthesise here, the browser plays it
+                def _tts(text=say, n=st.get("speech_n", 0) + 1):
+                    import tempfile
+                    from sip.voice import speech
+                    path = os.path.join(tempfile.gettempdir(), f"say{n}.wav")
+                    if speech.synth_wav(text, path):
+                        with open(path, "rb") as f:
+                            panel.set_frame("speech_wav", f.read())
+                        st["speech_id"] = n
+                st["speech_n"] = st.get("speech_n", 0) + 1
+                threading.Thread(target=_tts, daemon=True).start()
+            elif not a.headless:
                 from sip.voice import speech
                 speech.speak(say)
             sim.bb.set("say", None)
@@ -415,8 +433,13 @@ def main(argv=None):
 
     try:
         if a.headless:
+            w0 = time.time()
             while sim.t < a.seconds:
                 tick()
+                if a.realtime:                       # cloud demo: run at the speed of real life
+                    lag = sim.t - (time.time() - w0)
+                    if lag > 0:
+                        time.sleep(lag)
         else:
 
             import cv2

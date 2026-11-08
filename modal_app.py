@@ -15,7 +15,8 @@ IGNORE = ["**/.venv/**", "**/raw/**", "**/__pycache__/**", "**/runs/**", "**/.gi
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
-    .apt_install("libegl1", "libgl1", "libglib2.0-0", "libosmesa6", "ffmpeg", "git", "libgles2", "libegl-mesa0")
+    .apt_install("libegl1", "libgl1", "libglib2.0-0", "libosmesa6", "ffmpeg", "git", "libgles2", "libegl-mesa0",
+                 "espeak-ng")
     .pip_install("torch", "torchvision", index_url="https://download.pytorch.org/whl/cpu")   # CPU build: the CUDA one segfaults here
     .pip_install("mujoco==4.0.0", "numpy", "opencv-python-headless", "pytest", "rerun-sdk==0.42.0",
                  "mediapipe", "trimesh", "pillow", "gymnasium", "stable-baselines3", "ultralytics",
@@ -251,3 +252,38 @@ def bench(seeds: int = 12, real: bool = True):
     for r in rows:
         print(json.dumps(r)[:400] if isinstance(r, dict) else f"error: {r}")
     print(f"{len(ok)}/{len(rows)} random homes succeeded (real models={real})")
+
+
+# ---------- live demo in the cloud: the whole robot runs here, you open the dashboard link ----------
+live_image = image.apt_install("espeak-ng") if False else image
+
+
+@app.function(gpu="T4", cpu=8, memory=16384, timeout=3 * 3600)
+def live(minutes: float, keys: dict) -> None:
+    import os
+    import subprocess
+    import time
+    env = {**os.environ, **{k: v for k, v in keys.items() if v}, "SIP_PANEL_HOST": "0.0.0.0", "SIP_VOICE_BROWSER": "1",
+           "SIP_LLM": "0", "MUJOCO_GL": "egl", "PYOPENGL_PLATFORM": "egl"}
+    with modal.forward(8765) as tunnel:
+        print("DASHBOARD:", tunnel.url, flush=True)
+        p = subprocess.Popen(["python", "-m", "sip.app", "--headless", "--realtime", "--no-rerun",
+                              "--seconds", str(minutes * 60)], cwd="/root/sip", env=env)
+        t0 = time.time()
+        while p.poll() is None and time.time() - t0 < minutes * 60 + 120:
+            time.sleep(5)
+        p.kill()
+
+
+@app.local_entrypoint()
+def demo(minutes: float = 30):
+    """uv run modal run modal_app.py::demo --minutes 30   (prints the dashboard link; stops itself)"""
+    from pathlib import Path as _P
+    keys = {}
+    envf = _P(__file__).with_name(".env")
+    if envf.exists():
+        for line in envf.read_text().splitlines():
+            k, _, v = line.partition("=")
+            if k.strip() in ("GEMINI_API_KEY", "ELEVENLABS_API_KEY") and v.strip():
+                keys[k.strip()] = v.strip()
+    live.remote(minutes, keys)
