@@ -15,9 +15,11 @@ IGNORE = ["**/.venv/**", "**/raw/**", "**/__pycache__/**", "**/runs/**", "**/.gi
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
-    .apt_install("libegl1", "libgl1", "libglib2.0-0", "libosmesa6", "ffmpeg")
+    .apt_install("libegl1", "libgl1", "libglib2.0-0", "libosmesa6", "ffmpeg", "git")
     .pip_install("mujoco==4.0.0", "numpy", "opencv-python-headless", "pytest", "rerun-sdk==0.42.0",
-                 "mediapipe", "trimesh", "pillow", "gymnasium", "stable-baselines3")
+                 "mediapipe", "trimesh", "pillow", "gymnasium", "stable-baselines3", "ultralytics",
+                 "git+https://github.com/ultralytics/CLIP.git")
+    .run_commands("python -c \"import clip; clip.load('ViT-B/32', device='cpu')\"")   # cache text encoder
     .env({"MUJOCO_GL": "osmesa", "PYOPENGL_PLATFORM": "osmesa", "PYTHONPATH": "/root/sip/src", "SIP_LLM": "0"})
     .add_local_dir(ROOT / "src", "/root/sip/src", ignore=IGNORE)
     .add_local_dir(ROOT / "tests", "/root/sip/tests", ignore=IGNORE)
@@ -39,6 +41,8 @@ SLOW = [
     "tests/test_water.py::test_no_answer_raises_alert",
     "tests/test_water.py::test_prepare_drink_pours_and_adds_straw",
     "tests/test_water.py::test_gemini_points_when_local_detector_misses",
+    "tests/test_water.py::test_medicine_taken_is_logged_and_organiser_returned",
+    "tests/test_water.py::test_medicine_no_answer_alerts_carer",
     "tests/test_judge.py::test_physics_invariants_full_run",
     "tests/test_judge.py::test_perception_before_action",
     "tests/test_judge.py::test_autonomy_no_network",
@@ -46,12 +50,18 @@ SLOW = [
 ]
 
 
-@app.function(timeout=900, cpu=4, memory=4096)
-def run_test(nodeid: str) -> tuple[str, bool, str]:
+@app.function(timeout=1800, cpu=4, memory=6144)
+def run_test(job) -> tuple[str, bool, str]:
+    import os
     import subprocess
-    r = subprocess.run(["python", "-m", "pytest", "-q", "-p", "no:cacheprovider", nodeid],
-                       cwd="/root/sip", capture_output=True, text=True)
-    return nodeid, r.returncode == 0, (r.stdout + r.stderr)[-1500:]
+    nodeid, real = job if isinstance(job, tuple) else (job, False)
+    env = {**os.environ, **({"SIP_REAL": "1"} if real else {})}
+    r = subprocess.run(["python", "-m", "pytest", "-q", "-s", "-p", "no:cacheprovider", nodeid],
+                       cwd="/root/sip", capture_output=True, text=True, env=env)
+    out = r.stdout + r.stderr
+    timing = " | ".join(l for l in out.splitlines() if l.startswith("TIMING"))
+    return nodeid, r.returncode == 0, timing + ("" if r.returncode == 0 else "
+" + out[-1500:])
 
 
 @app.function(timeout=600, cpu=8)
@@ -64,9 +74,9 @@ def run_fast() -> tuple[bool, str]:
 
 
 @app.local_entrypoint()
-def tests():
+def tests(real: bool = False):
     fast = run_fast.spawn()
-    results = list(run_test.map(SLOW))
+    results = list(run_test.map([(n, real) for n in SLOW]))
     ok_fast, out_fast = fast.get()
     print(("PASS" if ok_fast else "FAIL"), "fast suite\n", out_fast.splitlines()[-1] if out_fast else "")
     for nodeid, ok, out in results:

@@ -13,6 +13,21 @@ from sip.scene.build_house import build_house, seat_person
 from sip.tasks.water import TICK_STEPS, WaterTask
 
 MODEL = None
+REAL = bool(__import__("os").environ.get("SIP_REAL"))   # 1 = real AI models on camera images, no sim labels
+_MODELS = {}
+
+
+def perception(labels):
+    """Detector + face tracker. SIP_REAL=1: YOLO-World + MediaPipe (what the app uses).
+    Otherwise the simulator's segmentation labels (fast checks of control logic only)."""
+    if REAL:
+        if "m" not in _MODELS:
+            from sip.perception.vision import MediaPipeFace, YoloDetector
+            _MODELS["m"] = (YoloDetector(asynchronous=False), MediaPipeFace())
+        det, face = _MODELS["m"]
+        face._facing, face._ref = [], None
+        return det, face
+    return SegDetector(labels, noise_m=0.005), FaceTracker("sim")
 
 
 def model():
@@ -32,7 +47,7 @@ class Harness:
         self.io = StretchIO(self.m, self.d)
         self.bb = Blackboard()
         self.task = WaterTask(self.io, self.bb, grid_from_model(self.m), ObjectMemory(),
-                              SegDetector(["glass"], noise_m=0.005), FaceTracker("sim"))
+                              *perception(["glass"]))
         self.t = 0.0
         self.hold = 0.0       # longest continuous time straw tip within 2 cm of mouth
         self._run = 0.0
@@ -59,14 +74,18 @@ class Harness:
         return state
 
     def run(self, seconds, until=None, on=None):
-        end = self.t + seconds
-        while self.t < end:
-            s = self.tick()
-            if on:
-                on(self, s)
-            if until and until(self, s):
-                return True
-        return False
+        import time
+        end, w0 = self.t + seconds, time.time()
+        try:
+            while self.t < end:
+                s = self.tick()
+                if on:
+                    on(self, s)
+                if until and until(self, s):
+                    return True
+            return False
+        finally:
+            print(f"TIMING sim={self.t:.1f}s wall={time.time() - w0:.1f}s real_models={REAL}")
 
     def kinds(self, kind):
         return [e.text for e in self.bb.events() if e.kind == kind]
@@ -198,7 +217,7 @@ def test_no_answer_raises_alert():
 def test_prepare_drink_pours_and_adds_straw():
     h = Harness()
     h.task = WaterTask(h.io, h.bb, h.task.grid, h.task.memory,
-                       SegDetector(["glass", "jug", "straw2"], noise_m=0.005), FaceTracker("sim"), prepare=True)
+                       *perception(["glass", "jug", "straw2"]), prepare=True)
     request_water(h)
     assert h.task.water_level == 0.0
     assert h.run(260, until=lambda h, s: s == "NAV_TO_PERSON"), h.states
@@ -208,6 +227,7 @@ def test_prepare_drink_pours_and_adds_straw():
     assert np.linalg.norm(h.d.body("jug").xpos[:2] - np.array([-1.72, 2.62])) < 0.15  # jug put back
 
 
+@pytest.mark.skipif(REAL, reason="blinds the local detector on purpose (oracle mode only)")
 def test_gemini_points_when_local_detector_misses():
     """Local detector blind to the glass; a stand-in for Gemini Robotics-ER points at it. The robot
     must verify the point locally (depth, reach, path) and then fetch the glass."""
@@ -233,7 +253,7 @@ def test_gemini_points_when_local_detector_misses():
 def _med_harness():
     h = Harness()
     h.task = WaterTask(h.io, h.bb, h.task.grid, h.task.memory,
-                       SegDetector(["glass", "organiser"], noise_m=0.005), FaceTracker("sim"))
+                       *perception(["glass", "organiser"]))
     h.bb.set("request", "medicine")
     return h
 
