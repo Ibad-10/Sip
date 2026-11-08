@@ -18,7 +18,7 @@ image = (
     .apt_install("libegl1", "libgl1", "libglib2.0-0", "libosmesa6", "ffmpeg")
     .pip_install("mujoco==4.0.0", "numpy", "opencv-python-headless", "pytest", "rerun-sdk==0.42.0",
                  "mediapipe", "trimesh", "pillow")
-    .env({"MUJOCO_GL": "egl", "PYTHONPATH": "/root/sip/src", "SIP_LLM": "0"})
+    .env({"MUJOCO_GL": "osmesa", "PYOPENGL_PLATFORM": "osmesa", "PYTHONPATH": "/root/sip/src", "SIP_LLM": "0"})
     .add_local_dir(ROOT / "src", "/root/sip/src", ignore=IGNORE)
     .add_local_dir(ROOT / "tests", "/root/sip/tests", ignore=IGNORE)
     .add_local_dir(ROOT / "assets", "/root/sip/assets", ignore=IGNORE)
@@ -44,7 +44,7 @@ SLOW = [
 ]
 
 
-@app.function(gpu="T4", timeout=900, cpu=4)
+@app.function(timeout=900, cpu=4, memory=4096)
 def run_test(nodeid: str) -> tuple[str, bool, str]:
     import subprocess
     r = subprocess.run(["python", "-m", "pytest", "-q", "-p", "no:cacheprovider", nodeid],
@@ -72,7 +72,7 @@ def tests():
     print(f"{sum(ok for _, ok, _ in results)}/{len(results)} slow scenarios passed")
 
 
-@app.function(gpu="L4", timeout=1800, cpu=8)
+@app.function(timeout=1800, cpu=8, memory=8192)
 def render(scenario: str, seconds: float) -> bytes:
     import subprocess
     args = ["python", "-m", "sip.record", "--out", "/tmp/out.mp4", "--seconds", str(seconds), "--hd"]
