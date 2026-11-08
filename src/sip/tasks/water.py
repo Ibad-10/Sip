@@ -309,10 +309,9 @@ class WaterTask:
         where = self._person_where
         facing = self._facing()
         front = self._mouth_guess() + 0.05 * np.array([np.cos(facing), np.sin(facing), 0])
-        g = self._inflated()
-        for a in (55, -55, 35, -35, 75, -75, 0):
+        for a in (55, -55, 35, -35, 75, -75, 0):   # first side the planner can actually reach
             x, y, yaw = park_pose_for(front, PERSON_STANDOFF, facing, a)
-            if g.is_free(x, y):
+            if self._plan((x, y)) is not None:
                 break
         return np.array([x, y]), yaw, facing, where
 
@@ -339,6 +338,10 @@ class WaterTask:
 
     # ---------- states ----------
     def _s_idle(self):
+        if self.bb.get("request") == "medicine":
+            self.bb.set("request", None)
+            self._gen = self._medicine_seq()
+            return self.goto("MEDICINE", "dose time / asked for tablets")
         if self.bb.get("request") == "water":
             self.bb.set("request", None)
             self._visited = []
@@ -613,11 +616,7 @@ class WaterTask:
         while self.io.arm_extension() > 0.03 and self.t - t0 < 4.0:
             yield
 
-    def _g_find(self, label: str, what: str):
-        """Look around (head sweep, then turn on the spot) until the camera has seen `label`."""
-        if label in self.seen:
-            return
-        self.log("perceive", f"looking for the {what}")
+    def _g_spin_look(self, label: str):
         spun, y0 = 0.0, self.pose().yaw
         while label not in self.seen and spun < 2 * np.pi:
             p = self.pose()
@@ -627,6 +626,27 @@ class WaterTask:
             self.io.drive(0, SPIN_W)
             yield
         self.io.drive(0, 0)
+
+    def _g_find(self, label: str, what: str):
+        """Look around here; if not seen, visit rooms (likeliest first, from memory) and look again."""
+        if label in self.seen:
+            return
+        self.log("perceive", f"looking for the {what}")
+        yield from self._g_spin_look(label)
+        for room in self.memory.search_order(label, self.t, list(ROOMS)):
+            if label in self.seen:
+                return
+            if not self._start_nav(ROOMS[room], None, f"looking for the {what} in the {room}"):
+                continue
+            while label not in self.seen:
+                p = self.pose()
+                aim_head(self.m, self.d, self.io, np.array([p.x + 1.2 * np.cos(p.yaw), p.y + 1.2 * np.sin(p.yaw), 0.9]), snap=False)
+                if self._nav_step() != "moving":
+                    break
+                yield
+            yield from self._g_spin_look(label)
+        if label in self.seen:
+            self.log("perceive", f"found the {what}")
 
     def _g_grab(self, label: str, what: str, offset=(0, 0, 0)):
         """Reach where the camera saw it and close the fingers; on a miss, look again (twice)."""
@@ -712,6 +732,111 @@ class WaterTask:
         self.say("Your water is ready.")
         # 5. back to a pick pose for the glass, then the normal grasp
         yield from self._g_nav_to_pick(glass, "picking up the glass")
+
+    # ---------- medicine: remind, fetch the organiser, check the day, log, alert ----------
+    def _s_medicine(self):
+        try:
+            next(self._gen)
+        except StopIteration:
+            if self.state == "MEDICINE":
+                self.goto("IDLE", "medicine round finished")
+
+    def _today_compartment(self) -> tuple[str, str]:
+        """Which compartment to use: the clock gives the day; Gemini (if online) reads the organiser
+        on the wrist camera to confirm. Returns (day, how it was checked)."""
+        import datetime
+        day = datetime.date.today().strftime("%A")
+        if self.cloud is None:
+            return day, "clock (offline)"
+        from sip.cloud.gemini import read_compartment
+        rgb, _, _ = render_head(self.m, self.d, self.renderer, cam=WRIST_CAM, rgb=True)
+        seen = read_compartment(rgb)
+        if seen is None:
+            return day, "clock (Gemini unavailable)"
+        if seen.lower()[:3] != day.lower()[:3]:
+            return day, f"MISMATCH: camera shows {seen}"
+        return day, f"clock + Gemini read '{seen}' on the organiser"
+
+    def _medicine_seq(self):
+        self.say("It's time for your tablets. I'll bring your pill organiser.")
+        self._grab_failed = None
+        yield from self._g_find("organiser", "pill organiser")
+        if "organiser" not in self.seen:
+            self.alert("pill organiser not found - dose may be missed")
+            self._ask("I can't find your pill organiser. Where is it?", resume="IDLE")
+            return
+        home = self.seen["organiser"].copy()
+        yield from self._g_nav_to_pick(home, "fetching the pill organiser")
+        aim_head(self.m, self.d, self.io, home, snap=False)
+        yield from self._g_wait(0.6)
+        yield from self._g_grab("organiser", "pill organiser")
+        if self._grab_failed:
+            self.alert("could not pick up the pill organiser - dose may be missed")
+            self._ask("I can't pick up the organiser. Could you help?", resume="IDLE")
+            return
+        day, how = self._today_compartment()
+        self.log("perceive", f"today's compartment: {day} (checked by {how})")
+        if how.startswith("MISMATCH"):
+            self.alert(f"organiser compartment does not match today ({day}): {how}")
+        yield from self._g_retract(lift_up=0.15)
+        self.io.stow(lift=max(self.io.arm_targets()["lift"], 0.8))
+        yield from self._g_wait(1.5)
+        # bring it to her: same person search and parking as for drinks, offered in front of her
+        if self._person_where is None:
+            yield from self._find_person_seq()
+        goal, yaw, facing, where = self._person_park()
+        if not self._start_nav(goal, yaw, "bringing the pill organiser"):
+            self._ask("I can't reach you. Could you move something?", resume="IDLE")
+            return
+        while True:
+            aim_head(self.m, self.d, self.io, self._mouth_guess(), snap=False)
+            r = self._nav_step()
+            if r == "arrived":
+                break
+            if r == "blocked":
+                self._ask("Something is in the way. Could you move it?", resume="IDLE")
+                return
+            yield
+        facing = self._facing()
+        mouth = self._mouth_guess()
+        offer = mouth + 0.30 * np.array([np.cos(facing), np.sin(facing), 0]) + np.array([0, 0, -0.30])
+        yield from self._g_reach(offer, tol=0.05)
+        self.say(f"Here are your {day} tablets. Say 'taken' when you've had them, or 'not now'.")
+        self.bb.set("dose_waiting", True)
+        self.bb.set("dose_reply", None)
+        asked, declines = self.t, 0
+        while True:
+            reply = self.bb.get("dose_reply")
+            if reply == "taken":
+                self.log("dose", f"taken: {day} dose at t={self.t:.0f}s")
+                self.say("Well done. I'll put it back.")
+                break
+            if reply == "declined":
+                declines += 1
+                self.bb.set("dose_reply", None)
+                self.log("dose", f"declined: {day} dose ({declines})")
+                if declines >= 2:
+                    self.alert(f"{day} dose declined twice - carer informed")
+                    self.say("That's okay. I've let your carer know.")
+                    break
+                self.say("Okay. I'll ask again in a little while.")
+                asked = self.t
+            if self.t - asked > 30.0:
+                self.log("dose", f"missed: no answer for 30 s ({day} dose)")
+                self.alert(f"no answer at dose time ({day}) - carer notified")
+                self.say("I'll let your carer know.")
+                break
+            yield
+        self.bb.set("dose_waiting", False)
+        yield from self._g_retract(lift_up=0.0)
+        self.io.stow(lift=max(self.io.arm_targets()["lift"], 0.8))
+        yield from self._g_wait(1.0)
+        yield from self._g_nav_to_pick(home, "putting the organiser back")
+        yield from self._g_reach(home + np.array([0, 0, 0.01]))
+        self.io.release()
+        yield from self._g_retract(lift_up=0.04)
+        self.io.stow(lift=max(self.io.arm_targets()["lift"], 0.5))
+        self.say("All done.")
 
     def _turn_straw_to_arm(self) -> None:
         """Turn the glass about its axis so the straw leans along the arm (Limits: done by
@@ -904,7 +1029,7 @@ class WaterTask:
                         lift=self.io.arm_targets()["lift"] + float(np.clip(err[2], -step, step)))
         p = self.pose()
         lever = max(0.3, float(np.hypot(self.tip()[0] - p.x, self.tip()[1] - p.y)))
-        self._base_bearing_fix(tgt, gain=1.5, wmax=min(0.15, 0.8 * dec.max_speed_mps / lever), point=self.tip())
+        self._base_bearing_fix(tgt, gain=1.5, wmax=min(0.15, 0.8 * dec.max_speed_mps / lever))
 
     def _s_hold(self):
         dec = self._gate()

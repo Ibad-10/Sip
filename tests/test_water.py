@@ -228,3 +228,31 @@ def test_gemini_points_when_local_detector_misses():
     assert h.run(200, until=lambda h, s: s == "GRASP"), h.states
     assert calls
     assert any("Gemini" in e.text and "verified" in e.text for e in h.bb.events())
+
+
+def _med_harness():
+    h = Harness()
+    h.task = WaterTask(h.io, h.bb, h.task.grid, h.task.memory,
+                       SegDetector(["glass", "organiser"], noise_m=0.005), FaceTracker("sim"))
+    h.bb.set("request", "medicine")
+    return h
+
+
+def test_medicine_taken_is_logged_and_organiser_returned():
+    h = _med_harness()
+
+    def on(h, s):
+        if h.bb.get("dose_waiting") and h.bb.get("dose_reply") is None:
+            h.bb.set("dose_reply", "taken")
+
+    assert h.run(260, until=lambda h, s: bool(h.kinds("dose")) and s == "IDLE", on=on), h.states
+    assert any(t.startswith("taken") for t in h.kinds("dose"))
+    assert not h.kinds("alert")
+    assert np.linalg.norm(h.d.body("organiser").xpos[:2] - np.array([-2.2, 2.66])) < 0.2
+
+
+def test_medicine_no_answer_alerts_carer():
+    h = _med_harness()
+    assert h.run(260, until=lambda h, s: bool(h.kinds("alert"))), h.states
+    assert any("dose" in t or "answer" in t for t in h.kinds("alert"))
+    assert any(t.startswith("missed") for t in h.kinds("dose"))

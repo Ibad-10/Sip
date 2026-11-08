@@ -85,6 +85,28 @@ def second_opinion(rgb: np.ndarray, transcript: str, map_summary: str, labels: l
     return _call(run, timeout_s)
 
 
+def read_compartment(rgb: np.ndarray, timeout_s: float = 8.0) -> str | None:
+    """Read which day's compartment of a weekly pill organiser is in view. One word or None."""
+    client = _client()
+    if client is None:
+        return None
+    import cv2
+    from google.genai import types
+    ok, jpg = cv2.imencode(".jpg", rgb[:, :, ::-1])
+    if not ok:
+        return None
+    prompt = ("This photo from a care robot's wrist camera shows a weekly pill organiser. Which day's compartment "
+              "is nearest the camera or open? Reply with only the day name, or 'unknown'.")
+
+    def run():
+        r = client.models.generate_content(model=MODEL, contents=[
+            types.Part.from_bytes(data=jpg.tobytes(), mime_type="image/jpeg"), prompt])
+        word = (r.text or "").strip().split()[0].strip(".,").capitalize() if r.text else ""
+        return None if not word or word.lower() == "unknown" else word
+
+    return _call(run, timeout_s)
+
+
 def day_summary(events, timeout_s: float = 15.0) -> str | None:
     client = _client()
     if client is None:

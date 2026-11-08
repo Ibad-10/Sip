@@ -252,6 +252,7 @@
     <material name="mat_kitchenette_24" specular="0.6" shininess="0.75" rgba="0.07 0.07 0.08 1"/>
     <material name="mat_glass_vis_0" specular="0.2" shininess="0.4" rgba="0.8 0.9 1 0.35"/>
     <material name="mat_mug_0" specular="0.6" shininess="0.75" rgba="0.65 0.66 0.68 1"/>
+    <material name="mat_pillbox_vis_0" specular="0.2" shininess="0.4" rgba="0.1 0.55 0.35 1"/>
     <material name="mat_jug_vis_0" texture="tex_mat_jug_vis_0" specular="0.2" shininess="0.4"/>
     <material name="mat_stove_0" texture="tex_mat_stove_0" specular="0.2" shininess="0.4"/>
     <material name="mat_stove_1" texture="tex_mat_stove_1" specular="0.2" shininess="0.4"/>
@@ -444,6 +445,7 @@
     <mesh name="m_kitchenette_24" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part24.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
     <mesh name="m_glass_vis_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\dishware_glass_8oz_a01\part0.obj" refpos="-1.76951e-07 6.20261e-07 5.29706e-05" scale="1.05725 1.05725 1.1949" inertia="shell"/>
     <mesh name="m_mug_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\dishware_mug_a01\part0.obj" refpos="0.0121225 -1.86265e-09 0.00233252" inertia="shell"/>
+    <mesh name="m_pillbox_vis_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\pillbox\pillbox.obj" refpos="0.1 0.0580514 0" inertia="shell"/>
     <mesh name="m_jug_vis_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\metal_jug\part0.obj" refpos="0.00041 0 -0.00013" scale="0.71131 0.716259 0.695531" inertia="shell"/>
     <mesh name="m_stove_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part0.obj" refpos="0 -0.02381 0" inertia="shell"/>
     <mesh name="m_stove_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part1.obj" refpos="0 -0.02381 0" inertia="shell"/>
@@ -903,9 +905,12 @@
       <geom name="straw2_geom" size="0.004 0.1" type="capsule" contype="0" conaffinity="0" rgba="1 0.3 0.3 1" mass="0.005"/>
       <geom name="straw2_grip" size="0.012 0.012 0.03" pos="0 0 0.05" type="box" group="3" rgba="1 0.3 0.3 0" mass="0.005"/>
     </body>
-    <body name="organiser" pos="-1.9 2.6 0.92">
+    <body name="organiser" pos="-2.2 2.66 0.93">
       <joint name="organiser_free" type="free"/>
-      <geom name="organiser_geom" size="0.14 0.06 0.02" type="box" rgba="0.9 0.9 0.3 1" mass="0.3"/>
+      <geom name="organiser_geom" size="0.1 0.058 0.023" type="box" group="3" rgba="0.1 0.55 0.35 1" mass="0.3"/>
+      <body name="vis_pillbox_vis" pos="0 0 -0.023">
+        <geom name="g_pillbox_vis_0" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_pillbox_vis_0" mesh="m_pillbox_vis_0"/>
+      </body>
     </body>
     <body name="person" pos="3 2.35 0.5" mocap="true">
       <geom name="torso" size="0.12 0.2" pos="0 0 0.25" quat="0 1 0 0" type="capsule" group="3" rgba="0.3 0.5 0.35 1"/>

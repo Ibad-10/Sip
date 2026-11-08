@@ -169,6 +169,9 @@ def dress(spec, world) -> None:
                 rgba=[0.55, 0.75, 0.95, 0.55], contype=0, conaffinity=0, group=1, mass=0)
     add_prop(spec, world, "dishware_mug_a01", (-3.4, 2.62, 0.9), name="mug")
     _hide(spec, {"jug_geom"})
+    if (PROPS / "pillbox" / "manifest.json").exists():
+        _hide(spec, {"organiser_geom"})
+        add_prop(spec, spec.body("organiser"), "pillbox", (0, 0, -0.023), name="pillbox_vis")
     add_prop(spec, spec.body("jug"), "metal_jug", (0, 0, -0.1), fit=(0.14, 0.14, 0.2), name="jug_vis")
     jw = spec.body("jug")
     jw.add_geom(name="jug_water_top", type=mujoco.mjtGeom.mjGEOM_CYLINDER, pos=[0, 0, 0.06], size=[0.055, 0.002, 0],

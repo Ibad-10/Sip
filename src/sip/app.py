@@ -50,6 +50,12 @@ def handle_command(text: str, bb: Blackboard, llm=None, sim=None) -> None:
     if "done" in kw:
         bb.set("done", True)
         return
+    if "taken" in kw:
+        bb.set("dose_reply", "taken")
+        return
+    if "no" in kw and bb.get("dose_waiting"):
+        bb.set("dose_reply", "declined")
+        return
     if "ready" in kw:
         bb.set("ready", True)
     if "go" in kw or "yes" in kw:
@@ -106,6 +112,8 @@ class Sim:
             self._move_free("chair_hall_free", [-2.0, 0.45, 0.0])
         elif cmd == "/glass":
             self._move_free("glass_free", [3.15, -1.2, 0.57])
+        elif cmd == "/dose":
+            bb.set("request", "medicine")
         elif cmd == "/turn":
             a = self.io.act["head_yaw_act"]
             self.person.override = not self.person.override
@@ -142,18 +150,43 @@ def save_alert_evidence(sim, folder: str = "runs/alerts") -> tuple[str, str]:
 
 
 def publish_panel(panel, sim, st) -> None:
-    """Render the three views as JPEG and publish a compact state snapshot for the web panel."""
+    """Render the camera views (head camera upright, with live detections drawn) and publish the
+    robot's beliefs for the web panel. Nothing here is ground truth except the camera images."""
     import cv2
+    from sip.cloud import gemini
     from sip.nav.lidar import ray_angles
+    from sip.perception.objects import project
     r = _PANEL_R.get("r")
     if r is None:
-        r = _PANEL_R["r"] = mujoco.Renderer(sim.m, 240, 320)
+        r = _PANEL_R["r"] = mujoco.Renderer(sim.m, 360, 480)
+    tk = sim.task
     for name, cam in (("head", "d435i_camera_rgb"), ("wrist", "d405_rgb"), ("person", "person_eyes")):
         r.update_scene(sim.d, camera=cam)
-        ok, jpg = cv2.imencode(".jpg", r.render()[:, :, ::-1], [cv2.IMWRITE_JPEG_QUALITY, 75])
+        img = r.render()[:, :, ::-1].copy()
+        if name == "head":
+            sy, sx = img.shape[0] / tk.renderer.height, img.shape[1] / tk.renderer.width
+            for det in tk.last_dets:
+                if not det.box:
+                    continue
+                u0, v0, u1, v1 = det.box
+                col = (40, 160, 60) if det.label == "person" else (200, 120, 20)
+                cv2.rectangle(img, (int(u0 * sx), int(v0 * sy)), (int(u1 * sx), int(v1 * sy)), col, 2)
+            if tk.mouth.visible and tk.mouth.xyz is not None:
+                u, v, z = project(sim.m, sim.d, cam, tk.mouth.xyz, img.shape[1], img.shape[0])
+                if z > 0:
+                    cv2.drawMarker(img, (int(u), int(v)), (40, 40, 230), cv2.MARKER_CROSS, 18, 2)
+            img = np.ascontiguousarray(np.rot90(img, 1))   # the D435i is mounted sideways
+            for det in tk.last_dets:   # labels after rotating so the text is upright
+                if det.box:
+                    u0, v0, u1, v1 = det.box
+                    x, y = int(v0 * sy), int(img.shape[0] - 1 - u1 * sx)
+                    cv2.putText(img, f"{det.label} {det.conf:.2f}", (x, max(12, y - 4)), cv2.FONT_HERSHEY_SIMPLEX,
+                                0.45, (255, 255, 255), 2)
+                    cv2.putText(img, f"{det.label} {det.conf:.2f}", (x, max(12, y - 4)), cv2.FONT_HERSHEY_SIMPLEX,
+                                0.45, (30, 30, 30), 1)
+        ok, jpg = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 80])
         if ok:
             panel.set_frame(name, jpg.tobytes())
-    tk = sim.task
     p = sim.io.base_pose()
     lidar = []
     if st.get("ranges") is not None:
@@ -166,28 +199,27 @@ def publish_panel(panel, sim, st) -> None:
         if w is not None:
             mem.append({"label": label, "x": float(w[0][0]), "y": float(w[0][1]),
                         "c": float(tk.memory.confidence(label, sim.t))})
-    if True:  # walls + learned obstacles every update (small)
-        st["occ_t"] = sim.t
-        g = tk.grid
-        sub = g.occ[::2, ::2]
-        occ = {"nx": int(sub.shape[0]), "ny": int(sub.shape[1]), "d": "".join("1" if v else "0" for v in sub.flatten())}
-    else:
-        occ = None
+    sub = tk.grid.occ[::2, ::2]
+    occ = {"nx": int(sub.shape[0]), "ny": int(sub.shape[1]), "d": "".join("1" if v else "0" for v in sub.flatten())}
     alert = sim.bb.get("alert")
-    person = sim.d.body("person").xpos
+    evs = sim.bb.events()
+    reason = next((e.text.split(": ", 1)[-1] for e in reversed(evs) if e.kind == "state"), "")
+    perc = getattr(tk.det, "needs_rgb", False)
     state = {
-        "t": sim.t, "state": tk.state, "online": bool(os.environ.get("GEMINI_API_KEY")),
-        "decision": {"action": tk.decision.action, "reason": tk.decision.reason} if tk.decision else None,
-        "dist": float(tk.dist_to_mouth()), "water": float(getattr(tk, "water_level", 1.0)),
+        "t": sim.t, "state": tk.state, "reason": reason, "online": bool(os.environ.get("GEMINI_API_KEY")),
+        "gemini_calls": gemini._usage["calls"],
+        "perception": (f"YOLO-World {tk.det.ms:.0f} ms + MediaPipe" if perc else "sim oracle (test mode)"),
+        "decision": {"action": tk.decision.action, "reason": tk.decision.reason,
+                     "max_speed": tk.decision.max_speed_mps} if tk.decision else None,
+        "sensed": float(tk.sensed_dist()), "water": float(getattr(tk, "water_level", 1.0)),
         "hz": st["ticks"] / max(1e-6, time.time() - st["t0"]),
-        "events": [{"t": e.t, "kind": e.kind, "text": e.text} for e in sim.bb.events()[-60:]],
+        "events": [{"t": e.t, "kind": e.kind, "text": e.text} for e in evs[-150:]],
         "alert": alert[1] if alert else None,
-        "robot": [p.x, p.y, p.yaw], "person": [float(person[0]), float(person[1])],
+        "robot": [p.x, p.y, p.yaw],
+        "places": [{"name": k, "x": float(v["xyz"][0]), "y": float(v["xyz"][1])} for k, v in tk.places.items()],
         "path": [list(map(float, q)) for q in tk._nav["follower"].path] if tk._nav else [],
-        "lidar": lidar, "memory": mem,
+        "lidar": lidar, "memory": mem, "occ": occ,
     }
-    if occ:
-        state["occ"] = occ
     panel.set_state(state)
 
 
@@ -271,8 +303,8 @@ def main(argv=None):
             if panel is not None:
                 with open(jpg, "rb") as f:
                     panel.set_frame("alert", f.read())
-        if panel is not None and sim.t - st.get("last_panel", -1.0) >= 0.3:
-            st["last_panel"] = sim.t
+        if panel is not None and time.time() - st.get("last_panel", 0.0) >= 0.4:   # wall clock: no lag build-up
+            st["last_panel"] = time.time()
             publish_panel(panel, sim, st)
         if ex and sim.t - st["last_log"] >= 0.2:
             st["last_log"] = sim.t

@@ -8,7 +8,8 @@ _GO = r"\b(go|go ahead|carry on|continue|try again)\b"
 _WATER = r"\b(water|drink|thirsty|sip|glass)\b"
 _MEDICINE = r"\b(medicine|medicines|pill|pills|tablet|tablets|medication)\b"
 _YES = r"\b(yes|yeah|yep|please do)\b"
-_NO = r"\b(no|nope|don'?t)\b"
+_NO = r"\b(no|nope|don'?t|not now|later)\b"
+_TAKEN = r"\b(taken|took them|took it|had them|had it|swallowed)\b"
 
 
 def parse_keywords(text: str) -> set[str]:
@@ -17,7 +18,7 @@ def parse_keywords(text: str) -> set[str]:
     if re.search(_STOP, t):
         out.add("stop")
     for name, pat in (("done", _DONE), ("ready", _READY), ("go", _GO), ("water", _WATER), ("medicine", _MEDICINE),
-                      ("yes", _YES), ("no", _NO)):
+                      ("yes", _YES), ("no", _NO), ("taken", _TAKEN)):
         if re.search(pat, t):
             out.add(name)
     if "stop" in out:  # stop overrides anything that would start motion

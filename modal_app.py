@@ -98,7 +98,7 @@ def video(scenario: str = "chaos", seconds: float = 240):
 
 
 # ---------- learned straw-reach policy (PPO, many parallel simulations) ----------
-@app.function(cpu=32, memory=16384, timeout=3600)
+@app.function(cpu=32, memory=16384, timeout=3600, retries=0)
 def train_policy(steps: int = 3_000_000) -> tuple[bytes, dict]:
     import sys
     sys.path.insert(0, "/root/sip/src")
@@ -107,7 +107,8 @@ def train_policy(steps: int = 3_000_000) -> tuple[bytes, dict]:
     from stable_baselines3.common.vec_env import SubprocVecEnv
     from sip.learn.reach_env import NEAR, StrawReachEnv
 
-    envs = SubprocVecEnv([lambda i=i: StrawReachEnv(seed=i) for i in range(32)])
+    from functools import partial
+    envs = SubprocVecEnv([partial(StrawReachEnv, seed=i) for i in range(30)], start_method="spawn")
     model = PPO("MlpPolicy", envs, n_steps=256, batch_size=4096, learning_rate=3e-4, gamma=0.98,
                 ent_coef=0.002, policy_kwargs={"net_arch": [128, 128]}, verbose=1, seed=0)
     model.learn(total_timesteps=steps)

@@ -111,9 +111,9 @@ def _items(world):
                contype=0, conaffinity=0)
     b.add_geom(name="straw2_grip", type=BOX, size=[0.012, 0.012, 0.03], pos=[0, 0, 0.05], rgba=[1, 0.3, 0.3, 0],
                mass=0.005, group=3)
-    b = world.add_body(name="organiser", pos=[-1.9, 2.6, 0.92])
+    b = world.add_body(name="organiser", pos=[-2.2, 2.66, 0.93])   # weekly pill organiser (pharmacist-filled)
     b.add_freejoint(name="organiser_free")
-    _box(b, "organiser_geom", (0, 0, 0), (0.14, 0.06, 0.02), (0.9, 0.9, 0.3, 1), mass=0.3)
+    _box(b, "organiser_geom", (0, 0, 0), (0.1, 0.058, 0.023), (0.1, 0.55, 0.35, 1), mass=0.3)
 
 
 def _person(spec, world):

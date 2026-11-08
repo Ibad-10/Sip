@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sip control panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F8FA;--surface:#FFFFFF;--surface-2:#EEF1F6;--border:#DDE2EA;--border-strong:#C9D0DB;--text:#0E1A2F;--muted:#4A5872;
+--accent:#13306B;--accent-ink:#fff;--brand:#C2362B;--ok:#0F7A3D;--warn:#A15C07;--danger:#B42318;--info:#1D4ED8;
+--ok-bg:rgba(15,122,61,.08);--warn-bg:rgba(161,92,7,.09);--danger-bg:rgba(180,35,24,.08);--info-bg:rgba(29,78,216,.08);
+--sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;--serif:"Source Serif 4",Georgia,serif}
+:root.dark{--bg:oklch(0.145 0.003 286);--surface:oklch(0.172 0.004 286);--surface-2:oklch(0.215 0.005 286);--border:oklch(1 0 0 / 7.5%);--border-strong:oklch(1 0 0 / 12%);
+--text:oklch(0.955 0.003 286);--muted:oklch(0.72 0.012 286);--accent:oklch(0.68 0.2 29);--accent-ink:oklch(0.14 0.01 40);
+--ok:oklch(0.74 0.14 160);--warn:oklch(0.8 0.14 80);--danger:oklch(0.7 0.18 22);--info:oklch(0.72 0.13 255);
+--ok-bg:oklch(0.74 0.14 160 / 12%);--warn-bg:oklch(0.8 0.14 80 / 12%);--danger-bg:oklch(0.7 0.18 22 / 14%);--info-bg:oklch(0.72 0.13 255 / 12%)}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--text);font:14px/1.45 var(--sans)}
+.wrap{max-width:1400px;margin:0 auto;padding:0 clamp(16px,3vw,32px)}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--border)}
+.bar{display:flex;align-items:center;gap:12px;min-height:60px;flex-wrap:wrap;padding:8px 0}
+.logo{font:600 18px var(--serif);display:flex;align-items:center;gap:8px}.logo i{width:10px;height:10px;border-radius:50%;background:var(--brand);display:inline-block}
+.label{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.goal{display:flex;flex-direction:column;min-width:0;flex:1 1 260px}.goal b{font:600 16px var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:999px;padding:4px 10px;font:500 12px var(--mono);background:var(--surface);white-space:nowrap}
+.chip.ok{color:var(--ok);background:var(--ok-bg);border-color:transparent}.chip.warn{color:var(--warn);background:var(--warn-bg);border-color:transparent}
+.chip.bad{color:var(--danger);background:var(--danger-bg);border-color:transparent}.chip.info{color:var(--info);background:var(--info-bg);border-color:transparent}
+button{font:500 13px var(--sans);min-height:40px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer}
+button:hover{border-color:var(--accent)}button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}button.stop{color:var(--danger);border-color:var(--danger)}
+button.icon{width:40px;padding:0}
+main{display:flex;flex-wrap:wrap;gap:16px;padding:16px 0 40px}
+.col-main{flex:999 1 560px;display:flex;flex-direction:column;gap:16px;min-width:0}.col-side{flex:1 1 340px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:.5rem;padding:14px;min-width:0}
+.card h2{margin:0 0 10px;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.view{position:relative;border-radius:.5rem;overflow:hidden;background:#000;aspect-ratio:4/3}.view img{width:100%;height:100%;object-fit:contain;display:block}
+.view .tag{position:absolute;left:10px;top:10px}
+.thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.thumbs button{padding:0;min-height:0;aspect-ratio:4/3;overflow:hidden;border-radius:6px;background:#000;position:relative}
+.thumbs button img{width:100%;height:100%;object-fit:cover;display:block}.thumbs button span{position:absolute;left:6px;bottom:4px;font:500 11px var(--mono);color:#fff;text-shadow:0 1px 2px #000}
+.thumbs button[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:1px}
+.light-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.lamp{border:1px solid var(--border);border-radius:6px;padding:8px 6px;text-align:center;font:500 11px var(--mono);color:var(--muted);opacity:.45}
+.lamp.on{opacity:1}.lamp.on.go{color:var(--ok);background:var(--ok-bg);border-color:var(--ok)}.lamp.on.slow{color:var(--info);background:var(--info-bg);border-color:var(--info)}
+.lamp.on.wait{color:var(--warn);background:var(--warn-bg);border-color:var(--warn)}.lamp.on.back,.lamp.on.halt{color:var(--danger);background:var(--danger-bg);border-color:var(--danger)}
+.why{margin-top:8px;font:400 13px var(--sans)}.why b{font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.stat{background:var(--surface-2);border-radius:6px;padding:8px}
+.stat b{display:block;font:600 18px var(--sans)}.stat span{font:500 10px var(--mono);text-transform:uppercase;color:var(--muted)}
+canvas{width:100%;aspect-ratio:4/3;display:block;border-radius:6px;background:var(--surface-2)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:12px;color:var(--muted)}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.btns{display:flex;flex-wrap:wrap;gap:6px}.row{display:flex;gap:6px;margin-top:8px}
+input[type=text]{flex:1;min-width:0;min-height:40px;border:1px solid var(--border-strong);border-radius:6px;padding:0 10px;background:var(--surface);color:var(--text);font:inherit}
+.timeline{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow:auto}
+details.step{border:1px solid var(--border);border-radius:.5rem;background:var(--surface)}
+details.step summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:center;padding:10px 12px}
+details.step summary::-webkit-details-marker{display:none}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--border-strong);flex:none}
+details.step.active .dot{background:var(--warn);animation:pulse 1.4s ease-in-out infinite}details.step.done .dot{background:var(--ok)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--warn-bg)}50%{box-shadow:0 0 0 6px var(--warn-bg)}}
+.st{font:500 12px var(--mono)}.reason{color:var(--muted);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tm{font:400 11px var(--mono);color:var(--muted)}
+.evs{border-top:1px solid var(--border);padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px}
+.ev{display:grid;grid-template-columns:52px 120px 1fr;gap:8px;align-items:start;font-size:13px}
+.agent{font:500 11px var(--mono);padding:2px 6px;border-radius:4px;background:var(--surface-2);color:var(--muted);text-align:center}
+.agent.perception{color:var(--info);background:var(--info-bg)}.agent.planner{color:var(--accent);background:var(--surface-2)}
+.agent.safety{color:var(--warn);background:var(--warn-bg)}.agent.gemini{color:var(--ok);background:var(--ok-bg)}.agent.alert{color:var(--danger);background:var(--danger-bg)}
+.agent.voice{color:var(--text)}
+#alert{display:none;border-color:var(--danger);background:var(--danger-bg)}#alert img{max-width:100%;border-radius:6px;margin-top:8px}
+dialog{border:1px solid var(--border);border-radius:.5rem;background:var(--surface);color:var(--text);max-width:640px;width:calc(100% - 32px);padding:20px}
+dialog::backdrop{background:rgba(14,26,47,.45)}dialog h3{font:600 20px var(--serif);margin:0 0 8px}dialog h4{margin:14px 0 4px;font:500 11px var(--mono);text-transform:uppercase;color:var(--muted)}
+dialog ul{margin:0;padding-left:18px}dialog li{margin:3px 0}kbd{font:500 12px var(--mono);border:1px solid var(--border-strong);border-radius:4px;padding:0 5px;background:var(--surface-2)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+  <div class="logo"><i></i>Sip</div>
+  <div class="goal"><span class="label">Current step</span><b id="goal">Waiting for a request</b></div>
+  <span class="chip" id="state">IDLE</span>
+  <span class="chip" id="net">offline</span>
+  <button class="icon" id="theme" aria-label="Switch light or dark theme" title="Theme">◐</button>
+  <button class="primary" id="helpBtn" aria-haspopup="dialog">? Help</button>
+</div></header>
+
+<div class="wrap"><main>
+  <div class="col-main">
+    <div class="card" id="alert" role="alert"></div>
+    <section class="card" aria-label="Cameras">
+      <h2><span id="viewName">Robot head camera: what it sees</span><span class="chip info" id="perc">perception</span></h2>
+      <div class="view"><img id="big" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACADs=" alt="Selected camera view"></div>
+      <div class="thumbs" role="group" aria-label="Choose camera">
+        <button aria-pressed="true" data-cam="head"><img id="t_head" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACADs=" alt=""><span>Robot head</span></button>
+        <button aria-pressed="false" data-cam="wrist"><img id="t_wrist" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACADs=" alt=""><span>Robot wrist</span></button>
+        <button aria-pressed="false" data-cam="person"><img id="t_person" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAACADs=" alt=""><span>Her view</span></button>
+      </div>
+    </section>
+    <section class="card" aria-label="Decision timeline">
+      <h2><span>What it's doing and why</span><span class="label">click a step to expand</span></h2>
+      <div class="timeline" id="timeline"></div>
+    </section>
+  </div>
+  <div class="col-side">
+    <section class="card" aria-label="Safety">
+      <h2><span>Safety gate</span><span class="label" id="dist">-</span></h2>
+      <div class="light-row">
+        <div class="lamp go" id="L_go">✓ GO</div><div class="lamp slow" id="L_slow">↘ SLOW</div><div class="lamp wait" id="L_wait">⏸ WAIT</div>
+        <div class="lamp back" id="L_back">↩ BACK</div><div class="lamp halt" id="L_halt">■ STOP</div>
+      </div>
+      <div class="why" id="why">No approach in progress.</div>
+    </section>
+    <section class="card" aria-label="Person says">
+      <h2><span>She says</span><span class="label">voice input</span></h2>
+      <div class="btns">
+        <button data-c="I'm thirsty, can I have some water?">Water please</button><button data-c="ready">Ready</button>
+        <button data-c="that's enough">That's enough</button><button data-c="go">Go on</button><button class="stop" data-c="stop">■ Stop</button>
+      </div>
+      <div class="row"><input type="text" id="txt" placeholder="Type what she says…" aria-label="What she says"><button id="send">Say</button></div>
+    </section>
+    <section class="card" aria-label="Live changes">
+      <h2><span>Live changes</span><span class="label">test the robot</span></h2>
+      <div class="btns">
+        <button data-c="/chair" title="A chair falls into the hallway">Drop chair in hall</button>
+        <button data-c="/glass" title="Someone moves the glass to the bedroom">Move the glass</button>
+        <button data-c="/turn" title="She turns her head away (toggle)">Turn her head</button>
+        <button data-c="/bed" title="She moves from the armchair to the bed">Move her to bed</button>
+        <button data-c="/reset">Reset</button>
+      </div>
+    </section>
+    <section class="card" aria-label="Map">
+      <h2><span>Map, route, lidar, memory</span><span class="btns"><button data-c="/lidar" style="min-height:28px">lidar</button><button data-c="/path" style="min-height:28px">route</button></span></h2>
+      <canvas id="map" width="640" height="480" aria-label="Map of the house"></canvas>
+      <div class="legend"><span><i style="background:var(--border-strong)"></i>walls / learned obstacles</span><span><i style="background:#ff5a46"></i>lidar hits</span>
+      <span><i style="background:var(--ok)"></i>route</span><span><i style="background:var(--info)"></i>robot</span><span><i style="background:#9b59d0"></i>where it thinks she is</span><span><i style="background:#e0a800"></i>remembered objects</span></div>
+    </section>
+    <section class="card" aria-label="Numbers">
+      <div class="stats">
+        <div class="stat"><b id="water">-</b><span>water</span></div><div class="stat"><b id="t">-</b><span>sim time</span></div>
+        <div class="stat"><b id="hz">-</b><span>loop</span></div><div class="stat"><b id="gem">0</b><span>Gemini calls</span></div>
+      </div>
+    </section>
+  </div>
+</main></div>
+
+<dialog id="help" aria-labelledby="helpTitle">
+  <h3 id="helpTitle">What you can do</h3>
+  <p>Sip is a care robot helping an older person drink. Everything it knows comes from its cameras, depth, lidar and what she says.</p>
+  <h4>Talk to it (as her)</h4>
+  <ul><li><b>Water please</b> starts a drink. It finds the glass, pours from the jug, adds a straw and brings it.</li>
+  <li><b>Ready</b>: the straw only comes to her lips after she says she's ready.</li>
+  <li><b>That's enough</b> ends the drink. <b>Stop</b> freezes it at once; <b>Go on</b> resumes.</li></ul>
+  <h4>Change the world and watch it adapt</h4>
+  <ul><li><b>Drop chair in hall</b>: lidar sees it and it re-routes.</li>
+  <li><b>Move the glass</b>: it isn't where remembered, so it searches the rooms.</li>
+  <li><b>Turn her head</b>: during the approach the arm backs off and waits.</li>
+  <li><b>Move her to bed</b>: it notices she's gone and looks for her.</li></ul>
+  <h4>In the 3D viewer window</h4>
+  <ul><li>Double-click an object to select it, then <kbd>Ctrl</kbd> + right-drag to move it, or <kbd>Ctrl</kbd> + left-drag to turn it.</li>
+  <li><kbd>Space</kbd> pause, <kbd>F7</kbd> lidar rays, <kbd>F8</kbd> route, <kbd>F9</kbd> camera picture-in-picture.</li></ul>
+  <h4>Reading this page</h4>
+  <ul><li>The timeline groups what it did into steps. Open a step to see who decided: <span class="agent perception">perception</span> (YOLO-World, MediaPipe),
+  <span class="agent planner">planner</span>, <span class="agent safety">safety</span>, <span class="agent gemini">gemini</span>, <span class="agent voice">voice</span>.</li>
+  <li>Boxes on the camera are live detections with confidence; the cross is the mouth point.</li></ul>
+  <p style="margin-top:16px;text-align:right"><button class="primary" id="closeHelp">Got it</button></p>
+</dialog>
+
+<script>
+const $=id=>document.getElementById(id);
+const root=document.documentElement;
+try{if(localStorage.getItem('sip-theme')==='dark')root.classList.add('dark')}catch(e){}
+$('theme').onclick=()=>{root.classList.toggle('dark');try{localStorage.setItem('sip-theme',root.classList.contains('dark')?'dark':'light')}catch(e){}};
+$('helpBtn').onclick=()=>$('help').showModal();$('closeHelp').onclick=()=>$('help').close();
+function cmd(c){fetch('/cmd',{method:'POST',body:c})}
+document.querySelectorAll('button[data-c]').forEach(b=>b.onclick=()=>cmd(b.dataset.c));
+$('send').onclick=()=>{if($('txt').value.trim()){cmd($('txt').value);$('txt').value=''}};
+$('txt').onkeydown=e=>{if(e.key==='Enter')$('send').click()};
+let cam='head';const names={head:'Robot head camera: what it sees',wrist:'Robot wrist camera: close-up at the face',person:'Her view: what she sees'};
+document.querySelectorAll('.thumbs button').forEach(b=>b.onclick=()=>{cam=b.dataset.cam;document.querySelectorAll('.thumbs button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('viewName').textContent=names[cam]});
+let n=0;setInterval(()=>{n++;$('big').src='/frame/'+cam+'.jpg?'+n;if(n%3==0)for(const k of ['head','wrist','person'])$('t_'+k).src='/frame/'+k+'.jpg?'+n},350);
+const AG={perceive:'perception',plan:'planner',state:'planner',safety:'safety',cloud:'gemini',say:'voice',alert:'alert',heard:'voice',dose:'planner'};
+const NICE={IDLE:'Waiting',LOCATE:'Recalling where things are',SEARCH:'Searching the rooms',NAV_TO_OBJECT:'Driving to the glass',VERIFY:'Checking with the camera',
+PREPARE:'Preparing the drink',GRASP:'Picking up the glass',FIND_PERSON:'Looking for her',NAV_TO_PERSON:'Bringing the drink',APPROACH:'Bringing the straw to her lips',
+HOLD:'Holding while she drinks',RETREAT:'Moving away',RETURN:'Putting the glass back',ASK:'Asking for help',HALT:'Stopped'};
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const openSteps=new Set();
+function steps(evs){const out=[];let cur={state:'IDLE',reason:'start',t:0,evs:[]};
+ for(const e of evs){if(e.kind==='state'){const m=e.text.match(/-> (\w+): (.*)$/);if(m){out.push(cur);cur={state:m[1],reason:m[2],t:e.t,evs:[]};continue}}cur.evs.push(e)}
+ out.push(cur);return out.filter(s=>s.evs.length||s.state!=='IDLE'||out.length==1)}
+function renderTimeline(evs){const tl=$('timeline');const st=steps(evs);const atTop=tl.scrollTop<10;
+ tl.innerHTML=st.map((s,i)=>{const key=s.state+'@'+s.t.toFixed(1);const last=i===st.length-1;const open=openSteps.has(key)||(last&&!openSteps.has('closed:'+key));
+  return `<details class="step ${last?'active':'done'}" data-k="${key}" ${open?'open':''}><summary><span class="dot"></span><span class="st">${esc(NICE[s.state]||s.state)}</span>
+  <span class="reason">${esc(s.reason)}</span><span class="tm">${s.t.toFixed(1)}s</span></summary>
+  <div class="evs">${s.evs.length?s.evs.map(e=>`<div class="ev"><span class="tm">${e.t.toFixed(1)}s</span><span class="agent ${AG[e.kind]||''}">${AG[e.kind]||e.kind}</span><span>${esc(e.text)}</span></div>`).join(''):'<span class="tm">no events yet</span>'}</div></details>`}).reverse().join('');
+ tl.querySelectorAll('details').forEach(d=>d.ontoggle=()=>{const k=d.dataset.k;if(d.open){openSteps.add(k);openSteps.delete('closed:'+k)}else{openSteps.delete(k);openSteps.add('closed:'+k)}});
+ if(atTop)tl.scrollTop=0}
+const ctx=$('map').getContext('2d');let occ=null;
+function W(x){return (x+4)/8*640}function H(y){return 480-(y+3)/6*480}
+function cssv(v){return getComputedStyle(root).getPropertyValue(v).trim()}
+function draw(s){ctx.fillStyle=cssv('--surface-2');ctx.fillRect(0,0,640,480);if(s.occ)occ=s.occ;
+ if(occ){ctx.fillStyle=cssv('--border-strong');for(let i=0;i<occ.nx;i++)for(let j=0;j<occ.ny;j++)if(occ.d[i*occ.ny+j]==='1')ctx.fillRect(i*640/occ.nx,480-(j+1)*480/occ.ny,640/occ.nx+.5,480/occ.ny+.5)}
+ ctx.fillStyle='#ff5a46';for(const p of s.lidar||[])ctx.fillRect(W(p[0])-1.5,H(p[1])-1.5,3,3);
+ if(s.path&&s.path.length){ctx.strokeStyle=cssv('--ok');ctx.lineWidth=3;ctx.beginPath();s.path.forEach((p,i)=>i?ctx.lineTo(W(p[0]),H(p[1])):ctx.moveTo(W(p[0]),H(p[1])));ctx.stroke()}
+ ctx.font='12px '+cssv('--sans');
+ for(const m of s.memory||[]){ctx.globalAlpha=.35+.65*m.c;ctx.fillStyle='#e0a800';ctx.beginPath();ctx.arc(W(m.x),H(m.y),7,0,7);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle=cssv('--text');ctx.fillText(m.label+' '+Math.round(m.c*100)+'%',W(m.x)+9,H(m.y)+4)}
+ for(const p of s.places||[]){ctx.fillStyle='#9b59d0';ctx.beginPath();ctx.arc(W(p.x),H(p.y),9,0,7);ctx.fill();ctx.fillStyle=cssv('--text');ctx.fillText(p.name,W(p.x)+11,H(p.y)+4)}
+ const r=s.robot;if(r){ctx.save();ctx.translate(W(r[0]),H(r[1]));ctx.rotate(-r[2]);ctx.fillStyle=cssv('--info');ctx.beginPath();ctx.arc(0,0,13,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(0,-2,15,4);ctx.restore()}}
+function lamps(d){for(const k of ['go','slow','wait','back','halt'])$('L_'+k).classList.remove('on');if(!d){$('why').textContent='No approach in progress.';return}
+ const a=d.action;const k=a==='halt'||a==='stop'?'halt':a==='retreat'?'back':(a==='pause'||a==='ask')?'wait':(d.max_speed<0.1?'slow':'go');
+ $('L_'+k).classList.add('on');$('why').innerHTML='<b>'+esc(a)+'</b>: '+esc(d.reason)}
+async function poll(){try{const s=await(await fetch('/state')).json();
+ $('goal').textContent=(NICE[s.state]||s.state)+(s.reason?': '+s.reason:'');
+ $('state').textContent=s.state;$('state').className='chip '+(s.state==='HALT'||s.state==='ASK'?'bad':s.state==='IDLE'?'':'warn');
+ $('net').textContent=s.online?'online: Gemini on standby':'offline: all on device';$('net').className='chip '+(s.online?'ok':'');
+ $('perc').textContent=s.perception||'perception';lamps(s.decision);
+ $('dist').textContent=s.sensed<1?'straw to mouth '+(s.sensed*100).toFixed(1)+' cm':'';
+ $('water').textContent=Math.round(s.water*100)+'%';$('t').textContent=s.t.toFixed(0)+'s';$('hz').textContent=s.hz.toFixed(0)+' Hz';$('gem').textContent=s.gemini_calls||0;
+ renderTimeline(s.events);
+ if(s.alert){$('alert').style.display='block';$('alert').innerHTML='<b>Alert for the carer:</b> '+esc(s.alert)+'<br><img src="/frame/alert.jpg?'+Math.floor(s.t)+'" alt="Evidence snapshot saved with the alert">'}else $('alert').style.display='none';
+ draw(s)}catch(e){}}
+setInterval(poll,400);poll();
+</script>
+</body>
+</html>
