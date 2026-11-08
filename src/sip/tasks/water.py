@@ -314,8 +314,21 @@ class WaterTask:
             out.append(det)
         return out
 
+    def _fall_check(self, xyz: np.ndarray) -> None:
+        """Body centre seen near the floor for 3 s -> possible fall: emergency alert with a photo."""
+        low = xyz[2] < 0.35
+        if not low:
+            self._low_since = None
+            return
+        self._low_since = getattr(self, "_low_since", None) or self.t
+        if self.t - self._low_since > 3.0 and not getattr(self, "_fall_alerted", False):
+            self._fall_alerted = True
+            self.alert(f"POSSIBLE FALL: person seen on the floor in the {self._room_of(*xyz[:2])} for 3 s")
+            self.say("Are you all right? I've raised an emergency alert for your carer.")
+
     def _saw_person(self, xyz: np.ndarray) -> None:
         """Remember where she is; nearby sightings refine the same place."""
+        self._fall_check(xyz)
         self.person_seen = (self.t, xyz)
         for name, pl in self.places.items():
             if np.linalg.norm(pl["xyz"][:2] - xyz[:2]) < 1.0:

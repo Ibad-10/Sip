@@ -107,3 +107,32 @@ def test_stale_perception_pauses_the_approach():
     assert task._gate().action != "proceed"
     task.det.latest_t = 9.9                    # fresh data again -> may proceed
     assert task._gate().action == "proceed"
+
+
+def test_person_on_the_floor_raises_emergency_alert():
+    import mujoco
+    import numpy as np
+    from sip.blackboard import Blackboard
+    from sip.memory import ObjectMemory
+    from sip.nav.grid import grid_from_model
+    from sip.perception.face import FaceTracker
+    from sip.perception.objects import SegDetector
+    from sip.robot import StretchIO
+    from sip.scene.build_house import build_house
+    from sip.tasks.water import WaterTask
+    m = mujoco.MjModel.from_xml_path(build_house())
+    d = mujoco.MjData(m)
+    mujoco.mj_forward(m, d)
+    task = WaterTask(StretchIO(m, d), Blackboard(), grid_from_model(m), ObjectMemory(), SegDetector(["glass"]),
+                     FaceTracker("sim"))
+    for k in range(10):                      # body centre at 20 cm for 4.5 s
+        task.t = 0.5 * k
+        task._saw_person(np.array([1.0, 1.5, 0.2]))
+    alerts = [e.text for e in task.bb.events() if e.kind == "alert"]
+    assert any("POSSIBLE FALL" in a for a in alerts)
+    task2 = WaterTask(StretchIO(m, d), Blackboard(), grid_from_model(m), ObjectMemory(), SegDetector(["glass"]),
+                      FaceTracker("sim"))
+    for k in range(10):                      # seated: body centre at 70 cm -> no alert
+        task2.t = 0.5 * k
+        task2._saw_person(np.array([1.0, 1.5, 0.7]))
+    assert not [e for e in task2.bb.events() if e.kind == "alert"]
