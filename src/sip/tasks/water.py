@@ -1148,7 +1148,7 @@ class WaterTask:
             return
         err = tgt - self.tip()
         lateral = float(np.linalg.norm((err - (err @ self.io.arm_dir()) * self.io.arm_dir())[:2]))
-        if (self.io.arm_extension() > 0.48 and err @ self.io.arm_dir() > 0.01) or lateral > 0.04 and self.t - self._timer > 8.0:
+        if self.io.arm_extension() > 0.48 and err @ self.io.arm_dir() > 0.01:
             if getattr(self, "_reparks", 0) < 2:
                 self._reparks = getattr(self, "_reparks", 0) + 1
                 self.io.set_arm(arm=0.0)
@@ -1163,7 +1163,7 @@ class WaterTask:
                         lift=self.io.arm_targets()["lift"] + float(np.clip(err[2], -step, step)))
         p = self.pose()
         lever = max(0.3, float(np.hypot(self.tip()[0] - p.x, self.tip()[1] - p.y)))
-        self._base_bearing_fix(tgt, gain=1.5, wmax=min(0.15, 0.8 * dec.max_speed_mps / lever))
+        self._base_bearing_fix(tgt, gain=1.5, wmax=min(0.15, 0.8 * dec.max_speed_mps / lever), point=self.tip())
 
     def _s_hold(self):
         dec = self._gate()
