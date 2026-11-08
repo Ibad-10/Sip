@@ -19,8 +19,12 @@ class FaceTracker:
         self.rng = np.random.default_rng(seed)
         self._person = None
 
-    def update(self, rgb, depth, seg, model, data, hand_raised: bool = False, cam: str = CAM) -> MouthState:
-        return self._sim(depth, seg, model, data, hand_raised, cam)
+    def update(self, rgb, depth, seg, model, data, hand_raised: bool = False, cam: str = CAM,
+               mouth_open: bool = True) -> MouthState:
+        m = self._sim(depth, seg, model, data, hand_raised, cam)
+        if m.visible and not mouth_open:
+            m.open_ratio = 0.0
+        return m
 
     def _sim(self, depth, seg, model, data, hand_raised: bool, cam: str) -> MouthState:
         if self._person is None:

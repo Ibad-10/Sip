@@ -66,3 +66,13 @@ def test_stop_short_at_2cm():
 def test_stop_beats_everything():
     d = safety_gate(inp(0.02, stop_heard=True, mouth=face(hand_raised=True)))
     assert d.action == "halt"
+
+
+def test_mouth_closed_pauses_near_face():
+    d = safety_gate(inp(0.1, mouth=face(open_ratio=0.0)))
+    assert d.action == "pause" and d.reason == "mouth closed"
+
+
+def test_done_retreats():
+    d = safety_gate(inp(0.05, done_heard=True))
+    assert d.action == "retreat" and d.reason == "person finished"

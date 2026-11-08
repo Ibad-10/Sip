@@ -1,7 +1,8 @@
 """Keyword intents. Safety words never wait on a language model."""
 import re
 
-_STOP = r"\b(stop|wait|hold on|no no|enough|careful)\b"
+_STOP = r"\b(stop|wait|hold on|no no|careful)\b"
+_DONE = r"(that'?s enough|i'?ve had enough|i'?m done|\bdone\b|no more|finished)"
 _READY = r"\b(ready|i'?m ready)\b"
 _GO = r"\b(go|go ahead|carry on|continue|try again)\b"
 _WATER = r"\b(water|drink|thirsty|sip|glass)\b"
@@ -15,7 +16,7 @@ def parse_keywords(text: str) -> set[str]:
     out: set[str] = set()
     if re.search(_STOP, t):
         out.add("stop")
-    for name, pat in (("ready", _READY), ("go", _GO), ("water", _WATER), ("medicine", _MEDICINE),
+    for name, pat in (("done", _DONE), ("ready", _READY), ("go", _GO), ("water", _WATER), ("medicine", _MEDICINE),
                       ("yes", _YES), ("no", _NO)):
         if re.search(pat, t):
             out.add(name)

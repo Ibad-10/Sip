@@ -22,6 +22,8 @@ def safety_gate(inp: SafetyInput) -> SafetyDecision:
         return SafetyDecision("halt", 0.0, "stop heard")
     if inp.contact_force_n > MAX_FORCE_N:
         return _retreat(inp, f"contact {inp.contact_force_n:.0f} N")
+    if inp.done_heard:
+        return SafetyDecision("retreat", SLOW_MPS, "person finished")
     d, m = inp.dist_to_mouth_m, inp.mouth
     if d < WATCH_M:
         if m.hand_raised:
@@ -30,6 +32,8 @@ def safety_gate(inp: SafetyInput) -> SafetyDecision:
             return SafetyDecision("pause", 0.0, "face lost")
         if abs(m.yaw_deg) > MAX_YAW_DEG:
             return _retreat(inp, "head turned away")
+        if d < NEAR_FACE_M and d > STOP_SHORT_M and m.open_ratio < 0.2:
+            return SafetyDecision("pause", 0.0, "mouth closed")
     if d <= STOP_SHORT_M:
         return SafetyDecision("pause", 0.0, "at mouth")
     if d < NEAR_FACE_M:

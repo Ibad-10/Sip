@@ -50,3 +50,9 @@ def test_llm_valid_json_used(monkeypatch):
     monkeypatch.setattr(llm, "_chat", lambda text: '{"task": "chat", "reply": "Hello Mary."}')
     out = llm.intent("hello")
     assert out == {"task": "chat", "reply": "Hello Mary.", "source": "llm"}
+
+
+@pytest.mark.parametrize("text", ["that's enough", "I'm done thanks", "no more please", "finished"])
+def test_done_is_not_emergency_stop(text):
+    kw = parse_keywords(text)
+    assert "done" in kw and "stop" not in kw

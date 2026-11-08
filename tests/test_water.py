@@ -175,3 +175,21 @@ def test_person_moved_to_bed_retargets():
     assert h.run(220, until=finished, on=on), h.states
     assert any("moved" in t for t in h.kinds("plan"))
     assert h.hold >= 3.0
+
+
+def test_done_during_hold_ends_drink():
+    h = Harness()
+    request_water(h)
+    assert h.run(150, until=lambda h, s: s == "HOLD"), h.states
+    h.run(0.5)
+    h.bb.set("done", True)
+    assert h.run(3, until=lambda h, s: s == "RETREAT"), h.states
+
+
+def test_no_answer_raises_alert():
+    h = Harness()
+    h.move_free("glass_free", [-2.0, -2.0, 0.06])
+    request_water(h)
+    assert h.run(200, until=lambda h, s: s == "ASK")
+    h.run(31)
+    assert any("no answer" in t for t in h.kinds("alert"))

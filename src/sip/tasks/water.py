@@ -182,12 +182,13 @@ class WaterTask:
                 if self.home is None:
                     self.home = det.xyz.copy()
         hand = bool(self.bb.get("hand_raised", False))
-        self.mouth = self.face.update(rgb, depth, seg, self.m, self.d, hand_raised=hand)
+        mopen = self.bb.get("mouth_open", True) is not False
+        self.mouth = self.face.update(rgb, depth, seg, self.m, self.d, hand_raised=hand, mouth_open=mopen)
         if not self.mouth.visible and self.state in ("APPROACH", "HOLD"):
             # the arm and glass block the head camera near the face: use the wrist camera
             rgb2, depth2, seg2 = render_head(self.m, self.d, self.renderer, cam=WRIST_CAM, rgb=False)
             self.mouth = self.face.update(rgb2, depth2, seg2, self.m, self.d, hand_raised=hand,
-                                          cam=WRIST_CAM)
+                                          cam=WRIST_CAM, mouth_open=mopen)
         if self.mouth.visible:
             self.last_mouth = (self.t, self.mouth.xyz.copy())
 
@@ -410,7 +411,8 @@ class WaterTask:
 
     def _gate(self) -> SafetyDecision:
         d = SafetyInput(self.dist_to_mouth(), self.mouth, bool(self.bb.get("ready", False)),
-                        bool(self.bb.get("stop", False)), self._contact_force(), self.reapproach)
+                        bool(self.bb.get("stop", False)), self._contact_force(), self.reapproach,
+                        done_heard=bool(self.bb.get("done", False)))
         dec = safety_gate(d)
         if self.decision is None or dec.action != self.decision.action or dec.reason != self.decision.reason:
             self.log("safety", f"{dec.action}: {dec.reason} (d={d.dist_to_mouth_m:.2f} m)")
@@ -436,6 +438,10 @@ class WaterTask:
             else:
                 self._timer = self.t
             return
+        if dec.action == "retreat" and dec.reason == "person finished":
+            self.bb.set("done", False)
+            self.say("Okay, I'll put it away.")
+            return self.goto("RETREAT", "person said they had enough")
         if dec.action == "retreat":
             self.reapproach += 1
             self.io.set_arm(arm=max(0.0, self.io.arm_extension() - 0.10))
@@ -466,6 +472,11 @@ class WaterTask:
 
     def _s_hold(self):
         dec = self._gate()
+        if dec.action == "retreat" and dec.reason == "person finished":
+            self.bb.set("done", False)
+            self.log("plan", f"drink offered for {self.t - self._timer:.0f} s (stopped by person)")
+            self.say("Okay, I'll put it away.")
+            return self.goto("RETREAT", "person said they had enough")
         if dec.action in ("retreat", "ask"):
             self.goto("APPROACH", dec.reason)
             self._sub = 1
@@ -513,11 +524,21 @@ class WaterTask:
     def _ask(self, question: str, resume: str):
         self.io.drive(0, 0)
         self.say(question)
+        self._ask_q = question
+        self._alerted = False
         self._after_ask = resume
         self.goto("ASK", question)
 
+    def alert(self, text: str) -> None:
+        self.log("alert", text)
+        self.bb.set("alert", (self.t, text))
+
     def _s_ask(self):
+        if self.t - self._timer > 30.0 and not getattr(self, "_alerted", False):
+            self._alerted = True
+            self.alert(f"no answer for 30 s: {self._ask_q} - carer notified")
         if self.bb.get("go"):
+            self._alerted = False
             self.bb.set("go", False)
             self.reapproach = 0
             self._visited = []

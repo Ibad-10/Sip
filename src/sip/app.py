@@ -35,7 +35,7 @@ def handle_command(text: str, bb: Blackboard, llm=None, sim=None) -> None:
     if not text:
         return
     if text.startswith("/"):
-        toggles = {"/hand": "hand_raised", "/lidar": "show_lidar", "/path": "show_path", "/pip": "show_pip"}
+        toggles = {"/mouth": "mouth_open", "/hand": "hand_raised", "/lidar": "show_lidar", "/path": "show_path", "/pip": "show_pip"}
         if text in toggles:
             key = toggles[text]
             bb.set(key, not bb.get(key, key != "hand_raised"))
@@ -46,6 +46,9 @@ def handle_command(text: str, bb: Blackboard, llm=None, sim=None) -> None:
     bb.set("heard", text)
     if "stop" in kw:
         bb.set("stop", True)
+        return
+    if "done" in kw:
+        bb.set("done", True)
         return
     if "ready" in kw:
         bb.set("ready", True)

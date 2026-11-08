@@ -31,6 +31,7 @@ class SafetyInput:
     stop_heard: bool
     contact_force_n: float
     reapproach_count: int
+    done_heard: bool = False
 
 
 @dataclass
