@@ -150,7 +150,12 @@ def dress(spec, world) -> None:
     add_prop(spec, gl, "dishware_glass_8oz_a01", (0, 0, -0.06), fit=(0.07, 0.07, 0.12), name="glass_vis")
     gl.add_geom(name="water", type=mujoco.mjtGeom.mjGEOM_CYLINDER, pos=[0, 0, -0.015], size=[0.03, 0.04, 0],
                 rgba=[0.55, 0.75, 0.95, 0.55], contype=0, conaffinity=0, group=1, mass=0)
-    add_prop(spec, world, "dishware_mug_a01", (-3.0, 2.62, 0.9), name="mug")
+    add_prop(spec, world, "dishware_mug_a01", (-3.4, 2.62, 0.9), name="mug")
+    _hide(spec, {"jug_geom"})
+    add_prop(spec, spec.body("jug"), "metal_jug", (0, 0, -0.1), fit=(0.14, 0.14, 0.2), name="jug_vis")
+    jw = spec.body("jug")
+    jw.add_geom(name="jug_water_top", type=mujoco.mjtGeom.mjGEOM_CYLINDER, pos=[0, 0, 0.06], size=[0.055, 0.002, 0],
+                rgba=[0.55, 0.75, 0.95, 0.7], contype=0, conaffinity=0, group=1, mass=0)
     add_prop(spec, world, "electric_stove", (-1.1, 2.72, 0), yaw=np.pi, name="stove")
     world.add_geom(name="stove_col", type=BOX, pos=[-1.1, 2.72, 0.43], size=[0.26, 0.26, 0.43],
                    group=HIDDEN)

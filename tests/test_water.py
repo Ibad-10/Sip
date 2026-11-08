@@ -193,3 +193,16 @@ def test_no_answer_raises_alert():
     assert h.run(200, until=lambda h, s: s == "ASK")
     h.run(31)
     assert any("no answer" in t for t in h.kinds("alert"))
+
+
+def test_prepare_drink_pours_and_adds_straw():
+    h = Harness()
+    h.task = WaterTask(h.io, h.bb, h.task.grid, h.task.memory,
+                       SegDetector(["glass", "jug", "straw2"], noise_m=0.005), FaceTracker("sim"), prepare=True)
+    request_water(h)
+    assert h.task.water_level == 0.0
+    assert h.run(260, until=lambda h, s: s == "NAV_TO_PERSON"), h.states
+    assert h.task.water_level > 0.9 and h.task._straw_in
+    texts = h.kinds("plan")
+    assert any("poured water" in t for t in texts) and any("straw in the glass" in t for t in texts)
+    assert np.linalg.norm(h.d.body("jug").xpos[:2] - np.array([-1.72, 2.62])) < 0.15  # jug put back

@@ -95,6 +95,19 @@ def _items(world):
     b.add_geom(name="straw", type=CAP, fromto=[0, 0, 0.0, 0.07, 0, 0.14], size=[0.004, 0, 0],
                rgba=[1, 0.3, 0.3, 1], mass=0.001, contype=0, conaffinity=0)
     b.add_site(name="straw_tip", pos=[0.07, 0, 0.14], size=[0.006, 0, 0], group=4)
+    # jug of water (collider cylinder; visual added in visuals.dress) and a straw holder with a straw
+    b = world.add_body(name="jug", pos=[-1.72, 2.62, 1.0])
+    b.add_freejoint(name="jug_free")
+    b.add_geom(name="jug_geom", type=CYL, size=[0.065, 0.1, 0], rgba=[0.7, 0.72, 0.75, 1], mass=0.8,
+               friction=[1.5, 0.05, 0.01])
+    b = world.add_body(name="straw_cup", pos=[-3.15, 2.62, 0.95])
+    b.add_geom(name="straw_cup_geom", type=CYL, size=[0.03, 0.05, 0], rgba=[0.95, 0.95, 0.93, 1])
+    b = world.add_body(name="straw2", pos=[-3.15, 2.62, 1.02])
+    b.add_freejoint(name="straw2_free")
+    b.add_geom(name="straw2_geom", type=CAP, size=[0.004, 0.1, 0], rgba=[1, 0.3, 0.3, 1], mass=0.005,
+               contype=0, conaffinity=0)
+    b.add_geom(name="straw2_grip", type=BOX, size=[0.012, 0.012, 0.03], pos=[0, 0, 0.05], rgba=[1, 0.3, 0.3, 0],
+               mass=0.005, group=3)
     b = world.add_body(name="organiser", pos=[-1.9, 2.6, 0.92])
     b.add_freejoint(name="organiser_free")
     _box(b, "organiser_geom", (0, 0, 0), (0.14, 0.06, 0.02), (0.9, 0.9, 0.3, 1), mass=0.3)
@@ -149,7 +162,7 @@ def build_spec() -> mujoco.MjSpec:
     _person(spec, world)
     from sip.scene.visuals import dress
     dress(spec, world)
-    for item in ("glass", "organiser"):
+    for item in ("glass", "organiser", "jug", "straw2"):
         spec.add_equality(name=f"grasp_weld_{item}", type=mujoco.mjtEq.mjEQ_WELD,
                           objtype=mujoco.mjtObj.mjOBJ_BODY, name1="link_grasp_center", name2=item,
                           active=False)

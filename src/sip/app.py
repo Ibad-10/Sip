@@ -77,7 +77,8 @@ class Sim:
         mujoco.mj_forward(self.m, self.d)
         self.io = StretchIO(self.m, self.d)
         self.task = WaterTask(self.io, self.bb, grid_from_model(self.m), ObjectMemory(),
-                              SegDetector(["glass", "organiser"], noise_m=0.005), FaceTracker("sim"))
+                              SegDetector(["glass", "organiser", "jug", "straw2"], noise_m=0.005),
+                              FaceTracker("sim"), prepare=os.environ.get("SIP_PREPARE", "1") == "1")
         self.t = 0.0
 
     def _move_free(self, joint, xyz):

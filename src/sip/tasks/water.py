@@ -30,7 +30,7 @@ WRIST_SWING = 0.6            # rad/s when swinging the glass out beside the pers
 
 class WaterTask:
     def __init__(self, io: StretchIO, bb: Blackboard, grid: OccupancyGrid, memory: ObjectMemory,
-                 detector, face, label: str = "glass"):
+                 detector, face, label: str = "glass", prepare: bool = False):
         self.io, self.bb, self.grid, self.memory = io, bb, grid, memory
         self.det, self.face, self.label = detector, face, label
         self.m, self.d = io.m, io.d
@@ -53,6 +53,13 @@ class WaterTask:
         self.last_frame = None
         self.last_dets = []
         self.last_mouth: tuple[float, np.ndarray] | None = None
+        self.prepare = prepare
+        self.seen: dict[str, np.ndarray] = {}
+        self._gen = None
+        self.water_level = 1.0
+        if prepare:
+            self._set_water(0.0)
+            self._show_straw(False)
 
     # ---------- helpers ----------
     def log(self, kind: str, text: str) -> None:
@@ -178,6 +185,7 @@ class WaterTask:
             self.last_frame = rgb
         self.last_dets = self.det.detect(self.m, self.d, rgb, depth, seg)
         for det in self.last_dets:
+            self.seen[det.label] = det.xyz
             if det.label == self.label:
                 self.obj_xyz = det.xyz
                 self.memory.see(self.label, det.xyz, self.t, room_at(*det.xyz[:2]))
@@ -318,6 +326,9 @@ class WaterTask:
         if self.t - self._timer < 1.0:
             return
         if self._seen() and np.linalg.norm(self.obj_xyz - expected) < 0.15:
+            if self.prepare and (self.water_level < 0.5 or not self._straw_in):
+                self._gen = self._prepare_seq()
+                return self.goto("PREPARE", "glass is empty: pour water and add a straw")
             return self.goto("GRASP", f"{self.label} confirmed by camera")
         if self._seen():
             return self._go_pick("it moved a little")
@@ -364,6 +375,131 @@ class WaterTask:
                 self._sub, self._timer = 3, self.t
         elif self._sub == 3 and self.t - self._timer > 2.0:
             self._go_person("bringing the water")
+
+    # ---------- drink preparation (pour from the jug, add a straw) ----------
+    _straw_in = True
+
+    def _set_water(self, level: float) -> None:
+        """Visual water level in the glass, 0 (empty) .. 1 (full). MuJoCo has no fluids."""
+        g = self.m.geom("water").id
+        h = max(0.001, 0.04 * level)
+        self.m.geom_size[g][1] = h
+        self.m.geom_pos[g][2] = -0.055 + h
+        self.m.geom_rgba[g][3] = 0.55 if level > 0.02 else 0.0
+        self.water_level = level
+
+    def _show_straw(self, on: bool) -> None:
+        self.m.geom_rgba[self.m.geom("straw").id][3] = 1.0 if on else 0.0
+        self._straw_in = on
+
+    def _s_prepare(self):
+        try:
+            next(self._gen)
+        except StopIteration:
+            self.goto("GRASP", "drink ready")
+
+    def _g_wait(self, seconds: float):
+        t0 = self.t
+        while self.t - t0 < seconds:
+            yield
+
+    def _g_nav_to_pick(self, xyz: np.ndarray, why: str):
+        pick = self._pick_pose(xyz)
+        if pick is None or not self._start_nav(pick[0], pick[1], why):
+            self._ask("I can't reach the counter. Could you help?", resume="LOCATE")
+            return
+        while True:
+            aim_head(self.m, self.d, self.io, xyz, snap=False)
+            r = self._nav_step()
+            if r == "arrived":
+                return
+            if r == "blocked":
+                self._ask("Something is in the way. Could you move it?", resume="LOCATE")
+                return
+            yield
+
+    def _g_reach(self, xyz: np.ndarray, tol: float = 0.03, timeout: float = 12.0, wrist_yaw: float = 0.0):
+        dt = TICK_STEPS * self.m.opt.timestep
+        self.io.set_arm(lift=xyz[2] - LIFT_TO_GRASP_Z, arm=0.0, wrist_yaw=wrist_yaw)
+        t0 = self.t
+        while abs(self.io.grasp_center()[2] - xyz[2]) > 0.03 and self.t - t0 < 3.0:
+            yield
+        t0 = self.t
+        while self.t - t0 < timeout:
+            err = xyz - self.io.grasp_center()
+            if np.linalg.norm(err) < tol:
+                self.io.drive(0, 0)
+                return
+            arm = self.io.arm_targets()["arm"] + float(np.clip(err @ self.io.arm_dir(), -0.15 * dt, 0.15 * dt))
+            self.io.set_arm(arm=arm, lift=self.io.arm_targets()["lift"] + 0.5 * err[2])
+            self._base_bearing_fix(xyz)
+            yield
+        self.io.drive(0, 0)
+
+    def _g_retract(self, lift_up: float = 0.06):
+        self.io.set_arm(lift=self.io.arm_targets()["lift"] + lift_up)
+        yield from self._g_wait(0.8)
+        self.io.set_arm(arm=0.0)
+        t0 = self.t
+        while self.io.arm_extension() > 0.03 and self.t - t0 < 4.0:
+            yield
+
+    def _see(self, label: str, fallback: np.ndarray) -> np.ndarray:
+        return np.array(self.seen.get(label, fallback), float).copy()
+
+    def _prepare_seq(self):
+        glass = self.obj_xyz.copy()
+        jug_home = self._see("jug", self.d.body("jug").xpos)
+        # 1. jug
+        self.say("Your glass is empty. Let me pour you some water.")
+        yield from self._g_nav_to_pick(jug_home, "fetching the jug")
+        aim_head(self.m, self.d, self.io, jug_home, snap=False)
+        yield from self._g_wait(0.6)
+        jug = self._see("jug", jug_home)
+        yield from self._g_reach(jug)
+        self.io.attach("jug")
+        self.log("plan", "picked up the jug")
+        yield from self._g_retract(lift_up=0.2)
+        # 2. pour: hold the jug just above the glass and tilt it
+        yield from self._g_nav_to_pick(glass, "pouring into the glass")
+        above = glass + np.array([0, 0, 0.21])
+        yield from self._g_reach(above, tol=0.04)
+        self.log("plan", "pouring water")
+        for k in range(40):
+            self.io.d.ctrl[self.io.act["wrist_roll"]] = 0.9 * min(1.0, k / 10)
+            if k >= 10:
+                self._set_water(min(1.0, (k - 10) / 25))
+            yield from self._g_wait(0.1)
+        self.io.d.ctrl[self.io.act["wrist_roll"]] = 0.0
+        self.log("plan", "poured water into the glass")
+        yield from self._g_wait(0.8)
+        yield from self._g_retract(lift_up=0.0)
+        # 3. put the jug back
+        yield from self._g_nav_to_pick(jug_home, "putting the jug back")
+        yield from self._g_reach(jug_home + np.array([0, 0, 0.01]))
+        self.io.release()
+        yield from self._g_retract(lift_up=0.04)
+        # 4. straw from the holder into the glass
+        straw_home = self._see("straw2", self.d.body("straw2").xpos)
+        yield from self._g_nav_to_pick(straw_home, "getting a straw")
+        aim_head(self.m, self.d, self.io, straw_home, snap=False)
+        yield from self._g_wait(0.6)
+        straw = self._see("straw2", straw_home)
+        yield from self._g_reach(straw + np.array([0, 0, 0.05]))
+        self.io.attach("straw2")
+        self.log("plan", "took a straw")
+        yield from self._g_retract(lift_up=0.15)
+        yield from self._g_nav_to_pick(glass, "putting the straw in")
+        yield from self._g_reach(glass + np.array([0, 0, 0.16]), tol=0.04)
+        self.io.release()
+        a = self.m.joint("straw2_free").qposadr[0]
+        self.d.qpos[a:a + 3] = [-3.15, 2.62, -1.0]  # Limits: the straw is handed over to the glass model
+        self._show_straw(True)
+        self.log("plan", "put a straw in the glass")
+        yield from self._g_retract(lift_up=0.0)
+        self.say("Your water is ready.")
+        # 5. back to a pick pose for the glass, then the normal grasp
+        yield from self._g_nav_to_pick(glass, "picking up the glass")
 
     def _turn_straw_to_arm(self) -> None:
         """Turn the glass about its axis so the straw leans along the arm (Limits: done by
