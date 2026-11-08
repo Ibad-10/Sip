@@ -36,6 +36,7 @@ class StrawReachEnv(gym.Env):
 
     def __init__(self, seed: int | None = None, task: str = "straw", noise: float = 0.01, randomise: bool = False):
         self.task, self.cfg, self.noise, self.randomise = task, TASKS[task], noise, randomise
+        self.curriculum = 1.0          # 0..1, raised during training by the trainer
         self.m = mujoco.MjModel.from_xml_path(str(SCENE))
         self.d = mujoco.MjData(self.m)
         self.act = {self.m.actuator(i).name: i for i in range(self.m.nu)}
@@ -51,6 +52,12 @@ class StrawReachEnv(gym.Env):
     def _tip(self):
         return self.d.xpos[self.gc].copy()
 
+    def _obs_safe(self):
+        return np.zeros(self.observation_space.shape, np.float32)
+
+    def set_curriculum(self, x: float) -> None:
+        self.curriculum = float(np.clip(x, 0.2, 1.0))
+
     def _obs(self):
         # perception noise (domain randomisation): the policy sees a jittered target, like a real detector
         err = self.target - self._tip() + self.rng.normal(0, self.noise, 3)
@@ -58,15 +65,15 @@ class StrawReachEnv(gym.Env):
         return np.concatenate([err, [np.linalg.norm(err)], q, self.prev, [self.speed]]).astype(np.float32)
 
     def _domain_randomise(self) -> None:
-        """Sim-to-real: motor strength +-20 %, joint damping x0.5-2, link masses +-15 %."""
+        """Sim-to-real: motor strength +-15 %, joint damping x0.8-1.5, link masses +-10 % (stable ranges)."""
         g, b, dmp, mass = self._nominal
-        k = self.rng.uniform(0.8, 1.2, self.m.nu)
+        k = self.rng.uniform(0.85, 1.15, self.m.nu)
         self.m.actuator_gainprm[:] = g
         self.m.actuator_biasprm[:] = b
         self.m.actuator_gainprm[:, 0] *= k
         self.m.actuator_biasprm[:, 1] *= k
-        self.m.dof_damping[:] = dmp * self.rng.uniform(0.5, 2.0, self.m.nv)
-        self.m.body_mass[:] = mass * self.rng.uniform(0.85, 1.15, self.m.nbody)
+        self.m.dof_damping[:] = dmp * self.rng.uniform(0.8, 1.5, self.m.nv)
+        self.m.body_mass[:] = mass * self.rng.uniform(0.9, 1.1, self.m.nbody)
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -100,6 +107,9 @@ class StrawReachEnv(gym.Env):
             self.d.ctrl[self.act[n]] = np.clip(self.d.ctrl[self.act[n]] + a[i] * MAX_DELTA, lo, hi)
         for _ in range(SUBSTEPS):
             mujoco.mj_step(self.m, self.d)
+        if not (np.isfinite(self.d.qacc).all() and np.isfinite(self.d.qpos).all()):   # physics blew up: end safely
+            mujoco.mj_resetData(self.m, self.d)
+            return self._obs_safe(), -5.0, False, True, {"dist": self.dist, "unstable": True}
         dist = float(np.linalg.norm(self.target - self._tip()))
         dt = SUBSTEPS * self.m.opt.timestep
         self.speed = (self.dist - dist) / dt          # closing speed

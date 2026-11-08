@@ -124,38 +124,49 @@ train_image = (
 )
 
 
-@app.function(image=train_image, cpu=32, memory=16384, timeout=3600, retries=0, volumes={"/results": results})
+@app.function(image=train_image, cpu=16, memory=16384, timeout=5400, retries=0, volumes={"/results": results})
 def train_policy(job: tuple) -> tuple[str, int, bytes, dict]:
-    task, seed, steps = job[:3]
-    nenv, dr = (job[3], job[4]) if len(job) > 3 else (8, False)
+    """PPO with observation/reward normalisation, curriculum, stable domain randomisation, held-out eval."""
+    task, seed, steps, nenv, dr, ver = job
+    import json
+    import os
     from functools import partial
     import numpy as np
     from stable_baselines3 import PPO
-    from stable_baselines3.common.vec_env import SubprocVecEnv
+    from stable_baselines3.common.callbacks import BaseCallback
+    from stable_baselines3.common.vec_env import SubprocVecEnv, VecNormalize
     from sip.learn.reach_env import StrawReachEnv
 
-    envs = SubprocVecEnv([partial(StrawReachEnv, seed=seed * 100 + i, task=task, randomise=dr) for i in range(nenv)],
-                         start_method="spawn")
+    envs = VecNormalize(SubprocVecEnv([partial(StrawReachEnv, seed=seed * 100 + i, task=task, randomise=dr)
+                                       for i in range(nenv)], start_method="spawn"), norm_obs=True, norm_reward=True,
+                        clip_obs=10.0)
     curve = []
 
-    from stable_baselines3.common.callbacks import BaseCallback
-
-    class Curve(BaseCallback):
+    class Trainer(BaseCallback):
         def _on_rollout_end(self):
+            frac = self.num_timesteps / steps
+            self.training_env.env_method("set_curriculum", 0.2 + frac / 0.5)   # full range by half-way
             ep = [e["r"] for e in self.model.ep_info_buffer]
             if ep:
                 curve.append([int(self.num_timesteps), float(np.mean(ep))])
 
         def _on_step(self):
             return True
-    model = PPO("MlpPolicy", envs, n_steps=256 if nenv > 8 else 512, batch_size=4096, learning_rate=3e-4, gamma=0.98,
-                ent_coef=0.002, policy_kwargs={"net_arch": [128, 128]}, verbose=0, seed=seed)
-    model.learn(total_timesteps=steps, callback=Curve())
+
+    model = PPO("MlpPolicy", envs, n_steps=512, batch_size=2048, learning_rate=3e-4, gamma=0.99, gae_lambda=0.95,
+                ent_coef=0.003, clip_range=0.2, policy_kwargs={"net_arch": [256, 256]}, verbose=0, seed=seed)
+    model.learn(total_timesteps=steps, callback=Trainer())
+    envs.training = False
+    out = f"/results/policy/{ver}"
+    os.makedirs(out, exist_ok=True)
+    model.save(f"{out}/{task}_seed{seed}")
+    envs.save(f"{out}/{task}_seed{seed}_vecnorm.pkl")
+    # held-out evaluation on fresh targets (full range), with the same normaliser
     env, ok, fast, errs, n = StrawReachEnv(seed=10_000 + seed, task=task, randomise=dr), 0, [], [], 200
     for _ in range(n):
         o, _ = env.reset()
         for _ in range(700):
-            a, _ = model.predict(o, deterministic=True)
+            a, _ = model.predict(envs.normalize_obs(o), deterministic=True)
             o, r, done, trunc, info = env.step(a)
             if info["dist"] < env.cfg["near"]:
                 fast.append(env.speed)
@@ -163,18 +174,13 @@ def train_policy(job: tuple) -> tuple[str, int, bytes, dict]:
                 break
         ok += int(done)
         errs.append(info["dist"])
-    model.save("/tmp/p")
-    import json as _j, os as _o, shutil as _s
-    ver = job[5] if len(job) > 5 else "v1"
-    _o.makedirs(f"/results/policy/{ver}", exist_ok=True)
-    _s.copy("/tmp/p.zip", f"/results/policy/{ver}/{task}_seed{seed}.zip")
     stats = {"task": task, "seed": seed, "steps": steps, "success_rate": ok / n,
              "median_final_error_cm": float(np.median(errs) * 100),
              "p95_close_speed_near_face_mps": float(np.percentile(fast, 95)) if fast else None,
              "parallel_worlds": nenv, "domain_randomisation": dr, "learning_curve": curve}
-    _j.dump(stats, open(f"/results/policy/{ver}/{task}_seed{seed}.json", "w"))
+    json.dump(stats, open(f"{out}/{task}_seed{seed}.json", "w"))
     results.commit()
-    return task, seed, Path("/tmp/p.zip").read_bytes(), stats
+    return task, seed, open(f"{out}/{task}_seed{seed}.zip", "rb").read(), stats
 
 
 @app.local_entrypoint()
@@ -183,6 +189,7 @@ def train(steps: int = 2_000_000, version: str = "v1", worlds: int = 8, dr: bool
     out = ROOT / "assets" / "policy"
     out.mkdir(parents=True, exist_ok=True)
     jobs = [(t, s, steps, worlds, dr, version) for t in skills.split(",") for s in (0, 1, 2)]
+    print("launching", len(jobs), "training jobs", flush=True)
     out = out / version
     out.mkdir(parents=True, exist_ok=True)
     table = []
