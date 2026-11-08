@@ -176,7 +176,7 @@ $('txt').onkeydown=e=>{if(e.key==='Enter')$('send').click()};
 let rec=null,chunks=[];
 async function startTalk(){try{const st=await navigator.mediaDevices.getUserMedia({audio:true});rec=new MediaRecorder(st);chunks=[];
  rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=async()=>{st.getTracks().forEach(t=>t.stop());$('heard').textContent='listening…';
- const r=await fetch('/audio',{method:'POST',body:new Blob(chunks,{type:'audio/webm'})});const j=await r.json();$('heard').textContent=j.text?'heard: "'+j.text+'"':'(didn't catch that)'};
+ const r=await fetch('/audio',{method:'POST',body:new Blob(chunks,{type:'audio/webm'})});const j=await r.json();$('heard').textContent=j.text?'heard: "'+j.text+'"':'(did not catch that)'};
  rec.start();$('talk').textContent='● Recording… release to send'}catch(e){$('heard').textContent='microphone not available'}}
 function stopTalk(){if(rec&&rec.state==='recording'){rec.stop();$('talk').textContent='🎙 Hold to talk'}}
 $('talk').onpointerdown=startTalk;$('talk').onpointerup=stopTalk;$('talk').onpointerleave=stopTalk;

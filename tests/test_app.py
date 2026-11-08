@@ -36,3 +36,16 @@ def test_alert_evidence_saved(tmp_path):
     assert os.path.getsize(jpg) > 1000
     data = json.loads(open(js).read())
     assert data["alert"].startswith("no answer") and data["events"]
+
+
+def test_panel_javascript_parses():
+    """A JS syntax error blanks the whole dashboard; catch it in CI (needs node, skipped otherwise)."""
+    import pathlib, re, shutil, subprocess, tempfile
+    import pytest
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node not installed")
+    js = re.search(r"<script>(.*)</script>", (pathlib.Path("src/sip/panel.html")).read_text(encoding="utf-8"), re.S).group(1)
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as f:
+        f.write(js)
+    assert subprocess.run([node, "--check", f.name], capture_output=True).returncode == 0
