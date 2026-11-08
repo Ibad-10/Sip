@@ -12,10 +12,14 @@ ER_MODEL = os.environ.get("GEMINI_ER_MODEL", "gemini-4-argon")
 _POOL = ThreadPoolExecutor(max_workers=2)
 
 
-def _client():
+def _client(images: bool = False):
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         return None
+    if images:
+        from sip.home import load
+        if not load().get("cloud_images_allowed", True):   # privacy: the carer can keep camera images local
+            return None
     try:
         from google import genai
         return genai.Client(api_key=key)
@@ -65,7 +69,7 @@ def parse_points(raw: str, labels: list[str], w: int, h: int) -> dict | None:
 def second_opinion(rgb: np.ndarray, transcript: str, map_summary: str, labels: list[str],
                    timeout_s: float = 8.0) -> dict | None:
     """Ask Gemini Robotics-ER to point at the object. Result must still pass sip.cloud.verify."""
-    client = _client()
+    client = _client(images=True)
     if client is None:
         return None
     import cv2
@@ -90,7 +94,7 @@ def second_opinion(rgb: np.ndarray, transcript: str, map_summary: str, labels: l
 
 def identify(crop_rgb: np.ndarray, options: list[str], timeout_s: float = 10.0) -> dict | None:
     """Second opinion on an object the local detector is unsure about: which of `options` is it, and why."""
-    client = _client()
+    client = _client(images=True)
     if client is None or crop_rgb is None or crop_rgb.size == 0:
         return None
     import cv2
@@ -115,7 +119,7 @@ def identify(crop_rgb: np.ndarray, options: list[str], timeout_s: float = 10.0) 
 
 def read_compartment(rgb: np.ndarray, timeout_s: float = 8.0) -> str | None:
     """Read which day's compartment of a weekly pill organiser is in view. One word or None."""
-    client = _client()
+    client = _client(images=True)
     if client is None:
         return None
     import cv2

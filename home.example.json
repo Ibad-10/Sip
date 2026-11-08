@@ -1,0 +1,7 @@
+{
+  "resident": "Margaret",
+  "dose_times": ["09:00", "13:00", "18:00"],
+  "carer_webhook_url": "",
+  "cloud_images_allowed": true,
+  "notes": "Copy to home.json (git-ignored) and edit. The robot reads this at start-up; nothing about the home is in the code."
+}

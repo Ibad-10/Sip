@@ -235,6 +235,7 @@ def publish_panel(panel, sim, st) -> None:
         "voice": __import__("sip.voice.speech", fromlist=["x"]).last_engine["name"],
         "bounds": [-tk.grid.w / 2, tk.grid.w / 2, -tk.grid.h / 2, tk.grid.h / 2],
         "driver": getattr(tk, "arm_driver", "controller"),
+        "next_dose": __import__("sip.home", fromlist=["x"]).next_dose(st.setdefault("home", __import__("sip.home", fromlist=["x"]).load())),
         "perception": (f"YOLO-World {tk.det.ms:.0f} ms + MediaPipe" if perc else "sim oracle (test mode)"),
         "decision": {"action": tk.decision.action, "reason": tk.decision.reason,
                      "max_speed": tk.decision.max_speed_mps} if tk.decision else None,
@@ -343,6 +344,14 @@ def main(argv=None):
             st["ranges"] = scan(sim.m, sim.d, st["scan_pose"])
             if ex:
                 ex.log_lidar(sim.t, sim.io.base_pose(), st["ranges"])
+        if st["ticks"] % 200 == 0:                              # dose reminders from the real clock
+            from sip import home
+            prof = st.setdefault("home", home.load())
+            due = home.due_dose(prof, st.setdefault("doses_done", set()))
+            if due and sim.task.state == "IDLE":
+                st["doses_done"].add(due)
+                sim.task.log("plan", f"dose time {due} (home profile) -> starting the medicine round")
+                sim.bb.set("request", "medicine")
         alert = sim.bb.get("alert")
         if alert and sim.t - alert[0] > 120 and alert != st.get("alert_repeated"):   # escalate until acknowledged
             st["alert_repeated"] = alert

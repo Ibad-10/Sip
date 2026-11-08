@@ -6,7 +6,8 @@ import urllib.request
 
 
 def send_carer(text: str, timeout_s: float = 4.0) -> bool:
-    url = os.environ.get("CARER_WEBHOOK_URL")
+    from sip.home import load
+    url = os.environ.get("CARER_WEBHOOK_URL") or load().get("carer_webhook_url")
     if not url:
         return False
     try:
