@@ -125,6 +125,8 @@ class Sim:
             self._move_free("glass_free", [3.15, -1.2, 0.57])
         elif cmd == "/dose":
             bb.set("request", "medicine")
+        elif cmd == "/explore":
+            bb.set("explore", True)
         elif cmd == "/ack":
             if bb.get("alert"):
                 bb.log(Event(self.t, "alert", f"carer acknowledged: {bb.get('alert')[1]}"))
@@ -304,6 +306,31 @@ def main(argv=None):
     pip_r = None
 
     def tick():
+        if sim.bb.get("explore") and "explore" not in st:
+            from sip.nav.explore import MapBuilder
+            from sip.tasks.explore import explore_steps
+            st["mb"] = MapBuilder()
+            st["explore"] = explore_steps(sim.m, sim.d, sim.io, st["mb"], sim.task.det,
+                                          log=lambda text: sim.task.log("plan", text))
+            sim.task.log("plan", "exploring this home from scratch: lidar + depth camera build the map")
+        if "explore" in st:
+            try:
+                next(st["explore"])
+                sim.task.grid = st["mb"].grid if st["mb"].known.any() else sim.task.grid
+            except StopIteration:
+                mb = st.pop("explore") and st.pop("mb")
+                os.makedirs("runs", exist_ok=True)
+                mb.save("runs/map.npz")
+                sim.task.grid = mb.grid
+                if mb.rooms:
+                    sim.task.rooms = dict(mb.rooms)
+                sim.task.log("plan", f"map saved ({mb.coverage() * 100:.0f}% seen); rooms: {', '.join(mb.rooms) or 'none named'}")
+                sim.bb.set("explore", False)
+            for _ in range(TICK_STEPS):
+                mujoco.mj_step(sim.m, sim.d)
+            sim.t += TICK_STEPS * sim.m.opt.timestep
+            st["ticks"] += 1
+            return "EXPLORE"
         try:
             state = sim.task.step(sim.t)
         except Exception as exc:   # crash-safe: freeze, alert, keep the dashboard alive

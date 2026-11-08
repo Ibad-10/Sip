@@ -17,11 +17,32 @@ from sip.tasks.water import TICK_STEPS
 
 
 def explore(m, d, io, detector=None, seconds: float = 400.0, log=print, on_tick=None) -> MapBuilder:
+    """Blocking version (tests, command line): steps the physics itself."""
     mb = MapBuilder()
+    gen = explore_steps(m, d, io, mb, detector, log)
+    t = 0.0
+    for _ in gen:
+        for _ in range(TICK_STEPS):
+            mujoco.mj_step(m, d)
+        t += TICK_STEPS * m.opt.timestep
+        if on_tick:
+            on_tick(t)
+        if t >= seconds:
+            break
+    io.drive(0, 0)
+    return mb
+
+
+def explore_steps(m, d, io, mb: MapBuilder, detector=None, log=print):
+    """One decision per yield; the caller advances the physics (so the app can show it live)."""
     r = mujoco.Renderer(m, 120, 160)
     t, k, follower, tried, goal, stuck_t, last_p = 0.0, 0, None, [], None, 0.0, None
     io.stow(lift=0.5)
-    while t < seconds:
+    while True:
+        if io.loc is not None:          # odometry + gyro while the map is still being built
+            from sip.perception.objects import set_frame
+            io.loc.update()
+            set_frame(io.true_pose(), io.loc.pose)
         p = io.base_pose()
         if k % 10 == 0:
             mb.add_scan(p, scan(m, d, p, n_rays=180, max_range=4.0), 4.0)
@@ -62,16 +83,12 @@ def explore(m, d, io, detector=None, seconds: float = 400.0, log=print, on_tick=
         if last_p and np.hypot(p.x - last_p[0], p.y - last_p[1]) > 0.1:
             stuck_t, last_p = t, (p.x, p.y)
         io.drive(*follower.step(p))
-        for _ in range(TICK_STEPS):
-            mujoco.mj_step(m, d)
+        yield
         t += TICK_STEPS * m.opt.timestep
         k += 1
-        if on_tick:
-            on_tick(t)
     io.drive(0, 0)
     for room, xy in mb.rooms.items():
         log(f"named a room from what it saw: {room} near ({xy[0]:.1f}, {xy[1]:.1f})")
-    return mb
 
 
 def main(argv=None):
