@@ -7,6 +7,8 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutTimeout
 import numpy as np
 
 MODEL = os.environ.get("GEMINI_MODEL", "gemini-4-argon")  # builder-guide id; check in AI Studio
+# Gemini Robotics-ER: embodied-reasoning model that points at objects ([y, x] normalised to 0-1000)
+ER_MODEL = os.environ.get("GEMINI_ER_MODEL", "gemini-robotics-er-1.5-preview")
 _POOL = ThreadPoolExecutor(max_workers=2)
 
 
@@ -29,8 +31,25 @@ def _call(fn, timeout_s: float):
         return None
 
 
+def parse_points(raw: str, labels: list[str], w: int, h: int) -> dict | None:
+    """First pointed object whose label is wanted, converted to pixel (u, v)."""
+    try:
+        pts = json.loads(raw[raw.find("["):raw.rfind("]") + 1])
+    except ValueError:
+        return None
+    for p in pts if isinstance(pts, list) else []:
+        try:
+            y, x = (float(c) for c in p["point"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if p.get("label") in labels and 0 <= x <= 1000 and 0 <= y <= 1000:
+            return {"label": p["label"], "u": min(w - 1, int(x / 1000 * w)), "v": min(h - 1, int(y / 1000 * h))}
+    return None
+
+
 def second_opinion(rgb: np.ndarray, transcript: str, map_summary: str, labels: list[str],
                    timeout_s: float = 8.0) -> dict | None:
+    """Ask Gemini Robotics-ER to point at the object. Result must still pass sip.cloud.verify."""
     client = _client()
     if client is None:
         return None
@@ -40,20 +59,16 @@ def second_opinion(rgb: np.ndarray, transcript: str, map_summary: str, labels: l
     if not ok:
         return None
     h, w = rgb.shape[:2]
-    prompt = (f"You help a home care robot. The person said: '{transcript}'. Map: {map_summary}. "
-              f"Find one of {labels} in this {w}x{h} image. Reply ONLY JSON "
-              '{"label": str, "u": int, "v": int, "plan": "<one sentence>"} with pixel coordinates, '
-              'or {"label": null} if none is visible.')
+    prompt = (f"A home care robot is looking for: {', '.join(labels)}. The person said: '{transcript}'. "
+              f"Map: {map_summary}. Point to the item if visible. Answer as JSON "
+              '[{"point": [y, x], "label": <label>}] with points normalised to 0-1000, or [] if not visible.')
 
     def run():
-        r = client.models.generate_content(model=MODEL, contents=[
-            types.Part.from_bytes(data=jpg.tobytes(), mime_type="image/jpeg"), prompt])
-        raw = r.text
-        out = json.loads(raw[raw.find("{"):raw.rfind("}") + 1])
-        if out.get("label") in labels and 0 <= int(out["u"]) < w and 0 <= int(out["v"]) < h:
-            return {"label": out["label"], "u": int(out["u"]), "v": int(out["v"]),
-                    "plan": str(out.get("plan", ""))}
-        return None
+        r = client.models.generate_content(model=ER_MODEL, contents=[
+            types.Part.from_bytes(data=jpg.tobytes(), mime_type="image/jpeg"), prompt],
+            config=types.GenerateContentConfig(temperature=0.5,
+                                               thinking_config=types.ThinkingConfig(thinking_budget=0)))
+        return parse_points(r.text or "", labels, w, h)
 
     return _call(run, timeout_s)
 

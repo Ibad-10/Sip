@@ -72,3 +72,11 @@ def test_verify_rejects_unreachable_point(scene):
     u, v = high  # a point on the wall above the counter, out of the gripper's height range
     ok, checks = verify_target(model, data, u, v, depth, grid, io, claimed_depth=depth[v, u])
     assert not ok and any("height" in c for c in checks)
+
+
+def test_parse_er_points_converts_normalised_yx_to_pixels():
+    from sip.cloud.gemini import parse_points
+    raw = 'Sure:\n```json\n[{"point": [500, 250], "label": "glass"}, {"point": [10, 10], "label": "cat"}]\n```'
+    assert parse_points(raw, ["glass"], w=320, h=240) == {"label": "glass", "u": 80, "v": 120}
+    assert parse_points("no json here", ["glass"], 320, 240) is None
+    assert parse_points('[{"point": [1200, 5], "label": "glass"}]', ["glass"], 320, 240) is None
