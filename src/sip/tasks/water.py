@@ -304,13 +304,13 @@ class WaterTask:
                 elif job.done():
                     r = job.result()
                     inv = {v: k for k, v in self._NAMES.items()}
-                    if r:
+                    if r and r.get("confidence", 0) >= 0.7:       # Gemini overrides only when it is sure
                         lab = inv.get(r["label"], "none")
                         self._ids[key] = (lab, r["why"])
                         self.log("cloud", f"Gemini: it's {'not one of mine' if lab == 'none' else 'a ' + r['label']}"
                                           f" ({r['why']}); detector said {det.label}")
                     else:
-                        self._ids[key] = (det.label, "offline: kept detector's guess")
+                        self._ids[key] = (det.label, "second opinion unsure or offline: kept detector's guess")
             out.append(det)
         return out
 

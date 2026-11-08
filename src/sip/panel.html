@@ -76,13 +76,14 @@ dialog ul{margin:0;padding-left:18px}dialog li{margin:3px 0}kbd{font:500 12px va
   <div class="logo"><i></i>Sip</div>
   <div class="goal"><span class="label">Current step</span><b id="goal">Waiting for a request</b></div>
   <span class="chip" id="state">IDLE</span>
-  <span class="chip" id="net">offline</span>
+  <span class="chip" id="net">offline</span><span class="chip" id="voice">voice: -</span><span class="chip" id="drv">arm: -</span>
   <button class="icon" id="theme" aria-label="Switch light or dark theme" title="Theme">◐</button>
   <button class="primary" id="helpBtn" aria-haspopup="dialog">? Help</button>
 </div></header>
 
 <div class="wrap"><main>
   <div class="col-main">
+    <div class="card" id="offline" role="status" style="display:none;border-color:var(--warn);background:var(--warn-bg)"><b>Robot not connected.</b> Start it with <code>uv run python -m sip.app</code>; this page reconnects by itself.</div>
     <div class="card" id="alert" role="alert"></div>
     <section class="card" aria-label="Cameras">
       <h2><span id="viewName">Robot head camera: what it sees</span><span class="chip info" id="perc">perception</span></h2>
@@ -123,6 +124,7 @@ dialog ul{margin:0;padding-left:18px}dialog li{margin:3px 0}kbd{font:500 12px va
         <button data-c="/glass" title="Someone moves the glass to the bedroom">Move the glass</button>
         <button data-c="/turn" title="She turns her head away (toggle)">Turn her head</button>
         <button data-c="/bed" title="She moves from the armchair to the bed">Move her to bed</button>
+        <button data-c="/dose" title="Dose time: bring today's tablets">Tablets now</button>
         <button data-c="/reset">Reset</button>
       </div>
     </section>
@@ -201,9 +203,9 @@ function renderTimeline(evs){const tl=$('timeline');const st=steps(evs);const at
  tl.querySelectorAll('details').forEach(d=>d.ontoggle=()=>{const k=d.dataset.k;if(d.open){openSteps.add(k);openSteps.delete('closed:'+k)}else{openSteps.delete(k);openSteps.add('closed:'+k)}});
  if(atTop)tl.scrollTop=0}
 const ctx=$('map').getContext('2d');let occ=null;
-function W(x){return (x+4)/8*640}function H(y){return 480-(y+3)/6*480}
+let B=[-4,4,-3,3];function W(x){return (x-B[0])/(B[1]-B[0])*640}function H(y){return 480-(y-B[2])/(B[3]-B[2])*480}
 function cssv(v){return getComputedStyle(root).getPropertyValue(v).trim()}
-function draw(s){ctx.fillStyle=cssv('--surface-2');ctx.fillRect(0,0,640,480);if(s.occ)occ=s.occ;
+function draw(s){if(s.bounds)B=s.bounds;ctx.fillStyle=cssv('--surface-2');ctx.fillRect(0,0,640,480);if(s.occ)occ=s.occ;
  if(occ){ctx.fillStyle=cssv('--border-strong');for(let i=0;i<occ.nx;i++)for(let j=0;j<occ.ny;j++)if(occ.d[i*occ.ny+j]==='1')ctx.fillRect(i*640/occ.nx,480-(j+1)*480/occ.ny,640/occ.nx+.5,480/occ.ny+.5)}
  ctx.fillStyle='#ff5a46';for(const p of s.lidar||[])ctx.fillRect(W(p[0])-1.5,H(p[1])-1.5,3,3);
  if(s.path&&s.path.length){ctx.strokeStyle=cssv('--ok');ctx.lineWidth=3;ctx.beginPath();s.path.forEach((p,i)=>i?ctx.lineTo(W(p[0]),H(p[1])):ctx.moveTo(W(p[0]),H(p[1])));ctx.stroke()}
@@ -217,13 +219,17 @@ function lamps(d){for(const k of ['go','slow','wait','back','halt'])$('L_'+k).cl
 async function poll(){try{const s=await(await fetch('/state')).json();
  $('goal').textContent=(NICE[s.state]||s.state)+(s.reason?': '+s.reason:'');
  $('state').textContent=s.state;$('state').className='chip '+(s.state==='HALT'||s.state==='ASK'?'bad':s.state==='IDLE'?'':'warn');
- $('net').textContent=s.online?'online: Gemini on standby':'offline: all on device';$('net').className='chip '+(s.online?'ok':'');
+ $('net').textContent=!s.cloud_configured?'cloud off: all on device':s.online===false?'offline: all on device':s.online?'online: Gemini ok':'cloud on standby';
+ $('net').className='chip '+(s.online?'ok':s.online===false?'warn':'');
+ $('voice').textContent='voice: '+(s.voice||'-');$('drv').textContent='arm: '+(s.driver||'controller');lastT=Date.now();
  $('perc').textContent=s.perception||'perception';lamps(s.decision);
  $('dist').textContent=s.sensed<1?'straw to mouth '+(s.sensed*100).toFixed(1)+' cm':'';
  $('water').textContent=Math.round(s.water*100)+'%';$('t').textContent=s.t.toFixed(0)+'s';$('hz').textContent=s.hz.toFixed(0)+' Hz';$('gem').textContent=s.gemini_calls||0;
  renderTimeline(s.events);
- if(s.alert){$('alert').style.display='block';$('alert').innerHTML='<b>Alert for the carer:</b> '+esc(s.alert)+'<br><img src="/frame/alert.jpg?'+Math.floor(s.t)+'" alt="Evidence snapshot saved with the alert">'}else $('alert').style.display='none';
+ if(s.alert){$('alert').style.display='block';$('alert').innerHTML='<b>Alert for the carer:</b> '+esc(s.alert)+' <button data-ack="1">Acknowledge</button><br><img src="/frame/alert.jpg?'+Math.floor(s.t)+'" alt="Evidence snapshot saved with the alert">'}else $('alert').style.display='none';
  draw(s)}catch(e){}}
+let lastT=0;setInterval(()=>{const off=Date.now()-lastT>3000;$('offline').style.display=off?'block':'none'},1000);
+document.addEventListener('click',e=>{if(e.target.dataset&&e.target.dataset.ack)cmd('/ack')});
 setInterval(poll,400);poll();
 </script>
 </body>

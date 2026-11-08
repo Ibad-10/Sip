@@ -125,6 +125,10 @@ class Sim:
             self._move_free("glass_free", [3.15, -1.2, 0.57])
         elif cmd == "/dose":
             bb.set("request", "medicine")
+        elif cmd == "/ack":
+            if bb.get("alert"):
+                bb.log(Event(self.t, "alert", f"carer acknowledged: {bb.get('alert')[1]}"))
+            bb.set("alert", None)
         elif cmd == "/turn":
             a = self.io.act["head_yaw_act"]
             self.person.override = not self.person.override
@@ -225,8 +229,12 @@ def publish_panel(panel, sim, st) -> None:
     reason = next((e.text.split(": ", 1)[-1] for e in reversed(evs) if e.kind == "state"), "")
     perc = getattr(tk.det, "needs_rgb", False)
     state = {
-        "t": sim.t, "state": tk.state, "reason": reason, "online": bool(os.environ.get("GEMINI_API_KEY")),
+        "t": sim.t, "state": tk.state, "reason": reason,
+        "online": gemini._usage["ok"], "cloud_configured": bool(os.environ.get("GEMINI_API_KEY")),
         "gemini_calls": gemini._usage["calls"],
+        "voice": __import__("sip.voice.speech", fromlist=["x"]).last_engine["name"],
+        "bounds": [-tk.grid.w / 2, tk.grid.w / 2, -tk.grid.h / 2, tk.grid.h / 2],
+        "driver": getattr(tk, "arm_driver", "controller"),
         "perception": (f"YOLO-World {tk.det.ms:.0f} ms + MediaPipe" if perc else "sim oracle (test mode)"),
         "decision": {"action": tk.decision.action, "reason": tk.decision.reason,
                      "max_speed": tk.decision.max_speed_mps} if tk.decision else None,
@@ -336,6 +344,11 @@ def main(argv=None):
             if ex:
                 ex.log_lidar(sim.t, sim.io.base_pose(), st["ranges"])
         alert = sim.bb.get("alert")
+        if alert and sim.t - alert[0] > 120 and alert != st.get("alert_repeated"):   # escalate until acknowledged
+            st["alert_repeated"] = alert
+            sim.task.log("alert", f"REPEAT (not acknowledged for 2 min): {alert[1]}")
+            from sip.notify import send_carer
+            send_carer(f"REPEAT, not acknowledged: {alert[1]}")
         if alert and alert != st.get("alert_saved"):
             st["alert_saved"] = alert
             jpg, _ = save_alert_evidence(sim)

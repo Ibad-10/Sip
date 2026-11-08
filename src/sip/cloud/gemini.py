@@ -26,7 +26,7 @@ def _client():
 # Fair-use guard (organisers: no abuse): hard cap per session and minimum spacing between calls.
 MAX_CALLS = int(os.environ.get("GEMINI_MAX_CALLS", "30"))
 MIN_GAP_S = 5.0
-_usage = {"calls": 0, "last": 0.0}
+_usage = {"calls": 0, "last": 0.0, "ok": None}   # ok: did the last cloud call succeed (None = never tried)
 
 
 def _call(fn, timeout_s: float):
@@ -38,8 +38,11 @@ def _call(fn, timeout_s: float):
     _usage["last"] = now
     fut = _POOL.submit(fn)
     try:
-        return fut.result(timeout=timeout_s)
+        out = fut.result(timeout=timeout_s)
+        _usage["ok"] = True
+        return out
     except (FutTimeout, Exception):
+        _usage["ok"] = False
         return None
 
 

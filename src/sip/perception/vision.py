@@ -176,7 +176,7 @@ class YoloDetector:
                         self.clip = ClipCheck()
                     u0, v0, u1, v1 = b
                     key = tuple(np.round(to_world((u0 + u1) / 2, (v0 + v1) / 2, z, pos, mat, fovy, w, h)[:2] / 0.1).astype(int))
-                    pad = max(6, (u1 - u0) // 2)
+                    pad = max(12, int(0.8 * max(u1 - u0, v1 - v0)))     # context helps CLIP on small objects
                     crop = np.ascontiguousarray(np.rot90(rgb[max(0, v0 - pad):v1 + pad, max(0, u0 - pad):u1 + pad], 1))
                     ranked = self._clip_cache.get(key)
                     if ranked is None and crop.size:
