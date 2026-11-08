@@ -34,8 +34,8 @@ TASKS = {
 class StrawReachEnv(gym.Env):
     metadata = {"render_modes": []}
 
-    def __init__(self, seed: int | None = None, task: str = "straw", noise: float = 0.01):
-        self.task, self.cfg, self.noise = task, TASKS[task], noise
+    def __init__(self, seed: int | None = None, task: str = "straw", noise: float = 0.01, randomise: bool = False):
+        self.task, self.cfg, self.noise, self.randomise = task, TASKS[task], noise, randomise
         self.m = mujoco.MjModel.from_xml_path(str(SCENE))
         self.d = mujoco.MjData(self.m)
         self.act = {self.m.actuator(i).name: i for i in range(self.m.nu)}
@@ -44,6 +44,9 @@ class StrawReachEnv(gym.Env):
         self.observation_space = gym.spaces.Box(-np.inf, np.inf, (11,), np.float32)
         self.action_space = gym.spaces.Box(-1.0, 1.0, (3,), np.float32)
         self.names = ("lift", "arm", "wrist_yaw")
+        self._nominal = (self.m.actuator_gainprm.copy(), self.m.actuator_biasprm.copy(),
+                         self.m.dof_damping.copy(), self.m.body_mass.copy())
+        self._pending = np.zeros(3)
 
     def _tip(self):
         return self.d.xpos[self.gc].copy()
@@ -54,9 +57,23 @@ class StrawReachEnv(gym.Env):
         q = [self.d.ctrl[self.act[n]] for n in self.names]
         return np.concatenate([err, [np.linalg.norm(err)], q, self.prev, [self.speed]]).astype(np.float32)
 
+    def _domain_randomise(self) -> None:
+        """Sim-to-real: motor strength +-20 %, joint damping x0.5-2, link masses +-15 %."""
+        g, b, dmp, mass = self._nominal
+        k = self.rng.uniform(0.8, 1.2, self.m.nu)
+        self.m.actuator_gainprm[:] = g
+        self.m.actuator_biasprm[:] = b
+        self.m.actuator_gainprm[:, 0] *= k
+        self.m.actuator_biasprm[:, 1] *= k
+        self.m.dof_damping[:] = dmp * self.rng.uniform(0.5, 2.0, self.m.nv)
+        self.m.body_mass[:] = mass * self.rng.uniform(0.85, 1.15, self.m.nbody)
+
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
+        if self.randomise:
+            self._domain_randomise()
         mujoco.mj_resetData(self.m, self.d)
+        self._pending = np.zeros(3)
         start = {"lift": self.rng.uniform(0.6, 1.0), "arm": self.rng.uniform(0.0, 0.15), "wrist_yaw": 0.0}
         for n, v in start.items():
             self.d.ctrl[self.act[n]] = v
@@ -76,6 +93,8 @@ class StrawReachEnv(gym.Env):
 
     def step(self, action):
         a = np.clip(np.asarray(action, float), -1, 1)
+        if self.randomise:   # one-step actuation delay, like a real controller loop
+            a, self._pending = self._pending, a
         for i, n in enumerate(self.names):
             lo, hi = self.m.actuator_ctrlrange[self.act[n]]
             self.d.ctrl[self.act[n]] = np.clip(self.d.ctrl[self.act[n]] + a[i] * MAX_DELTA, lo, hi)
