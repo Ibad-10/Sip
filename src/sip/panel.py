@@ -8,8 +8,9 @@ PAGE = (__import__("pathlib").Path(__file__).with_name("panel.html")).read_text(
 
 
 class Panel:
-    def __init__(self, on_command, port: int = 8765):
+    def __init__(self, on_command, port: int = 8765, on_audio=None):
         self.on_command = on_command
+        self.on_audio = on_audio
         self.frames: dict[str, bytes] = {}
         self.state: dict = {}
         self.lock = threading.Lock()
@@ -42,6 +43,12 @@ class Panel:
                 self._send(404, b"not found", "text/plain")
 
             def do_POST(self):
+                if self.path == "/audio" and panel.on_audio is not None:
+                    n = int(self.headers.get("Content-Length", "0") or 0)
+                    if n > 5_000_000:
+                        return self._send(413, b"too large", "text/plain")
+                    text = panel.on_audio(self.rfile.read(n))
+                    return self._send(200, json.dumps({"text": text}).encode(), "application/json")
                 if self.path == "/cmd":
                     n = int(self.headers.get("Content-Length", "0") or 0)
                     text = self.rfile.read(min(n, 2000)).decode("utf-8", "replace")

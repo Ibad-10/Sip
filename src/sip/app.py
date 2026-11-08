@@ -19,6 +19,7 @@ import mujoco.viewer
 import numpy as np
 
 from sip.blackboard import Blackboard
+from sip.types import Event
 from sip.config import load_profile
 from sip.memory import ObjectMemory
 from sip.nav.grid import grid_from_model
@@ -65,6 +66,12 @@ def handle_command(text: str, bb: Blackboard, llm=None, sim=None) -> None:
         out = llm.intent(text)
         task = out["task"] if out["task"] in ("water", "medicine") else None
         bb.set("say", out["reply"])
+    elif task is None and not kw:
+        # small talk: Gemma 4 replies when online (capped); offline the robot just acknowledges
+        def reply():
+            from sip.cloud.gemini import chat_reply
+            bb.set("say", chat_reply(text) or "I'm here. Would you like a drink or your tablets?")
+        threading.Thread(target=reply, daemon=True).start()
     if task:
         bb.set("request", task)
 
@@ -253,7 +260,15 @@ def main(argv=None):
     panel = None
     if not a.no_panel:
         from sip.panel import Panel
-        panel = Panel(lambda text: handle_command(text, sim.bb, llm, sim))
+        from sip.voice import speech
+
+        def on_audio(data: bytes) -> str:
+            text = speech.transcribe(data)
+            if text:
+                sim.bb.log(Event(sim.t, "heard", f"she says: {text}"))
+                handle_command(text, sim.bb, llm, sim)
+            return text
+        panel = Panel(lambda text: handle_command(text, sim.bb, llm, sim), on_audio=on_audio)
         sim.bb.set("show_pip", False)
         print("control panel:", panel.url, flush=True)
         if not a.headless:
@@ -277,6 +292,9 @@ def main(argv=None):
         say = sim.bb.get("say")
         if say:
             print(f"[robot] {say}", flush=True)
+            if not a.headless:
+                from sip.voice import speech
+                speech.speak(say)
             sim.bb.set("say", None)
         evs = sim.bb.events()
         for e in evs[st["n_events"]:]:

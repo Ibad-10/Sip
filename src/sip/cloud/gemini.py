@@ -107,6 +107,25 @@ def read_compartment(rgb: np.ndarray, timeout_s: float = 8.0) -> str | None:
     return _call(run, timeout_s)
 
 
+CHAT_MODEL = os.environ.get("GEMINI_CHAT_MODEL", "gemma-4-26b-a4b-it")   # open Gemma 4 model (also runs locally)
+
+
+def chat_reply(text: str, timeout_s: float = 15.0) -> str | None:
+    """One short, kind spoken reply when what she said is not a command (small talk, worries)."""
+    client = _client()
+    if client is None:
+        return None
+    prompt = ("You are Sip, a gentle home-care robot talking to an older woman. Reply in one or two short spoken "
+              "sentences, warm and plain. Never give medical advice; suggest asking her carer or GP instead. "
+              f"She said: \"{text}\"")
+
+    def run():
+        r = client.models.generate_content(model=CHAT_MODEL, contents=prompt)
+        return (r.text or "").strip().replace("*", "")[:240] or None
+
+    return _call(run, timeout_s)
+
+
 def day_summary(events, timeout_s: float = 15.0) -> str | None:
     client = _client()
     if client is None:
