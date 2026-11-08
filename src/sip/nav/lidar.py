@@ -33,24 +33,26 @@ def _robot_geom_mask(model) -> np.ndarray:
 
 def scan(model, data, pose: Pose2D, n_rays: int = 180, max_range: float = 4.0,
          height: float = 0.2) -> np.ndarray:
-    """Planar lidar; rays skip the robot's own geoms."""
+    """Planar lidar using one batched mj_multiRay call; the few rays that hit the robot's own
+    geoms are re-cast past them."""
     robot = _robot_geom_mask(model)
+    ang = pose.yaw + ray_angles(n_rays)
+    dirs = np.c_[np.cos(ang), np.sin(ang), np.zeros(n_rays)]
+    origin = np.array([pose.x, pose.y, height])
+    geomid = np.zeros(n_rays, dtype=np.int32)
+    dist = np.zeros(n_rays)
+    mujoco.mj_multiRay(model, data, origin, dirs.flatten(), None, 1, -1, geomid, dist, None, n_rays, max_range)
     ranges = np.full(n_rays, max_range)
-    geomid = np.zeros(1, dtype=np.int32)
-    for k, a in enumerate(ray_angles(n_rays)):
-        d = np.array([np.cos(pose.yaw + a), np.sin(pose.yaw + a), 0.0])
-        start = RAY_START
-        while start < max_range:
-            p = np.array([pose.x, pose.y, height]) + start * d
-            dist = mujoco.mj_ray(model, data, p, d, None, 1, -1, geomid)
-            if dist < 0:
-                break
-            if robot[geomid[0]]:
-                start += dist + 0.01
-                continue
-            if start + dist < max_range:
-                ranges[k] = start + dist
-            break
+    one = np.zeros(1, dtype=np.int32)
+    for k in range(n_rays):
+        d, g = dist[k], geomid[k]
+        start = 0.0
+        while g >= 0 and robot[g] and start < max_range:
+            start += d + 0.01
+            d = mujoco.mj_ray(model, data, origin + start * dirs[k], dirs[k], None, 1, -1, one)
+            g = one[0] if d >= 0 else -1
+        if g >= 0 and d >= 0 and start + d < max_range and start + d >= RAY_START:
+            ranges[k] = start + d
     return ranges
 
 

@@ -74,7 +74,7 @@ def _hide(spec, names):
 
 def dress(spec, world) -> None:
     v = spec.visual
-    v.quality.shadowsize, v.quality.offsamples = 4096, 4
+    v.quality.shadowsize, v.quality.offsamples = 2048, 4
     v.headlight.ambient, v.headlight.diffuse, v.headlight.specular = [0.32] * 3, [0.35] * 3, [0.05] * 3
     v.map.znear = 0.01
     spec.add_texture(name="sky", type=mujoco.mjtTexture.mjTEXTURE_SKYBOX,
@@ -204,7 +204,7 @@ def dress(spec, world) -> None:
     for name, pos in {"light_kitchen": (-2.0, 1.9, 2.3), "light_living": (2.0, 1.9, 2.3),
                       "light_bedroom": (2.0, -1.9, 2.3), "light_hall": (0.0, 0.0, 2.3)}.items():
         world.add_light(name=name, pos=list(pos), dir=[0, 0, -1], diffuse=[0.45, 0.43, 0.4],
-                        specular=[0.1] * 3, castshadow=True, cutoff=80, exponent=1)
+                        specular=[0.1] * 3, castshadow=(name == "light_living"), cutoff=80, exponent=1)
 
     # cameras: room views that track the robot, plus an overview
     track = mujoco.mjtCamLight.mjCAMLIGHT_TARGETBODY

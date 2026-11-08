@@ -7,6 +7,7 @@
 
   <visual>
     <global offwidth="1280" offheight="720"/>
+    <quality shadowsize="2048"/>
     <headlight ambient="0.32 0.32 0.32" diffuse="0.35 0.35 0.35" specular="0.05 0.05 0.05"/>
   </visual>
 
@@ -573,10 +574,10 @@
     <camera name="cam_hall" target="base_link" pos="-3.85 0 2" mode="targetbody" fovy="70"/>
     <camera name="cam_overview" quat="0.944146 0.329527 0 0" pos="0 -6 7.5" fovy="50"/>
     <light name="sun" castshadow="false" pos="0 0 5" diffuse="0.35 0.35 0.35"/>
-    <light name="light_kitchen" pos="-2 1.9 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
+    <light name="light_kitchen" castshadow="false" pos="-2 1.9 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
     <light name="light_living" pos="2 1.9 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
-    <light name="light_bedroom" pos="2 -1.9 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
-    <light name="light_hall" pos="0 0 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
+    <light name="light_bedroom" castshadow="false" pos="2 -1.9 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
+    <light name="light_hall" castshadow="false" pos="0 0 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
     <body name="base_link" childclass="stretch">
       <joint type="free"/>
       <geom class="visual" pos="1.60982e-15 -1.33505e-17 -1.70003e-16" quat="1 0 0 0" mass="0" material="Caster_Rollers_Red" mesh="base_link_0"/>

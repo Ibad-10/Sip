@@ -102,6 +102,59 @@ class Sim:
             self.d.ctrl[a] = 0.8 if self.d.ctrl[a] == 0 else 0.0
 
 
+_PANEL_R = {}
+
+
+def publish_panel(panel, sim, st) -> None:
+    """Render the three views as JPEG and publish a compact state snapshot for the web panel."""
+    import cv2
+    from sip.nav.lidar import ray_angles
+    r = _PANEL_R.get("r")
+    if r is None:
+        r = _PANEL_R["r"] = mujoco.Renderer(sim.m, 240, 320)
+    for name, cam in (("head", "d435i_camera_rgb"), ("wrist", "d405_rgb"), ("person", "person_eyes")):
+        r.update_scene(sim.d, camera=cam)
+        ok, jpg = cv2.imencode(".jpg", r.render()[:, :, ::-1], [cv2.IMWRITE_JPEG_QUALITY, 75])
+        if ok:
+            panel.set_frame(name, jpg.tobytes())
+    tk = sim.task
+    p = sim.io.base_pose()
+    lidar = []
+    if st.get("ranges") is not None:
+        rg = st["ranges"]
+        a = ray_angles(len(rg)) + p.yaw
+        lidar = [[round(p.x + d * np.cos(t), 2), round(p.y + d * np.sin(t), 2)] for d, t in zip(rg, a) if d < 3.99]
+    mem = []
+    for label in ("glass", "jug", "organiser"):
+        w = tk.memory.where(label)
+        if w is not None:
+            mem.append({"label": label, "x": float(w[0][0]), "y": float(w[0][1]),
+                        "c": float(tk.memory.confidence(label, sim.t))})
+    if True:  # walls + learned obstacles every update (small)
+        st["occ_t"] = sim.t
+        g = tk.grid
+        sub = g.occ[::2, ::2]
+        occ = {"nx": int(sub.shape[0]), "ny": int(sub.shape[1]), "d": "".join("1" if v else "0" for v in sub.flatten())}
+    else:
+        occ = None
+    alert = sim.bb.get("alert")
+    person = sim.d.body("person").xpos
+    state = {
+        "t": sim.t, "state": tk.state, "online": bool(os.environ.get("GEMINI_API_KEY")),
+        "decision": {"action": tk.decision.action, "reason": tk.decision.reason} if tk.decision else None,
+        "dist": float(tk.dist_to_mouth()), "water": float(getattr(tk, "water_level", 1.0)),
+        "hz": st["ticks"] / max(1e-6, time.time() - st["t0"]),
+        "events": [{"t": e.t, "kind": e.kind, "text": e.text} for e in sim.bb.events()[-60:]],
+        "alert": alert[1] if alert else None,
+        "robot": [p.x, p.y, p.yaw], "person": [float(person[0]), float(person[1])],
+        "path": [list(map(float, q)) for q in tk._nav["follower"].path] if tk._nav else [],
+        "lidar": lidar, "memory": mem,
+    }
+    if occ:
+        state["occ"] = occ
+    panel.set_state(state)
+
+
 def stdin_thread(sim: Sim, llm):
     for line in sys.stdin:
         handle_command(line, sim.bb, llm, sim)
@@ -113,6 +166,7 @@ def main(argv=None):
     ap.add_argument("--seconds", type=float, default=1e9)
     ap.add_argument("--no-rerun", action="store_true")
     ap.add_argument("--request", default=None, help="start with a request, e.g. water")
+    ap.add_argument("--no-panel", action="store_true", help="disable the web control panel")
     a = ap.parse_args(argv)
     sim = Sim()
     prof = load_profile()
@@ -128,6 +182,15 @@ def main(argv=None):
     if a.request:
         sim.bb.set("ready", True)
         sim.bb.set("request", a.request)
+    panel = None
+    if not a.no_panel:
+        from sip.panel import Panel
+        panel = Panel(lambda text: handle_command(text, sim.bb, llm, sim))
+        sim.bb.set("show_pip", False)
+        print("control panel:", panel.url, flush=True)
+        if not a.headless:
+            import webbrowser
+            webbrowser.open(panel.url)
     if not a.headless:
         threading.Thread(target=stdin_thread, args=(sim, llm), daemon=True).start()
         print(__doc__)
@@ -163,6 +226,9 @@ def main(argv=None):
             st["ranges"] = scan(sim.m, sim.d, sim.io.base_pose())
             if ex:
                 ex.log_lidar(sim.t, sim.io.base_pose(), st["ranges"])
+        if panel is not None and sim.t - st.get("last_panel", -1.0) >= 0.3:
+            st["last_panel"] = sim.t
+            publish_panel(panel, sim, st)
         if ex and sim.t - st["last_log"] >= 0.2:
             st["last_log"] = sim.t
             tk = sim.task
@@ -232,6 +298,8 @@ def main(argv=None):
         print(f"loop_hz={st['ticks'] / max(1e-6, time.time() - st['t0']):.1f}", flush=True)
         if ex:
             ex.close()
+        if panel is not None:
+            panel.close()
 
 
 if __name__ == "__main__":
