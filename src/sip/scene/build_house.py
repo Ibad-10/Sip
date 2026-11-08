@@ -100,6 +100,9 @@ def _items(world):
     b.add_freejoint(name="jug_free")
     b.add_geom(name="jug_geom", type=CYL, size=[0.065, 0.1, 0], rgba=[0.7, 0.72, 0.75, 1], mass=0.8,
                friction=[1.5, 0.05, 0.01])
+    b = world.add_body(name="pour_stream", pos=[0, 0, -2], mocap=True)  # visual water stream while pouring
+    b.add_geom(name="pour_stream_geom", type=CYL, size=[0.006, 0.05, 0], rgba=[0.6, 0.8, 1.0, 0.0],
+               contype=0, conaffinity=0, group=1)
     b = world.add_body(name="straw_cup", pos=[-3.15, 2.62, 0.95])
     b.add_geom(name="straw_cup_geom", type=CYL, size=[0.03, 0.05, 0], rgba=[0.95, 0.95, 0.93, 1])
     b = world.add_body(name="straw2", pos=[-3.15, 2.62, 1.02])

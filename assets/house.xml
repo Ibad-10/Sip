@@ -892,6 +892,9 @@
         <geom name="g_jug_vis_0" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_jug_vis_0" mesh="m_jug_vis_0"/>
       </body>
     </body>
+    <body name="pour_stream" pos="0 0 -2" mocap="true">
+      <geom name="pour_stream_geom" size="0.006 0.05" type="cylinder" contype="0" conaffinity="0" group="1" rgba="0.6 0.8 1 0"/>
+    </body>
     <body name="straw_cup" pos="-3.15 2.62 0.95">
       <geom name="straw_cup_geom" size="0.03 0.05" type="cylinder" rgba="0.95 0.95 0.93 1"/>
     </body>

@@ -448,6 +448,21 @@ class WaterTask:
         self.m.geom_rgba[g][3] = 0.55 if level > 0.02 else 0.0
         self.water_level = level
 
+    def _stream(self, on: bool, k: int = 0) -> None:
+        """Water falling from the jug into the glass (visual; MuJoCo has no fluids)."""
+        g, mid = self.m.geom("pour_stream_geom").id, self.m.body("pour_stream").mocapid[0]
+        if not on:
+            self.m.geom_rgba[g][3] = 0.0
+            self.d.mocap_pos[mid] = [0, 0, -2]
+            return
+        top = self.d.body("jug").xpos[2] + 0.02
+        surface = self.d.body("glass").xpos[2] - 0.055 + 0.04 * self.water_level
+        gx, gy = self.d.body("glass").xpos[:2] + 0.004 * np.sin(k * 1.7)  # slight wobble
+        half = max(0.01, (top - surface) / 2)
+        self.m.geom_size[g][1] = half
+        self.m.geom_rgba[g][3] = 0.55
+        self.d.mocap_pos[mid] = [gx, gy, surface + half]
+
     def _show_straw(self, on: bool) -> None:
         self.m.geom_rgba[self.m.geom("straw").id][3] = 1.0 if on else 0.0
         self._straw_in = on
@@ -480,7 +495,8 @@ class WaterTask:
 
     def _g_reach(self, xyz: np.ndarray, tol: float = 0.03, timeout: float = 12.0, wrist_yaw: float = 0.0):
         dt = TICK_STEPS * self.m.opt.timestep
-        self.io.set_arm(lift=xyz[2] - LIFT_TO_GRASP_Z, arm=0.0, wrist_yaw=wrist_yaw)
+        self.io.set_arm(lift=xyz[2] - LIFT_TO_GRASP_Z, arm=0.0, wrist_yaw=wrist_yaw,
+                        gripper=None if self.io.held else 0.04)
         t0 = self.t
         while abs(self.io.grasp_center()[2] - xyz[2]) > 0.03 and self.t - t0 < 3.0:
             yield
@@ -527,8 +543,11 @@ class WaterTask:
         self.log("plan", "pouring water")
         for k in range(40):
             self.io.d.ctrl[self.io.act["wrist_roll"]] = 0.9 * min(1.0, k / 10)
-            if k >= 10:
+            if 10 <= k < 36:
                 self._set_water(min(1.0, (k - 10) / 25))
+                self._stream(True, k)
+            else:
+                self._stream(False)
             yield from self._g_wait(0.1)
         self.io.d.ctrl[self.io.act["wrist_roll"]] = 0.0
         self.log("plan", "poured water into the glass")

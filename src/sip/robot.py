@@ -70,6 +70,7 @@ class StretchIO:
         rel_quat = np.zeros(4)
         mujoco.mju_mulQuat(rel_quat, inv, oquat)
         # eq_data layout for weld: anchor(3), relpos(3), relquat(4), torquescale(1)
+        self.d.ctrl[self.act["gripper"]] = self.GRIP.get(body, 0.0)
         self.m.eq_data[eq, 0:3] = 0.0
         self.m.eq_data[eq, 3:6] = rel_pos
         self.m.eq_data[eq, 6:10] = rel_quat
@@ -83,8 +84,12 @@ class StretchIO:
                 self._saved_contype[g] = (self.m.geom_contype[g], self.m.geom_conaffinity[g])
                 self.m.geom_contype[g] = self.m.geom_conaffinity[g] = 0
 
+    # gripper command that visibly closes the fingers on each object (the weld does the holding)
+    GRIP = {"glass": 0.01, "jug": 0.03, "straw2": -0.015, "organiser": 0.0}
+
     def release(self) -> None:
         if self._held:
+            self.d.ctrl[self.act["gripper"]] = 0.04
             self.d.eq_active[self.m.equality(f"grasp_weld_{self._held}").id] = 0
             for g, (ct, ca) in getattr(self, "_saved_contype", {}).items():
                 self.m.geom_contype[g], self.m.geom_conaffinity[g] = ct, ca
