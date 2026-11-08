@@ -76,3 +76,8 @@ def test_mouth_closed_pauses_near_face():
 def test_done_retreats():
     d = safety_gate(inp(0.05, done_heard=True))
     assert d.action == "retreat" and d.reason == "person finished"
+
+
+def test_slowdown_band_before_near_zone():
+    d = safety_gate(inp(0.4))
+    assert d.action == "proceed" and d.max_speed_mps == pytest.approx(0.06)

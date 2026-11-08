@@ -84,7 +84,7 @@ def finished(h, s):
 def test_full_water_run():
     h = Harness()
     request_water(h)
-    assert h.run(150, until=finished), h.states
+    assert h.run(240, until=finished), h.states
     assert h.hold >= 3.0
     glass = h.d.body("glass").xpos
     assert np.linalg.norm(glass[:2] - np.array([-2.6, 2.6])) < 0.15  # back on the counter

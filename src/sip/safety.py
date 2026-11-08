@@ -6,6 +6,7 @@ WATCH_M = 0.50        # face checks apply inside this distance
 STOP_SHORT_M = 0.02
 SLOW_MPS = 0.03
 FAST_MPS = 0.30
+BAND_MPS = 0.06       # 0.30-0.50 m: slow down before the near zone
 MAX_YAW_DEG = 30.0
 MAX_FORCE_N = 10.0
 MAX_REAPPROACH = 2
@@ -40,4 +41,6 @@ def safety_gate(inp: SafetyInput) -> SafetyDecision:
         if not inp.ready_heard:
             return SafetyDecision("pause", 0.0, "waiting for ready")
         return SafetyDecision("proceed", SLOW_MPS, "near face, slow")
+    if d < WATCH_M:
+        return SafetyDecision("proceed", BAND_MPS, "approaching face, slowing")
     return SafetyDecision("proceed", FAST_MPS, "clear")

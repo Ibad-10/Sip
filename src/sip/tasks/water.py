@@ -24,6 +24,8 @@ STRAW_SHORT = 0.015          # straw tip target this far in front of the lips (g
 HOLD_S = 3.0
 SPIN_W = 0.6
 WRIST_CAM = "d405_rgb"
+PERSON_STANDOFF = 0.42       # park so the wrist swing ends outside the 0.30 m slow zone
+WRIST_SWING = 0.6            # rad/s when swinging the glass out beside the person
 
 
 class WaterTask:
@@ -218,7 +220,7 @@ class WaterTask:
         mouth = self.mouth.xyz if (self.mouth.visible and self.mouth.xyz is not None) else \
             self.d.site("mouth").xpos.copy()
         front = mouth + 0.05 * np.array([np.cos(facing), np.sin(facing), 0])
-        x, y, yaw = park_pose_for(front, 0.30, facing, SEATS[where][2])
+        x, y, yaw = park_pose_for(front, PERSON_STANDOFF, facing, SEATS[where][2])
         return np.array([x, y]), yaw, facing, where
 
     # ---------- main step ----------
@@ -394,7 +396,6 @@ class WaterTask:
         if r == "blocked":
             return self._ask("Something is in the way. Could you move it?", resume="NAV_TO_PERSON")
         if r == "arrived":
-            self.io.set_arm(wrist_yaw=0.0)
             self.say("Here's your water. Tell me when you're ready.")
             self.goto("APPROACH", "arrived beside the person")
 
@@ -422,11 +423,22 @@ class WaterTask:
     def _s_approach(self):
         aim_head(self.m, self.d, self.io, self.d.site("mouth").xpos, snap=False)
         dt = TICK_STEPS * self.m.opt.timestep
-        if self._sub == 0:  # raise the straw to mouth height, arm retracted
+        if self._sub == 0:  # swing the glass out slowly (away from the face), arm retracted
+            near = self.dist_to_mouth() < 0.40
+            wy = min(self.io.arm_targets()["wrist_yaw"], float(self.d.joint("joint_wrist_yaw").qpos[0]) + 0.05)
+            # limit the straw tip's linear speed, not the joint rate: omega = v_tip / lever
+            axis = self.d.body("link_wrist_yaw").xpos
+            lever = max(0.05, float(np.hypot(*(self.tip() - axis)[:2])))
+            v_tip = 0.025 if near else 0.15
+            lag = abs(self.d.joint("joint_wrist_yaw").qpos[0] - wy)
+            if lag < 0.15:  # let the joint catch up before commanding further
+                self.io.set_arm(wrist_yaw=max(0.0, wy - min(WRIST_SWING, v_tip / lever) * dt))
             tgt = self._approach_target()
             if tgt is not None:
-                self.io.set_arm(lift=self.io.arm_targets()["lift"] + 0.5 * (tgt[2] - self.tip()[2]))
-            if self.t - self._timer > 2.0:
+                step = (0.02 if near else 0.15) * dt
+                dz = float(np.clip(tgt[2] - self.tip()[2], -step, step))
+                self.io.set_arm(lift=self.io.arm_targets()["lift"] + dz)
+            if wy <= 1e-3 and abs(self.d.joint("joint_wrist_yaw").qpos[0]) < 0.03 and self.t - self._timer > 2.0:
                 self._sub = 1
             return
         dec = self._gate()
@@ -466,9 +478,15 @@ class WaterTask:
             return
         err = tgt - self.tip()
         step = dec.max_speed_mps * dt
-        self.io.set_arm(arm=self.io.arm_targets()["arm"] + float(np.clip(err @ self.io.arm_dir(), -step, step)),
+        # step from where the joints actually are, so a lagging joint can't overshoot into the slow zone
+        ext = self.io.arm_extension()
+        cmd = self.io.arm_targets()["arm"] + float(np.clip(err @ self.io.arm_dir(), -step, step))
+        lead = 0.02 if dec.max_speed_mps < 0.1 else 0.06  # bound how far the command may run ahead
+        self.io.set_arm(arm=float(np.clip(cmd, ext - lead, ext + lead)),
                         lift=self.io.arm_targets()["lift"] + float(np.clip(err[2], -step, step)))
-        self._base_bearing_fix(tgt, gain=1.5, wmax=0.15)
+        p = self.pose()
+        lever = max(0.3, float(np.hypot(self.tip()[0] - p.x, self.tip()[1] - p.y)))
+        self._base_bearing_fix(tgt, gain=1.5, wmax=min(0.15, 0.8 * dec.max_speed_mps / lever))
 
     def _s_hold(self):
         dec = self._gate()
