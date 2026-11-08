@@ -103,10 +103,10 @@ class StrawReachEnv(gym.Env):
         dist = float(np.linalg.norm(self.target - self._tip()))
         dt = SUBSTEPS * self.m.opt.timestep
         self.speed = (self.dist - dist) / dt          # closing speed
-        r = 3.0 * (self.dist - dist) - 0.01 - 0.02 * float(np.sum((a - self.prev) ** 2))
         c = self.cfg
+        r = 10.0 * (self.dist - dist) - 0.005 - 0.02 * float(np.sum((a - self.prev) ** 2))
         if dist < c["near"] and self.speed > c["slow"]:
-            r -= 2.0 * (self.speed - c["slow"])       # too fast near the face
+            r -= 20.0 * (self.speed - c["slow"]) * (self.speed - c["slow"]) / c["slow"]   # gentle, grows with overspeed
         done = dist < c["goal"]
         if done:
             r += 5.0
@@ -114,4 +114,4 @@ class StrawReachEnv(gym.Env):
             r -= 2.0
         self.prev, self.dist = a, dist
         self.k += 1
-        return self._obs(), float(r), bool(done), self.k >= 300, {"dist": dist}
+        return self._obs(), float(r), bool(done), self.k >= (700 if c["near"] > 0 else 300), {"dist": dist}

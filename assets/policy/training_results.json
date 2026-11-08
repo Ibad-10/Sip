@@ -2,73 +2,97 @@
  {
   "task": "straw",
   "seed": 0,
-  "steps": 20000,
+  "steps": 2000000,
   "success_rate": 0.0,
-  "median_final_error_cm": 66.73251851325472,
-  "p95_close_speed_near_face_mps": 0.031487736907371555
+  "median_final_error_cm": 37.31958059391916,
+  "p95_close_speed_near_face_mps": 0.0433882464287345
  },
  {
   "task": "straw",
   "seed": 1,
-  "steps": 20000,
+  "steps": 2000000,
   "success_rate": 0.0,
-  "median_final_error_cm": 68.1800456593731,
-  "p95_close_speed_near_face_mps": 0.04672102850257007
+  "median_final_error_cm": 38.47231810763104,
+  "p95_close_speed_near_face_mps": 0.046168758629318296
  },
  {
   "task": "straw",
   "seed": 2,
-  "steps": 20000,
+  "steps": 2000000,
   "success_rate": 0.0,
-  "median_final_error_cm": 66.43028063106757,
-  "p95_close_speed_near_face_mps": 0.018482655848137127
+  "median_final_error_cm": 37.559455831623815,
+  "p95_close_speed_near_face_mps": 0.0365602322076327
  },
  {
   "task": "offer",
   "seed": 0,
-  "steps": 20000,
+  "steps": 2000000,
   "success_rate": 0.0,
-  "median_final_error_cm": 50.25286351038456,
-  "p95_close_speed_near_face_mps": 0.06571405321914162
+  "median_final_error_cm": 36.9390101825261,
+  "p95_close_speed_near_face_mps": 0.043587781911203126
  },
  {
   "task": "offer",
   "seed": 1,
-  "steps": 20000,
+  "steps": 2000000,
   "success_rate": 0.0,
-  "median_final_error_cm": 52.15575024476493,
-  "p95_close_speed_near_face_mps": 0.060762253989206316
+  "median_final_error_cm": 38.12057127869442,
+  "p95_close_speed_near_face_mps": 0.046261362980341725
  },
  {
   "task": "offer",
   "seed": 2,
-  "steps": 20000,
+  "steps": 2000000,
   "success_rate": 0.0,
-  "median_final_error_cm": 52.38874646759059,
-  "p95_close_speed_near_face_mps": 0.056964035198355245
+  "median_final_error_cm": 36.57144590009768,
+  "p95_close_speed_near_face_mps": 0.03664408883012893
  },
  {
   "task": "pour",
   "seed": 0,
-  "steps": 20000,
-  "success_rate": 0.04,
-  "median_final_error_cm": 32.71181631977462,
+  "steps": 2000000,
+  "success_rate": 0.97,
+  "median_final_error_cm": 1.2659262697948943,
   "p95_close_speed_near_face_mps": null
  },
  {
   "task": "pour",
   "seed": 1,
-  "steps": 20000,
-  "success_rate": 0.03,
-  "median_final_error_cm": 26.14722143833702,
+  "steps": 2000000,
+  "success_rate": 0.99,
+  "median_final_error_cm": 1.2528674904978874,
   "p95_close_speed_near_face_mps": null
  },
  {
   "task": "pour",
   "seed": 2,
-  "steps": 20000,
-  "success_rate": 0.02,
-  "median_final_error_cm": 39.950096629336784,
+  "steps": 2000000,
+  "success_rate": 1.0,
+  "median_final_error_cm": 1.2340470156002523,
+  "p95_close_speed_near_face_mps": null
+ },
+ {
+  "task": "grasp",
+  "seed": 0,
+  "steps": 2000000,
+  "success_rate": 0.61,
+  "median_final_error_cm": 1.9339120752146717,
+  "p95_close_speed_near_face_mps": null
+ },
+ {
+  "task": "grasp",
+  "seed": 1,
+  "steps": 2000000,
+  "success_rate": 0.595,
+  "median_final_error_cm": 1.958919028571875,
+  "p95_close_speed_near_face_mps": null
+ },
+ {
+  "task": "grasp",
+  "seed": 2,
+  "steps": 2000000,
+  "success_rate": 0.615,
+  "median_final_error_cm": 1.954171460430941,
   "p95_close_speed_near_face_mps": null
  }
 ]

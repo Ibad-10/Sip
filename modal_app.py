@@ -154,7 +154,7 @@ def train_policy(job: tuple) -> tuple[str, int, bytes, dict]:
     env, ok, fast, errs, n = StrawReachEnv(seed=10_000 + seed, task=task, randomise=dr), 0, [], [], 200
     for _ in range(n):
         o, _ = env.reset()
-        for _ in range(300):
+        for _ in range(700):
             a, _ = model.predict(o, deterministic=True)
             o, r, done, trunc, info = env.step(a)
             if info["dist"] < env.cfg["near"]:
@@ -178,11 +178,11 @@ def train_policy(job: tuple) -> tuple[str, int, bytes, dict]:
 
 
 @app.local_entrypoint()
-def train(steps: int = 2_000_000, version: str = "v1", worlds: int = 8, dr: bool = False):
+def train(steps: int = 2_000_000, version: str = "v1", worlds: int = 8, dr: bool = False, skills: str = "straw,offer,pour,grasp"):
     import json
     out = ROOT / "assets" / "policy"
     out.mkdir(parents=True, exist_ok=True)
-    jobs = [(t, s, steps, worlds, dr, version) for t in ("straw", "offer", "pour", "grasp") for s in (0, 1, 2)]
+    jobs = [(t, s, steps, worlds, dr, version) for t in skills.split(",") for s in (0, 1, 2)]
     out = out / version
     out.mkdir(parents=True, exist_ok=True)
     table = []
