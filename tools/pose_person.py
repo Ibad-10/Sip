@@ -44,7 +44,8 @@ def rot_between(a, b):
     return np.eye(3) + k + k @ k / (1 + c)
 
 
-def main():
+def main(arm_dirs=None, tag: str = ""):
+    """arm_dirs: optional {'R_Upperarm': (f,u,l), 'R_Forearm': (f,u,l)} from a retargeted animation frame."""
     g = json.loads((SRC / "scene.gltf").read_text())
     acc = reader(g, (SRC / g["buffers"][0]["uri"]).read_bytes())
     skin = g["skins"][0]
@@ -92,6 +93,8 @@ def main():
         "L_Forearm": ("L_Hand", d(1, -0.25, -0.35)), "R_Forearm": ("R_Forearm", None),
     }
     pose["R_Forearm"] = ("R_Hand", d(1, -0.25, 0.35))
+    for bone, (f_, u_, l_) in (arm_dirs or {}).items():
+        pose[bone] = (pose[bone][0], d(f_, u_, l_))
     D = {}
     order = sorted(range(len(joints)), key=lambda k: len(_chain(joints[k], parent)))
     for k in order:
@@ -148,6 +151,8 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     meta = {}
     for name, (vs, uvs, fs) in parts.items():
+        if tag and name != "body":
+            continue
         V = (np.vstack(vs) - mouth_raw) @ B.T * s
         UV = np.vstack(uvs)
         F = np.vstack(fs)
@@ -155,11 +160,13 @@ def main():
         remap = -np.ones(len(V), int)
         remap[used] = np.arange(len(used))
         V, UV, F = V[used], UV[used], remap[F]
-        with open(OUT / f"{name}.obj", "w") as f:
+        with open(OUT / f"{name}{tag}.obj", "w") as f:
             f.write("".join(f"v {x:.5f} {y:.5f} {z:.5f}\n" for x, y, z in V))
             f.write("".join(f"vt {u:.5f} {1 - v:.5f}\n" for u, v in UV))
             f.write("".join(f"f {a + 1}/{a + 1} {b + 1}/{b + 1} {c + 1}/{c + 1}\n" for a, b, c in F))
         meta[name] = {"faces": int(len(F)), "min": V.min(0).round(3).tolist(), "max": V.max(0).round(3).tolist()}
+    if tag:
+        return
     hp = (head_piv - mouth_raw) @ B.T * s
     meta["head_pivot"] = hp.round(4).tolist()
     tex = g["images"][g["textures"][g["materials"][0]["pbrMetallicRoughness"]["baseColorTexture"]["index"]]["source"]]["uri"]
@@ -201,5 +208,41 @@ def _chain_idx(k, joints, parent, jidx):
     return {k} | {jidx[n] for n in _chain(joints[k], parent) if n in jidx}
 
 
+def retarget_frames(frames=(181, 205, 217, 229, 241, 289, 337, 349, 361, 385)):
+    """Mixamo 'Sitting Drinking' right-arm motion -> our grandma's rig, one OBJ per keyframe."""
+    J = json.loads((ROOT / "assets/mixamo/sitting_drinking_bones.json").read_text())
+    by_f = {fr["f"]: {k: np.array(v) for k, v in fr["pos"].items()} for fr in J["frames"]}
+    for k, f in enumerate(frames):
+        p = by_f[min(by_f, key=lambda x: abs(x - f))]
+        up = p["Head"] - p["Hips"]
+        up /= np.linalg.norm(up)
+        left = p["LeftArm"] - p["RightArm"]
+        left -= (left @ up) * up
+        left /= np.linalg.norm(left)
+        fwd = np.cross(left, up)
+        if (p["LeftUpLeg"] + p["RightUpLeg"] - 2 * p["Hips"]) @ fwd < 0 and (p["RightHand"] - p["Hips"]) @ fwd < 0:
+            fwd = -fwd
+
+        def comp(v):
+            v = v / np.linalg.norm(v)
+            return float(v @ fwd), float(v @ up), float(v @ left)
+        # Mixamo holds a cup out; for tablets the hand must reach the lips, so blend the forearm
+        # toward the mouth in proportion to how close Mixamo's hand comes to the head.
+        mouth = p["Head"] + 16 * fwd + 4 * up
+        w = float(np.clip((60 - np.linalg.norm(p["RightHand"] - p["Head"])) / 28, 0, 1))
+        fa = p["RightHand"] - p["RightForeArm"]
+        to_mouth = mouth - p["RightForeArm"]
+        fa = (1 - w) * fa / np.linalg.norm(fa) + w * to_mouth / np.linalg.norm(to_mouth)
+        ua = p["RightForeArm"] - p["RightArm"]
+        ua = ua / np.linalg.norm(ua) + w * 0.6 * fwd     # elbow a little more forward
+        main({"R_Upperarm": comp(ua), "R_Forearm": comp(fa)}, tag=f"_drink{k}")
+    (OUT / "drink_frames.json").write_text(json.dumps({"count": len(frames), "mixamo_frames": list(frames)}))
+    print("wrote", len(frames), "drinking keyframes")
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+    if "--drink" in sys.argv:
+        retarget_frames()
+    else:
+        main()

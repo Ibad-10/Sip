@@ -18,8 +18,9 @@ from sip.types import Detection, MouthState
 MODELS = Path(__file__).resolve().parents[3] / "assets" / "models"
 # label -> (text prompt for the open-vocabulary model, minimum confidence)
 DEFAULT_LABELS = {
-    "glass": ("drinking glass", 0.12),
-    "jug": ("metal jug", 0.10),
+    "glass": ("cup", 0.15),          # cup-like things are told apart by their 3D shape (see _by_shape)
+    "mug": ("mug", 0.15),
+    "jug": ("jug", 0.10),
     "straw2": ("drinking straw", 0.20),
     "person": ("person", 0.40),
     "organiser": ("pill box", 0.10),
@@ -29,6 +30,16 @@ DEFAULT_LABELS = {
     "stove": ("stove", 0.25), "sink": ("sink", 0.25), "shelf": ("bookshelf", 0.30),
 }
 TASK_LABELS = {"glass", "jug", "straw2", "person", "organiser"}
+CUP_LIKE = {"glass", "mug", "jug"}
+
+
+def _by_shape(height_m: float, width_m: float) -> str:
+    """Decide glass / mug / jug from the real size measured with depth (not from the name alone)."""
+    if height_m >= 0.16:
+        return "jug"                    # tall container (water jug ~20 cm)
+    if height_m >= 1.3 * width_m:
+        return "glass"                  # tall and slim (tumbler ~11-13 cm with water)
+    return "mug"                        # squat
 # what a room contains -> what the robot calls it (a new house needs no room list)
 ROOM_HINTS = {"stove": "kitchen", "sink": "kitchen", "bed": "bedroom", "sofa": "living room", "tv": "living room"}
 
@@ -131,10 +142,17 @@ class YoloDetector:
                 if label not in best or conf > best[label][1]:
                     best[label] = (unrotate_box(box, w), float(conf))
             dets, boxes = [], {}
+            f = _focal(fovy, h)
+            reshaped: dict[str, tuple] = {}
             for label, (b, conf) in best.items():
                 z = box_depth(depth, b)
                 if z <= 0:
                     continue
+                if label in CUP_LIKE:   # raw camera is sideways: u-extent is the object's height
+                    label = _by_shape((b[2] - b[0]) * z / f, (b[3] - b[1]) * z / f)
+                if label not in reshaped or conf > reshaped[label][1]:
+                    reshaped[label] = (b, conf, z)
+            for label, (b, conf, z) in reshaped.items():
                 xyz = to_world((b[0] + b[2]) / 2, (b[1] + b[3]) / 2, z, pos, mat, fovy, w, h)
                 if label != "person":
                     xyz = xyz + np.array([0, 0, -0.02])  # centre of a small object, not its front skin
