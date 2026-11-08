@@ -25,3 +25,14 @@ def test_headless_runs_10s():
     assert r.returncode == 0, r.stderr[-2000:]
     rate = [line for line in r.stdout.splitlines() if line.startswith("loop_hz=")]
     assert rate and float(rate[-1].split("=")[1]) > 5.0
+
+
+def test_alert_evidence_saved(tmp_path):
+    from sip.app import Sim, save_alert_evidence
+    sim = Sim()
+    sim.task.alert("no answer for 30 s: test")
+    jpg, js = save_alert_evidence(sim, str(tmp_path))
+    import json, os
+    assert os.path.getsize(jpg) > 1000
+    data = json.loads(open(js).read())
+    assert data["alert"].startswith("no answer") and data["events"]

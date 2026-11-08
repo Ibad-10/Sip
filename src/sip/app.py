@@ -105,6 +105,32 @@ class Sim:
 _PANEL_R = {}
 
 
+def save_alert_evidence(sim, folder: str = "runs/alerts") -> tuple[str, str]:
+    """Snapshot for the carer: robot head camera, person's view and an overview, plus the recent log."""
+    import json
+    import cv2
+    os.makedirs(folder, exist_ok=True)
+    r = _PANEL_R.get("ev")
+    if r is None:
+        r = _PANEL_R["ev"] = mujoco.Renderer(sim.m, 360, 480)
+    tiles = []
+    for cam in ("d435i_camera_rgb", "person_eyes", "cam_overview"):
+        r.update_scene(sim.d, camera=cam)
+        tiles.append(r.render()[:, :, ::-1].copy())
+    t, text = sim.bb.get("alert") or (sim.t, "alert")
+    img = np.hstack(tiles)
+    bar = np.zeros((44, img.shape[1], 3), np.uint8)
+    bar[:] = (30, 30, 150)
+    cv2.putText(bar, f"ALERT t={t:.1f}s: {text}"[:150], (10, 29), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+    img = np.vstack([bar, img])
+    stem = os.path.join(folder, f"alert_{int(t * 10):06d}")
+    cv2.imwrite(stem + ".jpg", img)
+    events = [{"t": e.t, "kind": e.kind, "text": e.text} for e in sim.bb.events()[-30:]]
+    with open(stem + ".json", "w", encoding="utf-8") as f:
+        json.dump({"alert": text, "t": t, "state": sim.task.state, "events": events}, f, indent=1)
+    return stem + ".jpg", stem + ".json"
+
+
 def publish_panel(panel, sim, st) -> None:
     """Render the three views as JPEG and publish a compact state snapshot for the web panel."""
     import cv2
@@ -226,6 +252,14 @@ def main(argv=None):
             st["ranges"] = scan(sim.m, sim.d, sim.io.base_pose())
             if ex:
                 ex.log_lidar(sim.t, sim.io.base_pose(), st["ranges"])
+        alert = sim.bb.get("alert")
+        if alert and alert != st.get("alert_saved"):
+            st["alert_saved"] = alert
+            jpg, _ = save_alert_evidence(sim)
+            print(f"[ALERT] {alert[1]} -> evidence {jpg}", flush=True)
+            if panel is not None:
+                with open(jpg, "rb") as f:
+                    panel.set_frame("alert", f.read())
         if panel is not None and sim.t - st.get("last_panel", -1.0) >= 0.3:
             st["last_panel"] = sim.t
             publish_panel(panel, sim, st)

@@ -77,7 +77,7 @@ async function poll(){try{const s=await (await fetch('/state')).json();
  const ev=$('events');const atBottom=ev.scrollHeight-ev.scrollTop-ev.clientHeight<20;
  ev.innerHTML=s.events.map(e=>`<span class="k">${e.t.toFixed(1)}s</span> <span class="${e.kind==='safety'?'safetyk':e.kind}">[${e.kind}]</span> ${e.text.replace(/</g,'&lt;')}`).join('\n');
  if(atBottom)ev.scrollTop=ev.scrollHeight;
- if(s.alert){$('alert').style.display='block';$('alert').textContent='ALERT for carer: '+s.alert}else $('alert').style.display='none';
+ if(s.alert){$('alert').style.display='block';$('alert').innerHTML='<b>ALERT for carer:</b> '+s.alert.replace(/</g,'&lt;')+'<br><img style="max-width:100%;margin-top:8px;border-radius:8px" src="/frame/alert.jpg?'+Math.floor(s.t)+'" alt="Evidence snapshot">'}else $('alert').style.display='none';
  draw(s)}catch(e){}}
 setInterval(poll,250);
 </script></body></html>"""
