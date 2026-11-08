@@ -44,8 +44,9 @@ def randomise_home(m, d, seed: int) -> dict:
             surf = WHERE[item][rng.integers(len(WHERE[item]))]
             (x0, x1), (y0, y1), top = SURFACES[surf]
             p = np.array([rng.uniform(x0, x1), rng.uniform(y0, y1), top + HALF_HEIGHT[item]])
-            if all(np.linalg.norm(p[:2] - q[:2]) > 0.2 for _, q in placed) and \
-                    not (item != "glass" and abs(p[0] + 1.1) < 0.35 and surf == "kitchen counter"):  # not on the stove
+            clear = all(np.linalg.norm(p[:2] - q[:2]) > 0.2 for _, q in placed) and \
+                all(np.hypot(p[0] - dx, p[1] - dy) > r + 0.06 for dx, dy, r in DECOR)   # not inside decor/stove
+            if clear:
                 break
         placed.append((item, p))
         layout[item] = (surf, p.round(2).tolist())
