@@ -60,8 +60,7 @@ def run_test(job) -> tuple[str, bool, str]:
                        cwd="/root/sip", capture_output=True, text=True, env=env)
     out = r.stdout + r.stderr
     timing = " | ".join(l for l in out.splitlines() if l.startswith("TIMING"))
-    return nodeid, r.returncode == 0, timing + ("" if r.returncode == 0 else "
-" + out[-1500:])
+    return nodeid, r.returncode == 0, timing + ("" if r.returncode == 0 else chr(10) + out[-1500:])
 
 
 @app.function(timeout=600, cpu=8)

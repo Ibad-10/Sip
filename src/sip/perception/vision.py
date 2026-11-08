@@ -23,7 +23,14 @@ DEFAULT_LABELS = {
     "straw2": ("drinking straw", 0.20),
     "person": ("person", 0.40),
     "organiser": ("pill box", 0.10),
+    # scene objects: shown with confidence, used to name rooms and to explain detours
+    "chair": ("chair", 0.30), "sofa": ("sofa", 0.30), "bed": ("bed", 0.30), "table": ("table", 0.30),
+    "lamp": ("lamp", 0.30), "plant": ("potted plant", 0.30), "tv": ("television", 0.30),
+    "stove": ("stove", 0.25), "sink": ("sink", 0.25), "shelf": ("bookshelf", 0.30),
 }
+TASK_LABELS = {"glass", "jug", "straw2", "person", "organiser"}
+# what a room contains -> what the robot calls it (a new house needs no room list)
+ROOM_HINTS = {"stove": "kitchen", "sink": "kitchen", "bed": "bedroom", "sofa": "living room", "tv": "living room"}
 
 
 def _focal(fovy_deg: float, h: int) -> float:
