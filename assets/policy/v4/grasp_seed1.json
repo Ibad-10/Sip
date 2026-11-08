@@ -1,0 +1,1 @@
+{"task": "grasp", "seed": 1, "steps": 3000000, "success_rate": 0.625, "median_final_error_cm": 1.9096328241326608, "p95_close_speed_near_face_mps": null, "parallel_worlds": 16, "domain_randomisation": true, "learning_curve": []}

@@ -1,0 +1,1 @@
+{"task": "pour", "seed": 0, "steps": 3000000, "success_rate": 0.995, "median_final_error_cm": 1.2179144331791223, "p95_close_speed_near_face_mps": null, "parallel_worlds": 16, "domain_randomisation": true, "learning_curve": []}

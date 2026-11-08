@@ -1,0 +1,1 @@
+{"task": "offer", "seed": 0, "steps": 3000000, "success_rate": 0.0, "median_final_error_cm": 22.940925660372873, "p95_close_speed_near_face_mps": 0.031294038199771446, "parallel_worlds": 16, "domain_randomisation": true, "learning_curve": []}

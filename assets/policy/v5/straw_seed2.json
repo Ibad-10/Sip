@@ -1,0 +1,1 @@
+{"task": "straw", "seed": 2, "steps": 2000000, "success_rate": 0.685, "median_final_error_cm": 1.9616613670728964, "p95_close_speed_near_face_mps": 0.06538438331509522, "parallel_worlds": 16, "domain_randomisation": true, "learning_curve": []}
