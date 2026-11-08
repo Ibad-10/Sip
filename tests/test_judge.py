@@ -146,3 +146,22 @@ def test_chaos_unexpected_events():
     assert not mon.violations, mon.violations[:5]
     assert h.hold >= 3.0
     assert "HALT" in h.states
+
+
+def test_contact_check_can_fail_straw_into_face():
+    """Guard against a vacuous safety test: a straw pushed into her face MUST register contact."""
+    import mujoco
+    import numpy as np
+    from sip.scene.build_house import build_house, seat_person
+    from sip.perception.objects import _body_geoms
+    m = mujoco.MjModel.from_xml_path(build_house())
+    d = mujoco.MjData(m)
+    seat_person(m, d, "armchair")
+    mujoco.mj_forward(m, d)
+    head = d.body("person_head").xpos.copy()
+    a = m.joint("glass_free").qposadr[0]
+    d.qpos[a:a + 3] = head + np.array([0, 0, -0.14]) - np.array([0.07, 0, 0])   # straw tip inside the head
+    mujoco.mj_forward(m, d)
+    glass, person = set(_body_geoms(m, "glass")), set(_body_geoms(m, "person"))
+    hits = [c for c in d.contact[:d.ncon] if {c.geom1, c.geom2} & glass and {c.geom1, c.geom2} & person]
+    assert hits, "straw inside the face produced no contact: the safety check would be blind"

@@ -93,7 +93,7 @@ def _items(world):
                mass=0.25, friction=[1.5, 0.05, 0.01])
     # straw leans out along the glass's local +x; the robot turns the glass so +x faces the arm
     b.add_geom(name="straw", type=CAP, fromto=[0, 0, 0.0, 0.07, 0, 0.14], size=[0.004, 0, 0],
-               rgba=[1, 0.3, 0.3, 1], mass=0.001, contype=0, conaffinity=0)
+               rgba=[1, 0.3, 0.3, 1], mass=0.001)       # real collider: straw-face contact is measured
     b.add_site(name="straw_tip", pos=[0.07, 0, 0.14], size=[0.006, 0, 0], group=4)
     # jug of water (collider cylinder; visual added in visuals.dress) and a straw holder with a straw
     b = world.add_body(name="jug", pos=[-1.72, 2.62, 1.0])
@@ -168,6 +168,15 @@ def build_spec() -> mujoco.MjSpec:
     _person(spec, world)
     from sip.scene.visuals import dress
     dress(spec, world)
+    # graspable objects never collide with the robot's own links (they ride in/over the gripper), but
+    # they DO collide with the person and the furniture, so contact-force safety checks are real
+    tmp = spec.compile()
+    root = tmp.body("base_link").id
+    robot_bodies = [tmp.body(i).name for i in range(tmp.nbody)
+                    if _descends(tmp, i, root) and tmp.body(i).name]
+    for item in ("glass", "organiser", "jug", "straw2"):
+        for rb in robot_bodies:
+            spec.add_exclude(bodyname1=item, bodyname2=rb)
     for item in ("glass", "organiser", "jug", "straw2"):
         spec.add_equality(name=f"grasp_weld_{item}", type=mujoco.mjtEq.mjEQ_WELD,
                           objtype=mujoco.mjtObj.mjOBJ_BODY, name1="link_grasp_center", name2=item,
@@ -194,6 +203,14 @@ def room_at(x: float, y: float) -> str:
     if y < -0.8:
         return "bedroom" if x > 0 else "store"
     return "hall"
+
+
+def _descends(model, i: int, root: int) -> bool:
+    while i > 0:
+        if i == root:
+            return True
+        i = model.body_parentid[i]
+    return False
 
 
 def seat_person(model, data, where: str) -> float:

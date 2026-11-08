@@ -86,13 +86,7 @@ class StretchIO:
         self.m.eq_data[eq, 6:10] = rel_quat
         self.d.eq_active[eq] = 1
         self._held = body
-        # carried object must not collide with the robot (it rides over the base when stowed)
-        self._saved_contype = {}
-        root = self.m.body(body).id
-        for g in range(self.m.ngeom):
-            if self.m.geom_bodyid[g] == root:
-                self._saved_contype[g] = (self.m.geom_contype[g], self.m.geom_conaffinity[g])
-                self.m.geom_contype[g] = self.m.geom_conaffinity[g] = 0
+        # no collision switching: the scene excludes object-robot contacts but keeps object-person ones
         return True
 
     # gripper command that visibly closes the fingers on each object (the weld does the holding)
@@ -102,8 +96,6 @@ class StretchIO:
         if self._held:
             self.d.ctrl[self.act["gripper"]] = 0.04
             self.d.eq_active[self.m.equality(f"grasp_weld_{self._held}").id] = 0
-            for g, (ct, ca) in getattr(self, "_saved_contype", {}).items():
-                self.m.geom_contype[g], self.m.geom_conaffinity[g] = ct, ca
         self._held = None
 
     @property
