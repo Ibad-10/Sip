@@ -97,8 +97,12 @@ class Sim:
         else:                                                  # simulator oracle (fast tests only)
             det = SegDetector(["glass", "organiser", "jug", "straw2"], noise_m=0.005)
             face = FaceTracker("sim")
-        self.task = WaterTask(self.io, self.bb, grid_from_model(self.m), ObjectMemory(), det, face,
-                              prepare=os.environ.get("SIP_PREPARE", "1") == "1")
+        grid, rooms = grid_from_model(self.m), None
+        if os.path.exists(os.environ.get("SIP_MAP", "runs/map.npz")):   # map the robot built itself
+            from sip.nav.explore import load_map
+            grid, rooms = load_map(os.environ.get("SIP_MAP", "runs/map.npz"))
+        self.task = WaterTask(self.io, self.bb, grid, ObjectMemory(), det, face,
+                              prepare=os.environ.get("SIP_PREPARE", "1") == "1", rooms=rooms)
         from sip.person import Person
         self.person = Person(self.m, self.d, self.bb)
         self.t = 0.0

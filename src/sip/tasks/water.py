@@ -15,7 +15,7 @@ from sip.cloud.verify import verify_target
 from sip.perception.objects import CAM, aim_head, pixel_to_world, render_head
 from sip.robot import StretchIO
 from sip.safety import safety_gate
-from sip.scene.build_house import ROOMS, park_pose_for, room_at
+from sip.scene.build_house import ROOMS, park_pose_for
 from sip.types import Event, MouthState, SafetyDecision, SafetyInput
 
 TICK_STEPS = 25              # physics steps per control tick (0.05 s)
@@ -34,7 +34,7 @@ WRIST_SWING = 0.6            # rad/s when swinging the glass out beside the pers
 
 class WaterTask:
     def __init__(self, io: StretchIO, bb: Blackboard, grid: OccupancyGrid, memory: ObjectMemory,
-                 detector, face, label: str = "glass", prepare: bool = False, cloud=None):
+                 detector, face, label: str = "glass", prepare: bool = False, cloud=None, rooms=None):
         self.io, self.bb, self.grid, self.memory = io, bb, grid, memory
         self.det, self.face, self.label = detector, face, label
         self.m, self.d = io.m, io.d
@@ -58,6 +58,7 @@ class WaterTask:
         self.last_dets = []
         self.last_mouth: tuple[float, np.ndarray] | None = None
         self.prepare = prepare
+        self.rooms = dict(rooms or ROOMS)    # named places: learned while exploring, or the setup default
         # where the person is comes from the camera; the map only knows her usual seats
         from sip.perception.objects import SegDetector
         self._person_det = SegDetector(["person"], noise_m=0.02, seed=7)
@@ -82,6 +83,10 @@ class WaterTask:
             self._show_straw(False)
 
     # ---------- helpers ----------
+    def _room_of(self, x: float, y: float) -> str:
+        """Name of the nearest known room centre (learned while exploring, or set up by the carer)."""
+        return min(self.rooms, key=lambda r: np.hypot(self.rooms[r][0] - x, self.rooms[r][1] - y))
+
     def log(self, kind: str, text: str) -> None:
         self.bb.log(Event(self.t, kind, text))
 
@@ -129,13 +134,13 @@ class WaterTask:
     def _start_nav(self, goal_xy, yaw: float | None, why: str) -> bool:
         path = self._plan(goal_xy)
         if path is None:
-            self.log("plan", f"no route to {room_at(*goal_xy)} ({why})")
+            self.log("plan", f"no route to {self._room_of(*goal_xy)} ({why})")
             return False
         self._nav = {"goal": np.asarray(goal_xy, float), "yaw": yaw,
                      "follower": PathFollower(path, lookahead=0.2), "why": why, "length": _length(path),
                      "progress": (self.t, self.pose()), "backup_until": -1.0}
         self.io.stow()
-        self.log("plan", f"route to {room_at(*goal_xy)} for {why}: {_length(path):.1f} m")
+        self.log("plan", f"route to {self._room_of(*goal_xy)} for {why}: {_length(path):.1f} m")
         return True
 
     def _nav_step(self) -> str:
@@ -226,7 +231,7 @@ class WaterTask:
             self.seen[det.label] = det.xyz
             if det.label == self.label:
                 self.obj_xyz = det.xyz
-                self.memory.see(self.label, det.xyz, self.t, room_at(*det.xyz[:2]))
+                self.memory.see(self.label, det.xyz, self.t, self._room_of(*det.xyz[:2]))
                 if self.home is None:
                     self.home = det.xyz.copy()
         hand = bool(self.bb.get("hand_raised", False))
@@ -258,10 +263,10 @@ class WaterTask:
                 pl["xyz"] = 0.8 * pl["xyz"] + 0.2 * xyz
                 self._person_where = name
                 return
-        name = f"{room_at(*xyz[:2])} spot {len(self.places) + 1}"
+        name = f"{self._room_of(*xyz[:2])} spot {len(self.places) + 1}"
         self.places[name] = {"xyz": xyz.copy(), "facing": None}
         self._person_where = name
-        self.log("perceive", f"saw the person in the {room_at(*xyz[:2])} -> remembered this place")
+        self.log("perceive", f"saw the person in the {self._room_of(*xyz[:2])} -> remembered this place")
 
     def _seen(self) -> bool:
         return any(d.label == self.label for d in self.last_dets)
@@ -367,7 +372,7 @@ class WaterTask:
 
     def _s_search(self):
         if self._sub == 0:
-            rooms = [r for r in self.memory.search_order(self.label, self.t, list(ROOMS))
+            rooms = [r for r in self.memory.search_order(self.label, self.t, list(self.rooms))
                      if r not in self._visited]
             if not rooms:
                 return self._ask(f"I've looked everywhere but can't find your {self.label}. "
@@ -375,7 +380,7 @@ class WaterTask:
             room = rooms[0]
             self._visited.append(room)
             self._room = room
-            if not self._start_nav(ROOMS[room], None, f"searching the {room}"):
+            if not self._start_nav(self.rooms[room], None, f"searching the {room}"):
                 return self._ask(f"I can't find a way to the {room}. Could you move something?",
                                  resume="LOCATE")
             self._sub = 1
@@ -423,7 +428,7 @@ class WaterTask:
             h, w = depth.shape
             self.obj_xyz = pixel_to_world(self.m, self.d, CAM, r["u"], r["v"], float(depth[r["v"], r["u"]]), w, h)
             self.obj_xyz[2] += 0.04  # point lands on the glass surface; aim for its centre
-            self.memory.see(self.label, self.obj_xyz, self.t, room_at(*self.obj_xyz[:2]))
+            self.memory.see(self.label, self.obj_xyz, self.t, self._room_of(*self.obj_xyz[:2]))
             if self.home is None:
                 self.home = self.obj_xyz.copy()
             self.log("cloud", f"Gemini Robotics-ER pointed at the {self.label}; verified locally ({', '.join(checks)})")
@@ -475,7 +480,7 @@ class WaterTask:
         if self._cloud_found and self._depth_confirms(expected):
             return self.goto("GRASP", f"depth camera confirms the {self.label} Gemini found")
         self._cloud_found = False
-        self.memory.miss(self.label, room_at(*expected[:2]), self.t)
+        self.memory.miss(self.label, self._room_of(*expected[:2]), self.t)
         self.log("perceive", f"the {self.label} is not where I remembered")
         self._visited = []
         self.goto("SEARCH", f"{self.label} missing")
@@ -633,10 +638,10 @@ class WaterTask:
             return
         self.log("perceive", f"looking for the {what}")
         yield from self._g_spin_look(label)
-        for room in self.memory.search_order(label, self.t, list(ROOMS)):
+        for room in self.memory.search_order(label, self.t, list(self.rooms)):
             if label in self.seen:
                 return
-            if not self._start_nav(ROOMS[room], None, f"looking for the {what} in the {room}"):
+            if not self._start_nav(self.rooms[room], None, f"looking for the {what} in the {room}"):
                 continue
             while label not in self.seen:
                 p = self.pose()
@@ -926,9 +931,9 @@ class WaterTask:
     def _find_person_seq(self):
         """Visit rooms (living areas first) and look around until the camera sees a person."""
         self.say("Where are you? I'm coming to find you.")
-        order = sorted(ROOMS, key=lambda r: {"living": 0, "bedroom": 1, "kitchen": 2, "hall": 3}.get(r, 9))
+        order = sorted(self.rooms, key=lambda r: {"living": 0, "bedroom": 1, "kitchen": 2, "hall": 3}.get(r, 9))
         for room in order:
-            if not self._start_nav(ROOMS[room], None, f"looking for the person in the {room}"):
+            if not self._start_nav(self.rooms[room], None, f"looking for the person in the {room}"):
                 continue
             while True:
                 if self._person_where is not None:
@@ -1139,7 +1144,7 @@ class WaterTask:
             self.io.set_arm(arm=0.0)
             if self.t - self._timer > 2.0:
                 self.io.stow()
-                self.memory.see(self.label, self._place_xyz, self.t, room_at(*self._place_xyz[:2]))
+                self.memory.see(self.label, self._place_xyz, self.t, self._room_of(*self._place_xyz[:2]))
                 self.say("All done.")
                 self.goto("IDLE", "task complete")
 
