@@ -70,17 +70,24 @@ class Localiser:
         p = self.pose
         sigma, prior_xy, prior_a = 0.05, 0.05, np.deg2rad(3)
 
-        def score(dx, dy, da):
+        def fit(dx, dy, da):
             x, y, yaw = p.x + dx, p.y + dy, p.yaw + da
             px, py = x + r * np.cos(yaw + ang), y + r * np.sin(yaw + ang)
             i = np.clip(((px + grid.w / 2) / grid.res).astype(int), 0, grid.nx - 1)
             j = np.clip(((py + grid.h / 2) / grid.res).astype(int), 0, grid.ny - 1)
-            fit = float(np.exp(-0.5 * (field[i, j] / sigma) ** 2).mean())
-            # trust odometry for small moves: penalise corrections it cannot explain (corridor aliasing)
-            return fit - 0.01 * ((dx * dx + dy * dy) / prior_xy ** 2 + (da / prior_a) ** 2)
+            return float(np.exp(-0.5 * (field[i, j] / sigma) ** 2).mean())
 
+        def score(dx, dy, da):
+            # trust odometry for small moves: penalise corrections it cannot explain (corridor aliasing)
+            return fit(dx, dy, da) - 0.01 * ((dx * dx + dy * dy) / prior_xy ** 2 + (da / prior_a) ** 2)
+
+        here = fit(0, 0, 0)
+        self.quality = here
+        searches = [(0.02, 0.08, 1.0, 4.0), (0.005, 0.015, 0.25, 0.75)]
+        if here < 0.35:      # poor match where odometry says we are (wheel slip?): re-localise over a wider area
+            searches = [(0.05, 0.30, 2.5, 10.0)] + searches
         best = (score(0, 0, 0), 0.0, 0.0, 0.0)
-        for step_xy, span_xy, step_a, span_a in ((0.02, 0.08, 1.0, 4.0), (0.005, 0.015, 0.25, 0.75)):
+        for step_xy, span_xy, step_a, span_a in searches:
             cx, cy, ca = best[1], best[2], best[3]
             for da in np.deg2rad(np.arange(-span_a, span_a + 1e-6, step_a)) + ca:
                 for dx in np.arange(-span_xy, span_xy + 1e-6, step_xy) + cx:
@@ -89,6 +96,8 @@ class Localiser:
                         if sc > best[0]:
                             best = (sc, dx, dy, da)
         _, dx, dy, da = best
+        if fit(dx, dy, da) < 0.45:        # even the best pose does not explain the scan: do not trust it
+            return
         if dx or dy or da:
             self.pose = Pose2D(p.x + dx, p.y + dy, p.yaw + da)
             self.corrections.append((dx, dy, da))

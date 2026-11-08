@@ -91,7 +91,7 @@ class WaterTask:
         dist, z = (0.8, 0.55) if near else (1.8, 0.8)
         return np.array([p.x + dist * np.cos(p.yaw), p.y + dist * np.sin(p.yaw), z])
 
-    def _object_in_hand(self) -> bool:
+    def _object_in_hand(self, label: str | None = None) -> bool:
         """Wrist depth camera (D405, looks between the fingers): something solid fills the gap within 30 cm.
         This is how the robot knows a grasp worked; it never reads where the object really is."""
         if not hasattr(self, "_wrist_r"):
@@ -99,7 +99,8 @@ class WaterTask:
             self._wrist_r = fast_renderer(self.m, 120, 160)
         _, dep, _ = render_head(self.m, self.d, self._wrist_r, cam=WRIST_CAM, rgb=False, seg=False)
         gap = dep[50:120, 55:105]
-        return float((gap < 0.30).mean()) > 0.35
+        need = 0.08 if label == "straw2" else 0.35       # a thin straw fills far less of the gap than a glass
+        return float((gap < 0.30).mean()) > need
 
     def _room_of(self, x: float, y: float) -> str:
         """Name of the nearest known room centre (learned while exploring, or set up by the carer)."""
@@ -222,18 +223,23 @@ class WaterTask:
         return False
 
     def _pick_pose(self, target: np.ndarray) -> tuple[np.ndarray, float] | None:
+        """Where to park so the arm can reach `target`. The arm reaches 0.44-0.96 m from the base centre, so try
+        several distances and directions (corners and walls rule some out); keep the nearest reachable one."""
         g = self._inflated()
         p = self.pose()
-        best = None
-        for a in np.deg2rad(np.arange(0, 360, 15)):
-            b = target[:2] + PICK_STANDOFF * np.array([np.cos(a), np.sin(a)])
-            if not g.is_free(*b):
-                continue
-            u = target[:2] - b
-            cost = np.hypot(b[0] - p.x, b[1] - p.y)
-            if best is None or cost < best[0]:
-                best = (cost, b, float(np.arctan2(u[0], -u[1])))
-        return (best[1], best[2]) if best else None
+        cands = []
+        for stand in (PICK_STANDOFF, 0.62, 0.78, 0.56, 0.86):
+            for a in np.deg2rad(np.arange(0, 360, 15)):
+                b = target[:2] + stand * np.array([np.cos(a), np.sin(a)])
+                if not g.is_free(*b):
+                    continue
+                u = target[:2] - b
+                cost = np.hypot(b[0] - p.x, b[1] - p.y) + 2.0 * abs(stand - PICK_STANDOFF)
+                cands.append((cost, b, float(np.arctan2(u[0], -u[1]))))
+        for cost, b, yaw in sorted(cands, key=lambda c: c[0])[:6]:     # first one the planner can actually reach
+            if self._plan(b) is not None:
+                return b, yaw
+        return None
 
     def _perceive(self) -> None:
         want_rgb = self.real or self.tick_n % (4 * PERCEIVE_EVERY) == 0 or self.bb.get("want_frame", False)
@@ -707,7 +713,7 @@ class WaterTask:
         while self.t - t0 < timeout:
             err = xyz - self.io.grasp_center()
             d = float(np.linalg.norm(err))
-            if d < tol or (touch and d < 0.08 and self._object_in_hand()):
+            if d < tol or (touch and d < 0.08 and self._object_in_hand(touch)):
                 self.io.drive(0, 0)
                 return
             if d < best - 0.01:
@@ -777,7 +783,7 @@ class WaterTask:
         for attempt in range(3):
             target = self.seen[label] + np.array(offset)
             yield from self._g_reach(target, touch=label)
-            if self._object_in_hand() and self.io.attach(label):
+            if self._object_in_hand(label) and self.io.attach(label):
                 self.log("plan", f"picked up the {what}")
                 return
             self.log("perceive", f"missed the {what}; looking again")
