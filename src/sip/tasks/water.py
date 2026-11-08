@@ -1083,8 +1083,22 @@ class WaterTask:
         yaw = self._facing() + np.deg2rad(self.mouth.yaw_deg)
         return mouth + STRAW_SHORT * np.array([np.cos(yaw), np.sin(yaw), 0])
 
+    def _perception_age(self) -> float:
+        """Seconds since the camera models last produced a result (real models run in a background thread)."""
+        if not self.real:
+            return 0.0
+        return self.t - getattr(self.det, "latest_t", self.t)
+
     def _gate(self) -> SafetyDecision:
-        d = SafetyInput(self.sensed_dist(), self.mouth, bool(self.bb.get("ready", False)),
+        mouth = self.mouth
+        if self._perception_age() > 1.0:          # watchdog: never move near the face on old data
+            mouth = MouthState(False, None, 0.0, 0.0, False, "stale")
+            if not getattr(self, "_stale_logged", False):
+                self.log("safety", f"perception is {self._perception_age():.1f} s old -> treating face as unseen")
+                self._stale_logged = True
+        else:
+            self._stale_logged = False
+        d = SafetyInput(self.sensed_dist(), mouth, bool(self.bb.get("ready", False)),
                         bool(self.bb.get("stop", False)), self._contact_force(), self.reapproach,
                         done_heard=bool(self.bb.get("done", False)))
         dec = safety_gate(d)

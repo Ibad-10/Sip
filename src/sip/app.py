@@ -295,7 +295,16 @@ def main(argv=None):
     pip_r = None
 
     def tick():
-        state = sim.task.step(sim.t)
+        try:
+            state = sim.task.step(sim.t)
+        except Exception as exc:   # crash-safe: freeze, alert, keep the dashboard alive
+            import traceback
+            traceback.print_exc()
+            sim.io.freeze()
+            if sim.task.state != "HALT":
+                sim.task.alert(f"robot software fault ({type(exc).__name__}) - stopped safely, needs a restart")
+                sim.task.state = "HALT"
+            state = "HALT"
         sim.person.step(sim.t, state)
         for _ in range(TICK_STEPS):
             mujoco.mj_step(sim.m, sim.d)

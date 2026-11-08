@@ -81,3 +81,29 @@ def test_done_retreats():
 def test_slowdown_band_before_near_zone():
     d = safety_gate(inp(0.4))
     assert d.action == "proceed" and d.max_speed_mps == pytest.approx(0.06)
+
+
+def test_stale_perception_pauses_the_approach():
+    """Watchdog: if the camera models stop updating, the gate must not keep moving towards the face."""
+    import mujoco
+    from sip.blackboard import Blackboard
+    from sip.memory import ObjectMemory
+    from sip.nav.grid import grid_from_model
+    from sip.perception.face import FaceTracker
+    from sip.perception.objects import SegDetector
+    from sip.robot import StretchIO
+    from sip.scene.build_house import build_house
+    from sip.tasks.water import WaterTask
+    m = mujoco.MjModel.from_xml_path(build_house())
+    d = mujoco.MjData(m)
+    mujoco.mj_forward(m, d)
+    task = WaterTask(StretchIO(m, d), Blackboard(), grid_from_model(m), ObjectMemory(), SegDetector(["glass"]),
+                     FaceTracker("sim"))
+    task.real, task.t = True, 10.0
+    task.det.latest_t = 7.0                   # last result 3 s ago
+    task.mouth = face(visible=True)
+    task.bb.set("ready", True)
+    task.sensed_dist = lambda: 0.25            # straw 25 cm from the mouth
+    assert task._gate().action != "proceed"
+    task.det.latest_t = 9.9                    # fresh data again -> may proceed
+    assert task._gate().action == "proceed"
