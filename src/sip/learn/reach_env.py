@@ -18,10 +18,24 @@ NEAR, SLOW = 0.30, 0.03  # inside 30 cm, close at most 3 cm/s
 GOAL = 0.02
 
 
+# Three skills, same arm, different targets and rules:
+#   straw: tip to the lips, slow inside 30 cm, 2 cm goal
+#   offer: pill organiser to chest height in front of her, slow inside 30 cm, 4 cm goal
+#   pour:  jug spout above the glass, precise 1.5 cm goal, no face rule
+TASKS = {
+    "straw": {"dy": (0.15, 0.45), "dz": (-0.15, 0.15), "goal": 0.02, "near": 0.30, "slow": 0.03},
+    "offer": {"dy": (0.15, 0.45), "dz": (-0.35, -0.05), "goal": 0.04, "near": 0.30, "slow": 0.05},
+    "pour":  {"dy": (0.10, 0.40), "dz": (-0.05, 0.25), "goal": 0.015, "near": 0.0, "slow": 1.0},
+    # grasp: objects anywhere from a low side table to a high shelf, either side of the arm line
+    "grasp": {"dy": (0.05, 0.50), "dz": (-0.45, 0.30), "dx": 0.10, "goal": 0.02, "near": 0.0, "slow": 1.0},
+}
+
+
 class StrawReachEnv(gym.Env):
     metadata = {"render_modes": []}
 
-    def __init__(self, seed: int | None = None):
+    def __init__(self, seed: int | None = None, task: str = "straw", noise: float = 0.01):
+        self.task, self.cfg, self.noise = task, TASKS[task], noise
         self.m = mujoco.MjModel.from_xml_path(str(SCENE))
         self.d = mujoco.MjData(self.m)
         self.act = {self.m.actuator(i).name: i for i in range(self.m.nu)}
@@ -35,7 +49,8 @@ class StrawReachEnv(gym.Env):
         return self.d.xpos[self.gc].copy()
 
     def _obs(self):
-        err = self.target - self._tip()
+        # perception noise (domain randomisation): the policy sees a jittered target, like a real detector
+        err = self.target - self._tip() + self.rng.normal(0, self.noise, 3)
         q = [self.d.ctrl[self.act[n]] for n in self.names]
         return np.concatenate([err, [np.linalg.norm(err)], q, self.prev, [self.speed]]).astype(np.float32)
 
@@ -49,8 +64,10 @@ class StrawReachEnv(gym.Env):
             mujoco.mj_step(self.m, self.d)
         tip = self._tip()
         # a mouth somewhere ahead of the arm (arm extends along the base's -y)
-        self.target = tip + np.array([self.rng.uniform(-0.03, 0.03), -self.rng.uniform(0.15, 0.45),
-                                      self.rng.uniform(-0.15, 0.15)])
+        c = self.cfg
+        dx = c.get("dx", 0.03)
+        self.target = tip + np.array([self.rng.uniform(-dx, dx), -self.rng.uniform(*c["dy"]),
+                                      self.rng.uniform(*c["dz"])])
         self.prev = np.zeros(3)
         self.speed = 0.0
         self.k = 0
@@ -68,9 +85,10 @@ class StrawReachEnv(gym.Env):
         dt = SUBSTEPS * self.m.opt.timestep
         self.speed = (self.dist - dist) / dt          # closing speed
         r = 3.0 * (self.dist - dist) - 0.01 - 0.02 * float(np.sum((a - self.prev) ** 2))
-        if dist < NEAR and self.speed > SLOW:
-            r -= 2.0 * (self.speed - SLOW)            # too fast near the face
-        done = dist < GOAL
+        c = self.cfg
+        if dist < c["near"] and self.speed > c["slow"]:
+            r -= 2.0 * (self.speed - c["slow"])       # too fast near the face
+        done = dist < c["goal"]
         if done:
             r += 5.0
         if dist < 0.005:                              # never poke past the lips

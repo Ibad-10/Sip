@@ -41,7 +41,8 @@ def scan(model, data, pose: Pose2D, n_rays: int = 180, max_range: float = 4.0,
     origin = np.array([pose.x, pose.y, height])
     geomid = np.zeros(n_rays, dtype=np.int32)
     dist = np.zeros(n_rays)
-    mujoco.mj_multiRay(model, data, origin, dirs.flatten(), None, 1, -1, geomid, dist, None, n_rays, max_range)
+    # cutoff applies to geom bounding spheres: long walls have far centres, so use a big cutoff and clamp
+    mujoco.mj_multiRay(model, data, origin, dirs.flatten(), None, 1, -1, geomid, dist, None, n_rays, 50.0)
     ranges = np.full(n_rays, max_range)
     one = np.zeros(1, dtype=np.int32)
     for k in range(n_rays):
@@ -51,7 +52,7 @@ def scan(model, data, pose: Pose2D, n_rays: int = 180, max_range: float = 4.0,
             start += d + 0.01
             d = mujoco.mj_ray(model, data, origin + start * dirs[k], dirs[k], None, 1, -1, one)
             g = one[0] if d >= 0 else -1
-        if g >= 0 and d >= 0 and start + d < max_range and start + d >= RAY_START:
+        if g >= 0 and d >= 0 and start + d < max_range:   # near walls count too (robot geoms skipped above)
             ranges[k] = start + d
     return ranges
 

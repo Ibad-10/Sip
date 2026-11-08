@@ -1,0 +1,74 @@
+[
+ {
+  "task": "straw",
+  "seed": 0,
+  "steps": 20000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 66.73251851325472,
+  "p95_close_speed_near_face_mps": 0.031487736907371555
+ },
+ {
+  "task": "straw",
+  "seed": 1,
+  "steps": 20000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 68.1800456593731,
+  "p95_close_speed_near_face_mps": 0.04672102850257007
+ },
+ {
+  "task": "straw",
+  "seed": 2,
+  "steps": 20000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 66.43028063106757,
+  "p95_close_speed_near_face_mps": 0.018482655848137127
+ },
+ {
+  "task": "offer",
+  "seed": 0,
+  "steps": 20000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 50.25286351038456,
+  "p95_close_speed_near_face_mps": 0.06571405321914162
+ },
+ {
+  "task": "offer",
+  "seed": 1,
+  "steps": 20000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 52.15575024476493,
+  "p95_close_speed_near_face_mps": 0.060762253989206316
+ },
+ {
+  "task": "offer",
+  "seed": 2,
+  "steps": 20000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 52.38874646759059,
+  "p95_close_speed_near_face_mps": 0.056964035198355245
+ },
+ {
+  "task": "pour",
+  "seed": 0,
+  "steps": 20000,
+  "success_rate": 0.04,
+  "median_final_error_cm": 32.71181631977462,
+  "p95_close_speed_near_face_mps": null
+ },
+ {
+  "task": "pour",
+  "seed": 1,
+  "steps": 20000,
+  "success_rate": 0.03,
+  "median_final_error_cm": 26.14722143833702,
+  "p95_close_speed_near_face_mps": null
+ },
+ {
+  "task": "pour",
+  "seed": 2,
+  "steps": 20000,
+  "success_rate": 0.02,
+  "median_final_error_cm": 39.950096629336784,
+  "p95_close_speed_near_face_mps": null
+ }
+]

@@ -70,3 +70,40 @@ def test_scan_ignores_own_gripper(model):
         mujoco.mj_step(model, data)
     ranges = scan(model, data, io.base_pose(), n_rays=180)
     assert ranges[135] > 0.6  # -y: own gripper at ~0.44 must be ignored; wall at ~0.75
+
+
+def test_batched_lidar_matches_single_rays():
+    """Batched rays must stop at walls exactly like individual mj_ray calls (no see-through walls)."""
+    import mujoco
+    import numpy as np
+    from sip.scene.build_house import build_house
+    from sip.types import Pose2D
+    from sip.nav.lidar import ray_angles, scan
+    m = mujoco.MjModel.from_xml_path(build_house())
+    d = mujoco.MjData(m)
+    for x, y in ((2.0, 1.9), (2.0, -1.9), (-2.0, 1.9)):
+        d.qpos[0:2] = [x, y]
+        mujoco.mj_forward(m, d)
+        r = scan(m, d, Pose2D(x, y, 0.0), n_rays=90, max_range=8.0)
+        robot = {g for g in range(m.ngeom) if m.body(m.geom_bodyid[g]).name.startswith(("base", "link"))}
+        gid = np.zeros(1, np.int32)
+        for k, a in enumerate(ray_angles(90)):
+            v = np.array([np.cos(a), np.sin(a), 0.0])
+            ref = mujoco.mj_ray(m, d, np.array([x, y, 0.2]) + 0.25 * v, v, None, 1, -1, gid)
+            if ref >= 0 and gid[0] not in robot and 0.25 + ref < 8.0:
+                assert abs(r[k] - (0.25 + ref)) < 0.05, (x, y, np.rad2deg(a), r[k], 0.25 + ref)
+
+
+def test_wall_right_next_to_robot_is_seen():
+    import mujoco
+    import numpy as np
+    from sip.scene.build_house import build_house
+    from sip.types import Pose2D
+    from sip.nav.lidar import ray_angles, scan
+    m = mujoco.MjModel.from_xml_path(build_house())
+    d = mujoco.MjData(m)
+    d.qpos[0:2] = [3.82, 1.9]          # 13 cm from the living room's east wall face
+    mujoco.mj_forward(m, d)
+    r = scan(m, d, Pose2D(3.82, 1.9, 0.0), n_rays=180, max_range=4.0)
+    east = r[np.argmin(np.abs(ray_angles(180)))]
+    assert east < 0.3, east
