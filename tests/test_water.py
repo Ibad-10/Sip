@@ -206,3 +206,25 @@ def test_prepare_drink_pours_and_adds_straw():
     texts = h.kinds("plan")
     assert any("poured water" in t for t in texts) and any("straw in the glass" in t for t in texts)
     assert np.linalg.norm(h.d.body("jug").xpos[:2] - np.array([-1.72, 2.62])) < 0.15  # jug put back
+
+
+def test_gemini_points_when_local_detector_misses():
+    """Local detector blind to the glass; a stand-in for Gemini Robotics-ER points at it. The robot
+    must verify the point locally (depth, reach, path) and then fetch the glass."""
+    from sip.perception.objects import CAM, project
+    h = Harness()
+    calls = []
+
+    def fake_cloud(rgb, transcript, map_summary, labels):
+        calls.append(1)
+        u, v, z = project(h.m, h.d, CAM, h.d.body("glass").xpos, rgb.shape[1], rgb.shape[0])
+        if z > 0 and 0 <= u < rgb.shape[1] and 0 <= v < rgb.shape[0]:
+            return {"label": "glass", "u": int(u), "v": int(v)}
+        return None
+
+    h.task = WaterTask(h.io, h.bb, h.task.grid, h.task.memory, SegDetector([], noise_m=0.005),
+                       FaceTracker("sim"), cloud=fake_cloud)
+    request_water(h)
+    assert h.run(200, until=lambda h, s: s == "GRASP"), h.states
+    assert calls
+    assert any("Gemini" in e.text and "verified" in e.text for e in h.bb.events())

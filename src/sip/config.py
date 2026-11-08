@@ -1,6 +1,20 @@
 """Model profiles: 'dev' (CPU laptop) and 'demo' (RTX A2000 laptop)."""
 import os
 from dataclasses import dataclass
+from pathlib import Path
+
+
+def load_env(path: Path = Path(__file__).resolve().parents[2] / ".env") -> None:
+    """Read KEY=value lines from the repo's .env (git-ignored). Real environment wins."""
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        k, sep, v = line.strip().partition("=")
+        if sep and k and not k.startswith("#"):
+            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
+load_env()
 
 
 @dataclass(frozen=True)

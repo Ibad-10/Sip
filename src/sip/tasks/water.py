@@ -1,5 +1,8 @@
 """Water task: deterministic state machine that owns all motion. Every transition is logged
 with a plain-English reason so the explain view can show cause and effect."""
+import os
+from concurrent.futures import ThreadPoolExecutor
+
 import mujoco
 import numpy as np
 
@@ -8,7 +11,8 @@ from sip.memory import ObjectMemory
 from sip.nav.follow import PathFollower, wrap
 from sip.nav.grid import OccupancyGrid, astar
 from sip.nav.lidar import scan, update_map
-from sip.perception.objects import aim_head, render_head
+from sip.cloud.verify import verify_target
+from sip.perception.objects import CAM, aim_head, pixel_to_world, render_head
 from sip.robot import StretchIO
 from sip.safety import safety_gate
 from sip.scene.build_house import ROOMS, SEATS, park_pose_for, room_at
@@ -30,7 +34,7 @@ WRIST_SWING = 0.6            # rad/s when swinging the glass out beside the pers
 
 class WaterTask:
     def __init__(self, io: StretchIO, bb: Blackboard, grid: OccupancyGrid, memory: ObjectMemory,
-                 detector, face, label: str = "glass", prepare: bool = False):
+                 detector, face, label: str = "glass", prepare: bool = False, cloud=None):
         self.io, self.bb, self.grid, self.memory = io, bb, grid, memory
         self.det, self.face, self.label = detector, face, label
         self.m, self.d = io.m, io.d
@@ -54,6 +58,12 @@ class WaterTask:
         self.last_dets = []
         self.last_mouth: tuple[float, np.ndarray] | None = None
         self.prepare = prepare
+        # optional cloud second opinion (Gemini Robotics-ER); None = offline, robot still works
+        if cloud is None and os.environ.get("GEMINI_API_KEY"):
+            from sip.cloud.gemini import second_opinion as cloud
+        self.cloud = cloud
+        self._cloud_job = None
+        self._cloud_found = False
         self.seen: dict[str, np.ndarray] = {}
         self._gen = None
         self.water_level = 1.0
@@ -292,7 +302,7 @@ class WaterTask:
                 return self._ask("Something is blocking the way. Could you move it?", resume="SEARCH")
             if r == "arrived":
                 self._sub, self._spin0 = 2, self.pose().yaw
-                self._spun = 0.0
+                self._spun, self._next_ask = 0.0, 0.0
         elif self._sub == 2:  # spin in place, looking
             p = self.pose()
             self._spun += abs(wrap(p.yaw - self._spin0))
@@ -303,6 +313,9 @@ class WaterTask:
                 self.io.drive(0, 0)
                 self.log("perceive", f"found the {self.label} in the {self._room}")
                 return self._go_pick("found while searching")
+            if self.cloud is not None and self._spun >= self._next_ask and self._spun < 2 * np.pi:
+                self._next_ask += np.pi / 2
+                return self._ask_cloud()
             if self._spun >= 2 * np.pi:
                 self.io.drive(0, 0)
                 self.memory.miss(self.label, self._room, self.t)
@@ -310,6 +323,50 @@ class WaterTask:
                 self._sub = 0
             else:
                 self.io.drive(0, SPIN_W)
+
+        elif self._sub == 3:  # waiting for the cloud second opinion (robot stopped, still safe)
+            job, rgb, depth, t0 = self._cloud_job
+            if not job.done() and self.t - t0 < 10.0:
+                return
+            r = job.result() if job.done() else None
+            self._cloud_job = None
+            self._sub = 2
+            if not r:
+                return
+            ok, checks = verify_target(self.m, self.d, r["u"], r["v"], depth, self.grid, self.io)
+            if not ok:
+                self.log("cloud", f"Gemini pointed at a {r['label']} but local checks failed: {', '.join(checks)}")
+                return
+            h, w = depth.shape
+            self.obj_xyz = pixel_to_world(self.m, self.d, CAM, r["u"], r["v"], float(depth[r["v"], r["u"]]), w, h)
+            self.obj_xyz[2] += 0.04  # point lands on the glass surface; aim for its centre
+            self.memory.see(self.label, self.obj_xyz, self.t, room_at(*self.obj_xyz[:2]))
+            if self.home is None:
+                self.home = self.obj_xyz.copy()
+            self.log("cloud", f"Gemini Robotics-ER pointed at the {self.label}; verified locally ({', '.join(checks)})")
+            self._cloud_found = True
+            self._go_pick("found with Gemini's help")
+
+    _POOL = ThreadPoolExecutor(max_workers=1)
+
+    def _depth_confirms(self, xyz: np.ndarray, tol: float = 0.08) -> bool:
+        """Something solid sits where we expect the object (local check, no cloud)."""
+        from sip.perception.objects import project
+        _, depth, _ = render_head(self.m, self.d, self.renderer, rgb=False)
+        h, w = depth.shape
+        u, v, z = project(self.m, self.d, CAM, xyz, w, h)
+        if z <= 0 or not (0 <= u < w and 0 <= v < h):
+            return False
+        return abs(float(depth[int(v), int(u)]) - z) < tol
+
+    def _ask_cloud(self):
+        self.io.drive(0, 0)
+        rgb, depth, _ = render_head(self.m, self.d, self.renderer, rgb=True)
+        transcript = str(self.bb.get("last_utterance", "") or "can I have some water")
+        job = self._POOL.submit(self.cloud, rgb, transcript, f"searching the {self._room}", [self.label])
+        self._cloud_job = (job, rgb, depth, self.t)
+        self.log("cloud", f"local detector unsure: asking Gemini Robotics-ER to look ({self._room})")
+        self._sub = 3
 
     def _s_nav_to_object(self):
         if self.obj_xyz is not None:
@@ -332,6 +389,9 @@ class WaterTask:
             return self.goto("GRASP", f"{self.label} confirmed by camera")
         if self._seen():
             return self._go_pick("it moved a little")
+        if self._cloud_found and self._depth_confirms(expected):
+            return self.goto("GRASP", f"depth camera confirms the {self.label} Gemini found")
+        self._cloud_found = False
         self.memory.miss(self.label, room_at(*expected[:2]), self.t)
         self.log("perceive", f"the {self.label} is not where I remembered")
         self._visited = []
