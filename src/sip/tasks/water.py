@@ -251,21 +251,24 @@ class WaterTask:
                 self.memory.see(self.label, det.xyz, self.t, self._room_of(*det.xyz[:2]))
                 if self.home is None:
                     self.home = det.xyz.copy()
-        hand = bool(self.bb.get("hand_raised", False))
+        hand = False
         if self.real:
             box = self.det.boxes.get("person") if self.det.latest_t > self.t - 1.0 else None
             self.mouth = self.face.update(rgb, depth, self.m, self.d, CAM, person_box=box)
+            if self.state in ("APPROACH", "HOLD") and box is not None and self.tick_n % 2 == 0:
+                if not hasattr(self, "_h2m"):
+                    from sip.perception.vision import HandToMouth
+                    self._h2m = HandToMouth()
+                self.mouth.hand_raised = bool(self._h2m.hand_raised(rgb, box))   # stop gesture, seen by camera
             if not self.mouth.visible and self.state in ("APPROACH", "HOLD"):
                 rgb2, depth2, _ = render_head(self.m, self.d, self.renderer, cam=WRIST_CAM, rgb=True)
                 self.mouth = self.face.update(rgb2, depth2, self.m, self.d, WRIST_CAM)
         else:
-            mopen = self.bb.get("mouth_open", True) is not False
-            self.mouth = self.face.update(rgb, depth, seg, self.m, self.d, hand_raised=hand, mouth_open=mopen)
+            self.mouth = self.face.update(rgb, depth, seg, self.m, self.d, hand_raised=hand)
             if not self.mouth.visible and self.state in ("APPROACH", "HOLD"):
                 # the arm and glass block the head camera near the face: use the wrist camera
                 rgb2, depth2, seg2 = render_head(self.m, self.d, self.renderer, cam=WRIST_CAM, rgb=False)
-                self.mouth = self.face.update(rgb2, depth2, seg2, self.m, self.d, hand_raised=hand,
-                                              cam=WRIST_CAM, mouth_open=mopen)
+                self.mouth = self.face.update(rgb2, depth2, seg2, self.m, self.d, hand_raised=hand, cam=WRIST_CAM)
         if self.mouth.visible:
             self.last_mouth = (self.t, self.mouth.xyz.copy())
             f = self.face.resting_facing

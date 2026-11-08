@@ -15,8 +15,8 @@ def test_handle_command_flags():
     assert bb.get("go") is True
     handle_command("ready", bb, llm=None)
     assert bb.get("ready") is True
-    handle_command("/hand", bb, llm=None)
-    assert bb.get("hand_raised") is True
+    handle_command("/hand", bb, llm=None)          # no fake sensor toggles: a raised hand must be SEEN
+    assert bb.get("hand_raised") is None
 
 
 def test_headless_runs_10s():

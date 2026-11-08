@@ -315,6 +315,27 @@ class HandToMouth:
             base_options=mp.tasks.BaseOptions(model_asset_path=str(MODELS / "pose_landmarker_lite.task")), num_poses=1)
         self.pl = mp.tasks.vision.PoseLandmarker.create_from_options(opts)
 
+    def _pose(self, rgb, person_box):
+        import cv2
+        if rgb is None or person_box is None:
+            return None
+        u0, v0, u1, v1 = person_box
+        pad = 20
+        crop = rgb[max(0, v0 - pad):v1 + pad, max(0, u0 - pad):u1 + pad]
+        if crop.size == 0:
+            return None
+        up = np.ascontiguousarray(np.rot90(crop, 1))
+        s = max(1.0, 384 / max(up.shape[:2]))
+        res = self.pl.detect(self.mp.Image(image_format=self.mp.ImageFormat.SRGB, data=cv2.resize(up, None, fx=s, fy=s)))
+        return res.pose_landmarks[0] if res.pose_landmarks else None
+
+    def hand_raised(self, rgb, person_box) -> bool:
+        """Stop gesture: a wrist clearly above its shoulder (image y grows downwards)."""
+        lm = self._pose(rgb, person_box)
+        if lm is None:
+            return False
+        return bool(lm[15].y < lm[11].y - 0.05 or lm[16].y < lm[12].y - 0.05)
+
     def check(self, rgb, person_box) -> bool | None:
         """True/False if a pose was found, None if not."""
         import cv2

@@ -36,10 +36,10 @@ def handle_command(text: str, bb: Blackboard, llm=None, sim=None) -> None:
     if not text:
         return
     if text.startswith("/"):
-        toggles = {"/mouth": "mouth_open", "/hand": "hand_raised", "/lidar": "show_lidar", "/path": "show_path", "/pip": "show_pip"}
+        toggles = {"/lidar": "show_lidar", "/path": "show_path", "/pip": "show_pip"}   # view options only
         if text in toggles:
             key = toggles[text]
-            bb.set(key, not bb.get(key, key != "hand_raised"))
+            bb.set(key, not bb.get(key, True))
         elif sim is not None:
             sim.special(text, bb)
         return
@@ -114,7 +114,7 @@ class Sim:
 
     def special(self, cmd: str, bb: Blackboard):
         if cmd == "/reset":
-            for k in ("stop", "go", "request", "ready", "hand_raised", "asked_ready"):
+            for k in ("stop", "go", "request", "ready", "asked_ready"):
                 bb.set(k, None)
             self.reset()
         elif cmd == "/bed":
