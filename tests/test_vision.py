@@ -53,3 +53,12 @@ def test_glass_on_counter_found_by_detector(models):
     dets = {x.label: x for x in det.detect(m, d, rgb, depth)}
     assert "glass" in dets
     assert np.linalg.norm(dets["glass"].xyz - d.body("glass").xpos) < 0.12
+
+
+def test_detector_learns_new_words(models):
+    det, _ = models
+    new = det.learn_words(["teapot", "bowl of fruit"])
+    assert set(new) <= {"teapot", "bowl of fruit"} and "teapot" in det.prompts
+    m, d, r = _scene((-2.0, 1.6), np.pi / 2, (-2.6, 2.6, 0.95))
+    rgb, depth, _ = render_head(m, d, r, rgb=True)
+    det.detect(m, d, rgb, depth)          # still runs with the larger vocabulary
