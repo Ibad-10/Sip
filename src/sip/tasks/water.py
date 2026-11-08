@@ -399,7 +399,9 @@ class WaterTask:
         where = self._person_where
         facing = self._facing()
         front = self._mouth_guess() + 0.05 * np.array([np.cos(facing), np.sin(facing), 0])
-        for a in (55, -55, 35, -35, 75, -75, 0):   # first side the planner can actually reach
+        sides = (55, -55, 35, -35, 75, -75, 0)
+        start = getattr(self, "_side_idx", 0) % len(sides)
+        for a in sides[start:] + sides[:start]:   # first side the planner can reach (rotated after a failed side)
             x, y, yaw = park_pose_for(front, PERSON_STANDOFF, facing, a)
             if self._plan((x, y)) is not None:
                 break
@@ -414,9 +416,11 @@ class WaterTask:
     def step(self, t: float) -> str:
         self.t = t
         self.tick_n += 1
-        if self.io.loc is not None:          # where am I: wheel odometry (scan matching in _nav_step)
+        if self.io.loc is not None:          # where am I: wheel odometry + gyro, lidar scan matching every 0.5 s
             from sip.perception.objects import set_frame
             self.io.loc.update()
+            if self.tick_n % LIDAR_EVERY == 0 and not self._nav:      # (while navigating, _nav_step does it)
+                self.io.loc.correct(scan(self.m, self.d, self.io.loc.pose), self.grid)
             set_frame(self.io.true_pose(), self.io.loc.pose)
         every = PERCEIVE_EVERY if self.state in ("APPROACH", "HOLD", "GRASP", "VERIFY", "SEARCH") else 2 * PERCEIVE_EVERY
         if self.tick_n % every == 0:
@@ -1213,6 +1217,17 @@ class WaterTask:
         if dec.action == "ask":
             self.io.set_arm(arm=max(0.0, self.io.arm_extension() - 0.10))
             return self._ask("Shall I try again? Say go when you're ready.", resume="APPROACH")
+        if dec.action == "pause" and dec.reason == "face lost" and self.sensed_dist() > 0.35:
+            self._face_lost_t = getattr(self, "_face_lost_t", None) or self.t
+            if self.t - self._face_lost_t > 8.0 and getattr(self, "_side_tries", 0) < 4:
+                self._side_tries = getattr(self, "_side_tries", 0) + 1
+                self._side_idx = getattr(self, "_side_idx", 0) + 1
+                self._face_lost_t = None
+                self.io.set_arm(arm=0.0)
+                self.say("I can't see your face from here. Let me come round the other side.")
+                return self._go_person("re-parking where her face is visible")
+        else:
+            self._face_lost_t = None
         if dec.action == "pause":
             self.io.drive(0, 0)
             if dec.reason == "at mouth":

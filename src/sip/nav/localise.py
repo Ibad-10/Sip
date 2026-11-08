@@ -88,7 +88,7 @@ class Localiser:
         self.quality = here
         searches = [(0.02, 0.08, 1.0, 4.0), (0.005, 0.015, 0.25, 0.75)]
         if here < 0.35:      # poor match where odometry says we are (wheel slip?): re-localise over a wider area
-            searches = [(0.05, 0.30, 2.5, 10.0)] + searches
+            searches = [(0.05, 0.50, 2.5, 10.0)] + searches
         best = (score(0, 0, 0), 0.0, 0.0, 0.0)
         for step_xy, span_xy, step_a, span_a in searches:
             cx, cy, ca = best[1], best[2], best[3]
@@ -103,8 +103,8 @@ class Localiser:
         if f_best < 0.45:                 # even the best pose does not explain the scan: do not trust it
             return
         big = np.hypot(dx, dy) > 0.08 or abs(da) > np.deg2rad(4)
-        if big and (f_best < here + 0.15 or np.hypot(dx, dy) > 0.3):
-            return                        # a big jump must fit clearly better, and never more than 30 cm at once
+        if big and (f_best < here + 0.15 or np.hypot(dx, dy) > 0.55):
+            return                        # a big jump must fit clearly better, and stay within the search window
         if not (np.isfinite(dx) and np.isfinite(dy) and np.isfinite(da)):
             return
         if dx or dy or da:

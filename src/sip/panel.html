@@ -179,8 +179,11 @@ $('send').onclick=()=>{if($('txt').value.trim()){cmd($('txt').value);$('txt').va
 $('txt').onkeydown=e=>{if(e.key==='Enter')$('send').click()};
 let rec=null,chunks=[];
 async function startTalk(){try{const st=await navigator.mediaDevices.getUserMedia({audio:true});rec=new MediaRecorder(st);chunks=[];
- rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=async()=>{st.getTracks().forEach(t=>t.stop());$('heard').textContent='listening…';
- const r=await fetch('/audio',{method:'POST',body:new Blob(chunks,{type:'audio/webm'})});const j=await r.json();$('heard').textContent=j.text?'heard: "'+j.text+'"':'(did not catch that)'};
+ rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=async()=>{st.getTracks().forEach(t=>t.stop());$('heard').textContent='transcribing…';
+ try{const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),20000);
+  const r=await fetch('/audio',{method:'POST',body:new Blob(chunks,{type:'audio/webm'}),signal:ctl.signal});clearTimeout(to);
+  const j=await r.json();$('heard').textContent=j.text?'heard: "'+j.text+'"':'(did not catch that, try again)'}
+ catch(e){$('heard').textContent='robot not reachable: is the simulation running?'}};
  rec.start();$('talk').textContent='● Listening… tap to send';$('talk').setAttribute('aria-pressed','true')}catch(e){$('heard').textContent='microphone not available'}}
 function stopTalk(){if(rec&&rec.state==='recording'){rec.stop();$('talk').textContent='🎙 Tap to talk';$('talk').setAttribute('aria-pressed','false')}}
 $('talk').onclick=()=>{if(rec&&rec.state==='recording')stopTalk();else startTalk()};
