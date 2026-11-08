@@ -14,6 +14,7 @@ from sip.perception.objects import render_head
 from sip.tasks.water import TICK_STEPS
 
 W, H, FPS = 960, 540, 10
+HD = (1920, 1080, 30)
 
 
 def main(argv=None):
@@ -22,7 +23,11 @@ def main(argv=None):
     ap.add_argument("--seconds", type=float, default=110)
     ap.add_argument("--chair", action="store_true", help="drop a chair in the hall at t=6 s")
     ap.add_argument("--turn", action="store_true", help="person turns head away during approach")
+    ap.add_argument("--hd", action="store_true", help="1920x1080 at 30 fps (for GPU rendering)")
     a = ap.parse_args(argv)
+    global W, H, FPS
+    if a.hd:
+        W, H, FPS = HD
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     sim = Sim()
     sim.bb.set("ready", True)
@@ -60,7 +65,11 @@ def main(argv=None):
         rgb, _, _ = render_head(sim.m, sim.d, inset, rgb=True)
         frame[10:190, W - 250:W - 10] = rgb[:, :, ::-1]
         cv2.rectangle(frame, (W - 251, 9), (W - 9, 191), (255, 255, 255), 1)
-        cv2.putText(frame, "head camera", (W - 245, 205), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
+        cv2.putText(frame, "robot head camera", (W - 245, 205), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
+        pe, _, _ = render_head(sim.m, sim.d, inset, cam="person_eyes", rgb=True)
+        frame[220:400, W - 250:W - 10] = pe[:, :, ::-1]
+        cv2.rectangle(frame, (W - 251, 219), (W - 9, 401), (255, 255, 255), 1)
+        cv2.putText(frame, "person's view", (W - 245, 415), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
         cv2.rectangle(frame, (0, H - 60), (W, H), (0, 0, 0), -1)
         cv2.putText(frame, f"t={sim.t:5.1f}s  state={state}", (12, H - 36), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
                     (0, 200, 255), 2)
