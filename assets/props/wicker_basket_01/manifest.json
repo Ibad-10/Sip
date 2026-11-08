@@ -1,0 +1,21 @@
+{
+ "asset": "wicker_basket_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 22276
+  }
+ ],
+ "min": [
+  -0.19188,
+  -0.14707,
+  -0.00092
+ ],
+ "max": [
+  0.19134,
+  0.14794,
+  0.11651
+ ],
+ "license": "CC0 (Poly Haven)"
+}

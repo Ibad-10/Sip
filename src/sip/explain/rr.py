@@ -64,6 +64,14 @@ class Explainer:
                     [w[0][:2]], radii=0.08, colors=[(255, 215, 0, int(60 + 195 * c))],
                     labels=[f"{label} ({c:.0%})"]))
 
+    def log_lidar(self, t, pose, ranges, max_range: float = 4.0) -> None:
+        from sip.nav.lidar import ray_angles
+        self._t(t)
+        a = ray_angles(len(ranges)) + pose.yaw
+        hit = ranges < max_range - 1e-6
+        pts = np.c_[pose.x + ranges[hit] * np.cos(a[hit]), pose.y + ranges[hit] * np.sin(a[hit])]
+        self.rec.log("map/lidar", rr.Points2D(pts, radii=0.025, colors=[(255, 70, 50)]))
+
     def log_state(self, t, state: str, reason: str) -> None:
         self._t(t)
         self.rec.log("decisions/nodes", rr.GraphNodes(

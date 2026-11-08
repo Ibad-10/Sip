@@ -1,0 +1,26 @@
+{
+ "asset": "fancy_picture_frame_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 2
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 936
+  }
+ ],
+ "min": [
+  -0.30152,
+  -0.02189,
+  -0.23206
+ ],
+ "max": [
+  0.30152,
+  -0.0019,
+  0.23206
+ ],
+ "license": "CC0 (Poly Haven)"
+}

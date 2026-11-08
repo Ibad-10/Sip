@@ -1,0 +1,31 @@
+{
+ "asset": "hanging_picture_frame_02",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 2
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 3674
+  },
+  {
+   "obj": "part2.obj",
+   "png": "part2.png",
+   "faces": 2
+  }
+ ],
+ "min": [
+  -0.37561,
+  -0.03511,
+  -0.27865
+ ],
+ "max": [
+  0.37621,
+  -0.00203,
+  0.22135
+ ],
+ "license": "CC0 (Poly Haven)"
+}

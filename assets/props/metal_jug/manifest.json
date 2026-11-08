@@ -1,0 +1,21 @@
+{
+ "asset": "metal_jug",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 6040
+  }
+ ],
+ "min": [
+  -0.098,
+  -0.09773,
+  -0.00013
+ ],
+ "max": [
+  0.09882,
+  0.09773,
+  0.28742
+ ],
+ "license": "CC0 (Poly Haven)"
+}

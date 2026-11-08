@@ -4,6 +4,9 @@ Usage:  uv run python -m sip.app             viewer + Rerun; type commands in th
         uv run python -m sip.app --headless --seconds 30 --no-rerun
 Commands: any sentence ("I'm thirsty", "stop", "ready", "go"),
           or /reset /hand /bed /chair /glass /turn  (live changes for the demo)
+Toggles:  /lidar (F7)  /path (F8)  /pip (F9: picture-in-picture, robot view + person view)
+Cameras:  in the viewer press ] or [ to cycle: person_eyes, d435i_camera_rgb (robot head),
+          d405_rgb (wrist), cam_kitchen/living/bedroom/hall (follow robot), cam_overview
 """
 import argparse
 import os
@@ -13,6 +16,7 @@ import time
 
 import mujoco
 import mujoco.viewer
+import numpy as np
 
 from sip.blackboard import Blackboard
 from sip.config import load_profile
@@ -31,8 +35,10 @@ def handle_command(text: str, bb: Blackboard, llm=None, sim=None) -> None:
     if not text:
         return
     if text.startswith("/"):
-        if text == "/hand":
-            bb.set("hand_raised", not bb.get("hand_raised", False))
+        toggles = {"/hand": "hand_raised", "/lidar": "show_lidar", "/path": "show_path", "/pip": "show_pip"}
+        if text in toggles:
+            key = toggles[text]
+            bb.set(key, not bb.get(key, key != "hand_raised"))
         elif sim is not None:
             sim.special(text, bb)
         return
@@ -122,7 +128,9 @@ def main(argv=None):
         threading.Thread(target=stdin_thread, args=(sim, llm), daemon=True).start()
         print(__doc__)
 
-    st = {"n_events": 0, "last_log": -1.0, "ticks": 0, "t0": time.time(), "path_first": None}
+    st = {"n_events": 0, "last_log": -1.0, "ticks": 0, "t0": time.time(), "path_first": None,
+          "ranges": None, "last_scan": -1.0, "last_pip": -1.0}
+    pip_r = None
 
     def tick():
         state = sim.task.step(sim.t)
@@ -145,6 +153,12 @@ def main(argv=None):
                 if e.kind == "plan" and "new route" in e.text:
                     st["path_first"] = st.get("path_cur")
         st["n_events"] = len(evs)
+        if sim.t - st["last_scan"] >= 0.5 and (sim.bb.get("show_lidar", True) or ex):
+            from sip.nav.lidar import scan
+            st["last_scan"] = sim.t
+            st["ranges"] = scan(sim.m, sim.d, sim.io.base_pose())
+            if ex:
+                ex.log_lidar(sim.t, sim.io.base_pose(), st["ranges"])
         if ex and sim.t - st["last_log"] >= 0.2:
             st["last_log"] = sim.t
             tk = sim.task
@@ -168,10 +182,44 @@ def main(argv=None):
                 tick()
         else:
 
-            with mujoco.viewer.launch_passive(sim.m, sim.d) as v:
+            import cv2
+            from sip import overlay
+            keys = {296: "/lidar", 297: "/path", 298: "/pip"}  # F7 F8 F9
+
+            def on_key(code):
+                if code in keys:
+                    handle_command(keys[code], sim.bb, None, sim)
+
+            with mujoco.viewer.launch_passive(sim.m, sim.d, key_callback=on_key) as v:
                 while v.is_running() and sim.t < a.seconds:
                     t0 = time.time()
                     tick()
+                    tk = sim.task
+                    nav = tk._nav
+                    with v.lock():
+                        overlay.draw(v.user_scn, sim.io.base_pose(), st["ranges"],
+                                     [tuple(p) for p in nav["follower"].path] if nav else None,
+                                     tk._approach_target() if tk.state in ("APPROACH", "HOLD") else None,
+                                     show_lidar=sim.bb.get("show_lidar", True), show_path=sim.bb.get("show_path", True))
+                    if sim.bb.get("show_pip", True) and sim.t - st["last_pip"] >= 0.25:
+                        st["last_pip"] = sim.t
+                        if pip_r is None:
+                            pip_r = mujoco.Renderer(sim.m, 270, 360)
+                        views = []
+                        for cam, label in (("d435i_camera_rgb", "ROBOT SEES (head)"), ("d405_rgb", "ROBOT SEES (wrist)"),
+                                           ("person_eyes", "PERSON SEES")):
+                            pip_r.update_scene(sim.d, camera=cam)
+                            img = pip_r.render()[:, :, ::-1].copy()
+                            cv2.rectangle(img, (0, 0), (360, 26), (0, 0, 0), -1)
+                            cv2.putText(img, label, (8, 19), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 220, 255), 1)
+                            views.append(img)
+                        bar = np.zeros((40, 1080, 3), np.uint8)
+                        cv2.putText(bar, f"state: {tk.state}   safety: {tk.decision.action + ' / ' + tk.decision.reason if tk.decision else '-'}",
+                                    (10, 27), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+                        cv2.imshow("Sip - what they see", np.vstack([np.hstack(views), bar]))
+                        cv2.waitKey(1)
+                    elif not sim.bb.get("show_pip", True):
+                        cv2.destroyAllWindows()
                     v.sync()
                     dt = TICK_STEPS * sim.m.opt.timestep - (time.time() - t0)
                     if dt > 0:
