@@ -58,6 +58,11 @@ class WaterTask:
         self.last_dets = []
         self.last_mouth: tuple[float, np.ndarray] | None = None
         self.prepare = prepare
+        # where the person is comes from the camera; the map only knows her usual seats
+        from sip.perception.objects import SegDetector
+        self._person_det = SegDetector(["person"], noise_m=0.02, seed=7)
+        self.person_seen: tuple[float, np.ndarray] | None = None
+        self._person_where, self._seats_tried = "armchair", []
         # optional cloud second opinion (Gemini Robotics-ER); None = offline, robot still works
         if cloud is None and os.environ.get("GEMINI_API_KEY"):
             from sip.cloud.gemini import second_opinion as cloud
@@ -91,7 +96,12 @@ class WaterTask:
         return self.d.site("straw_tip").xpos.copy()
 
     def dist_to_mouth(self) -> float:
+        """Ground truth, for tests, the judge monitor and the video overlay only."""
         return float(np.linalg.norm(self.tip() - self.d.site("mouth").xpos))
+
+    def sensed_dist(self) -> float:
+        """What the robot believes: straw tip to the tracked (or last known) mouth."""
+        return float(np.linalg.norm(self.tip() - self._mouth_guess()))
 
     def _inflated(self) -> OccupancyGrid:
         return self.grid.inflate(INFLATE)
@@ -201,6 +211,11 @@ class WaterTask:
                 self.memory.see(self.label, det.xyz, self.t, room_at(*det.xyz[:2]))
                 if self.home is None:
                     self.home = det.xyz.copy()
+        for det in self._person_det.detect(self.m, self.d, rgb, depth, seg):
+            self.person_seen = (self.t, det.xyz)
+            near = min(SEATS, key=lambda k: np.linalg.norm(np.array(SEATS[k][0][:2]) - det.xyz[:2]))
+            if np.linalg.norm(np.array(SEATS[near][0][:2]) - det.xyz[:2]) < 1.0:
+                self._person_where = near
         hand = bool(self.bb.get("hand_raised", False))
         mopen = self.bb.get("mouth_open", True) is not False
         self.mouth = self.face.update(rgb, depth, seg, self.m, self.d, hand_raised=hand, mouth_open=mopen)
@@ -229,17 +244,27 @@ class WaterTask:
                 total += abs(f6[0])
         return total
 
+    def _mouth_guess(self) -> np.ndarray:
+        """Best mouth estimate: live face track, else last sighting, else her seat's usual spot."""
+        if self.mouth.visible and self.mouth.xyz is not None:
+            return self.mouth.xyz
+        if self.last_mouth is not None and np.linalg.norm(
+                self.last_mouth[1][:2] - np.array(SEATS[self._person_where][0][:2])) < 0.6:
+            return self.last_mouth[1]
+        (x, y, z), f, _ = SEATS[self._person_where]
+        return np.array([x + 0.16 * np.cos(f), y + 0.16 * np.sin(f), z + 0.555])
+
     def _person_park(self):
-        pid = self.m.body("person").id
-        mpos = self.d.xpos[pid]
-        q = self.d.xquat[pid]
-        facing = float(2 * np.arctan2(q[3], q[0]))
-        where = min(SEATS, key=lambda k: np.linalg.norm(np.array(SEATS[k][0][:2]) - mpos[:2]))
-        mouth = self.mouth.xyz if (self.mouth.visible and self.mouth.xyz is not None) else \
-            self.d.site("mouth").xpos.copy()
-        front = mouth + 0.05 * np.array([np.cos(facing), np.sin(facing), 0])
+        where = self._person_where
+        facing = SEATS[where][1]
+        front = self._mouth_guess() + 0.05 * np.array([np.cos(facing), np.sin(facing), 0])
         x, y, yaw = park_pose_for(front, PERSON_STANDOFF, facing, SEATS[where][2])
         return np.array([x, y]), yaw, facing, where
+
+    def _person_here(self) -> bool:
+        if self.person_seen is None or self.t - self.person_seen[0] > 3.0:
+            return False
+        return np.linalg.norm(self.person_seen[1][:2] - np.array(SEATS[self._person_where][0][:2])) < 1.0
 
     # ---------- main step ----------
     def step(self, t: float) -> str:
@@ -606,27 +631,42 @@ class WaterTask:
                 self._person_target = goal
                 if not self._start_nav(goal, yaw, "person moved"):
                     return self._ask("I can't reach you there. Could you help?", resume="NAV_TO_PERSON")
-        aim_head(self.m, self.d, self.io, self.d.site("mouth").xpos, snap=False)
+        aim_head(self.m, self.d, self.io, self._mouth_guess(), snap=False)
         r = self._nav_step()
         if r == "blocked":
             return self._ask("Something is in the way. Could you move it?", resume="NAV_TO_PERSON")
         if r == "arrived":
+            if not self._person_here():
+                if self._sub == 0:
+                    self._sub, self._timer = 1, self.t   # look for a moment before deciding
+                if self.t - self._timer < 2.0:
+                    self.io.drive(0, 0)
+                    return
+                self._seats_tried.append(self._person_where)
+                left = [k for k in SEATS if k not in self._seats_tried]
+                if not left:
+                    self._seats_tried = []
+                    self.alert("can't find the person at any of her usual places")
+                    return self._ask("Where are you? I have your water.", resume="NAV_TO_PERSON")
+                self.log("plan", f"person moved: not at the {self._person_where}, checking the {left[0]}")
+                self._person_where = left[0]
+                self._sub = 0
+                return self._go_person("looking for the person")
+            self._seats_tried = []
             self.say("Here's your water. Tell me when you're ready.")
             self.goto("APPROACH", "arrived beside the person")
 
     def _approach_target(self) -> np.ndarray:
         mouth = self.mouth.xyz if (self.mouth.visible and self.mouth.xyz is not None) else None
-        if mouth is None and self.last_mouth is not None and self.dist_to_mouth() > 0.5:
+        if mouth is None and self.last_mouth is not None and self.sensed_dist() > 0.5:
             mouth = self.last_mouth[1]  # far away: last sighting is good enough; gate needs live view < 0.5 m
         if mouth is None:
             return None
-        pid = self.m.body("person").id
-        q = self.d.xquat[pid]
-        yaw = float(2 * np.arctan2(q[3], q[0])) + np.deg2rad(self.mouth.yaw_deg)
+        yaw = SEATS[self._person_where][1] + np.deg2rad(self.mouth.yaw_deg)
         return mouth + STRAW_SHORT * np.array([np.cos(yaw), np.sin(yaw), 0])
 
     def _gate(self) -> SafetyDecision:
-        d = SafetyInput(self.dist_to_mouth(), self.mouth, bool(self.bb.get("ready", False)),
+        d = SafetyInput(self.sensed_dist(), self.mouth, bool(self.bb.get("ready", False)),
                         bool(self.bb.get("stop", False)), self._contact_force(), self.reapproach,
                         done_heard=bool(self.bb.get("done", False)))
         dec = safety_gate(d)
@@ -636,10 +676,10 @@ class WaterTask:
         return dec
 
     def _s_approach(self):
-        aim_head(self.m, self.d, self.io, self.d.site("mouth").xpos, snap=False)
+        aim_head(self.m, self.d, self.io, self._mouth_guess(), snap=False)
         dt = TICK_STEPS * self.m.opt.timestep
         if self._sub == 0:  # swing the glass out slowly (away from the face), arm retracted
-            near = self.dist_to_mouth() < 0.40
+            near = self.sensed_dist() < 0.40
             wy = min(self.io.arm_targets()["wrist_yaw"], float(self.d.joint("joint_wrist_yaw").qpos[0]) + 0.05)
             # limit the straw tip's linear speed, not the joint rate: omega = v_tip / lever
             axis = self.d.body("link_wrist_yaw").xpos
