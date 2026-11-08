@@ -162,3 +162,10 @@ def train(steps: int = 2_000_000):
         table.append(stats)
         print(stats, flush=True)
     (out / "training_results.json").write_text(json.dumps(table, indent=1))
+
+
+@app.local_entrypoint()
+def one(nodeid: str, real: bool = True):
+    name, ok, out = run_test.remote((nodeid, real))
+    print(("PASS " if ok else "FAIL ") + name)
+    print(out)
