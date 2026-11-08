@@ -48,6 +48,8 @@ class Detection:
     box: tuple[int, int, int, int]  # u0, v0, u1, v1
     xyz: np.ndarray | None
     source: str = "seg"
+    why: str = ""                 # how it was decided (scores, runner-up, second opinion)
+    unsure: bool = False          # top labels too close or confidence low: ask for a second opinion
 
 
 @dataclass

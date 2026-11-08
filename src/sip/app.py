@@ -167,13 +167,21 @@ def publish_panel(panel, sim, st) -> None:
     from sip.cloud import gemini
     from sip.nav.lidar import ray_angles
     from sip.perception.objects import project
+    from sip.perception.objects import fast_renderer
     r = _PANEL_R.get("r")
     if r is None:
-        r = _PANEL_R["r"] = mujoco.Renderer(sim.m, 360, 480)
+        r = _PANEL_R["r"] = fast_renderer(sim.m, 240, 320)
     tk = sim.task
-    for name, cam in (("head", "d435i_camera_rgb"), ("wrist", "d405_rgb"), ("person", "person_eyes")):
-        r.update_scene(sim.d, camera=cam)
-        img = r.render()[:, :, ::-1].copy()
+    _PANEL_R["n"] = _PANEL_R.get("n", 0) + 1
+    views = [("head", "d435i_camera_rgb")]
+    if _PANEL_R["n"] % 3 == 1:                       # side views refresh every third update
+        views += [("wrist", "d405_rgb"), ("person", "person_eyes")]
+    for name, cam in views:
+        if name == "head" and tk.last_frame is not None:
+            img = tk.last_frame[:, :, ::-1].copy()     # the robot's own latest frame: no extra render
+        else:
+            r.update_scene(sim.d, camera=cam)
+            img = r.render()[:, :, ::-1].copy()
         if name == "head":
             sy, sx = img.shape[0] / tk.renderer.height, img.shape[1] / tk.renderer.width
             for det in tk.last_dets:
@@ -191,9 +199,9 @@ def publish_panel(panel, sim, st) -> None:
                 if det.box:
                     u0, v0, u1, v1 = det.box
                     x, y = int(v0 * sy), int(img.shape[0] - 1 - u1 * sx)
-                    cv2.putText(img, f"{det.label} {det.conf:.2f}", (x, max(12, y - 4)), cv2.FONT_HERSHEY_SIMPLEX,
+                    cv2.putText(img, f"{det.label}{'?' if det.unsure else ''} {det.conf:.0%}", (x, max(12, y - 4)), cv2.FONT_HERSHEY_SIMPLEX,
                                 0.45, (255, 255, 255), 2)
-                    cv2.putText(img, f"{det.label} {det.conf:.2f}", (x, max(12, y - 4)), cv2.FONT_HERSHEY_SIMPLEX,
+                    cv2.putText(img, f"{det.label}{'?' if det.unsure else ''} {det.conf:.0%}", (x, max(12, y - 4)), cv2.FONT_HERSHEY_SIMPLEX,
                                 0.45, (30, 30, 30), 1)
         ok, jpg = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 80])
         if ok:
@@ -201,9 +209,9 @@ def publish_panel(panel, sim, st) -> None:
     p = sim.io.base_pose()
     lidar = []
     if st.get("ranges") is not None:
-        rg = st["ranges"]
-        a = ray_angles(len(rg)) + p.yaw
-        lidar = [[round(p.x + d * np.cos(t), 2), round(p.y + d * np.sin(t), 2)] for d, t in zip(rg, a) if d < 3.99]
+        rg, sp = st["ranges"], st.get("scan_pose") or p
+        a = ray_angles(len(rg)) + sp.yaw
+        lidar = [[round(sp.x + d * np.cos(t), 2), round(sp.y + d * np.sin(t), 2)] for d, t in zip(rg, a) if d < 3.99]
     mem = []
     for label in ("glass", "jug", "organiser"):
         w = tk.memory.where(label)
@@ -314,7 +322,8 @@ def main(argv=None):
         if sim.t - st["last_scan"] >= 0.5 and (sim.bb.get("show_lidar", True) or ex):
             from sip.nav.lidar import scan
             st["last_scan"] = sim.t
-            st["ranges"] = scan(sim.m, sim.d, sim.io.base_pose())
+            st["scan_pose"] = sim.io.base_pose()          # draw rays from where they were cast
+            st["ranges"] = scan(sim.m, sim.d, st["scan_pose"])
             if ex:
                 ex.log_lidar(sim.t, sim.io.base_pose(), st["ranges"])
         alert = sim.bb.get("alert")
@@ -366,7 +375,7 @@ def main(argv=None):
                     tk = sim.task
                     nav = tk._nav
                     with v.lock():
-                        overlay.draw(v.user_scn, sim.io.base_pose(), st["ranges"],
+                        overlay.draw(v.user_scn, st.get("scan_pose") or sim.io.base_pose(), st["ranges"],
                                      [tuple(p) for p in nav["follower"].path] if nav else None,
                                      tk._approach_target() if tk.state in ("APPROACH", "HOLD") else None,
                                      show_lidar=sim.bb.get("show_lidar", True), show_path=sim.bb.get("show_path", True))

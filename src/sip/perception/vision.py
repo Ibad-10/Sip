@@ -18,10 +18,10 @@ from sip.types import Detection, MouthState
 MODELS = Path(__file__).resolve().parents[3] / "assets" / "models"
 # label -> (text prompt for the open-vocabulary model, minimum confidence)
 DEFAULT_LABELS = {
-    "glass": ("cup", 0.15),          # cup-like things are told apart by their 3D shape (see _by_shape)
+    "glass": ("drinking glass", 0.12),
     "mug": ("mug", 0.15),
-    "jug": ("jug", 0.10),
-    "straw2": ("drinking straw", 0.20),
+    "jug": ("water jug", 0.10),
+    "straw2": ("cup of drinking straws", 0.12),
     "person": ("person", 0.40),
     "organiser": ("pill box", 0.10),
     # scene objects: shown with confidence, used to name rooms and to explain detours
@@ -30,19 +30,34 @@ DEFAULT_LABELS = {
     "stove": ("stove", 0.25), "sink": ("sink", 0.25), "shelf": ("bookshelf", 0.30),
 }
 TASK_LABELS = {"glass", "jug", "straw2", "person", "organiser"}
-CUP_LIKE = {"glass", "mug", "jug"}
+UNSURE_CONF, UNSURE_MARGIN = 0.30, 0.15     # below / closer than this: ask Gemini what it is, and why
+# labels YOLO-World confuses in our own evaluation (it calls the glass "mug" at 0.77): always get a second
+# opinion from a second local model (CLIP) on the crop, with its probabilities as the explanation
+CONFUSABLE = {"glass": "a clear drinking glass with water", "mug": "an opaque ceramic coffee mug",
+              "jug": "a tall metal water jug", "straw2": "a small cup holding drinking straws"}
 
 
-def _by_shape(height_m: float, width_m: float) -> str:
-    """Decide glass / mug / jug from the real size measured with depth (not from the name alone)."""
-    if height_m >= 0.16:
-        # tall: a wide one is the water jug (~13 cm across), a slim one is the cup of straws (~6 cm)
-        return "jug" if width_m >= 0.09 else "straw2"
-    if height_m >= 1.3 * width_m:
-        return "glass"                  # tall and slim (tumbler ~11-13 cm with water)
-    return "mug"                        # squat
-# what a room contains -> what the robot calls it (a new house needs no room list)
-ROOM_HINTS = {"stove": "kitchen", "sink": "kitchen", "bed": "bedroom", "sofa": "living room", "tv": "living room"}
+class ClipCheck:
+    """Zero-shot CLIP (ViT-B/32, the text encoder YOLO-World already loads) on an object crop."""
+
+    def __init__(self):
+        import clip
+        import torch
+        self.torch = torch
+        self.model, self.pre = clip.load("ViT-B/32", device="cpu")
+        self.labels = list(CONFUSABLE)
+        with torch.no_grad():
+            self.text = self.model.encode_text(clip.tokenize(list(CONFUSABLE.values())))
+            self.text /= self.text.norm(dim=-1, keepdim=True)
+
+    def __call__(self, crop_rgb: np.ndarray) -> list[tuple[str, float]]:
+        from PIL import Image
+        with self.torch.no_grad():
+            im = self.pre(Image.fromarray(crop_rgb)).unsqueeze(0)
+            f = self.model.encode_image(im)
+            f /= f.norm(dim=-1, keepdim=True)
+            p = (100.0 * f @ self.text.T).softmax(dim=-1)[0].tolist()
+        return sorted(zip(self.labels, p), key=lambda x: -x[1])
 
 
 def _focal(fovy_deg: float, h: int) -> float:
@@ -90,8 +105,11 @@ class YoloDetector:
 
     def __init__(self, labels: dict | None = None, cam: str = "d435i_camera_rgb", asynchronous: bool = True,
                  weights: str = "yolov8s-worldv2.pt"):
+        import torch
         from ultralytics import YOLOWorld
+        torch.set_num_threads(2)          # leave CPU for the robot's control loop and rendering
         self.labels = dict(labels or DEFAULT_LABELS)
+        self._clip_cache: dict = {}
         self.cam = cam
         self.model = YOLOWorld(str(MODELS / weights))
         self.prompts = [p for p, _ in self.labels.values()]
@@ -104,6 +122,7 @@ class YoloDetector:
         self.latest_t = -1.0
         self.boxes: dict[str, tuple] = {}   # label -> best raw-image box, for the face tracker
         self.ms = 0.0
+        self.clip = None
 
     def detect(self, model, data, rgb, depth, seg=None, t: float = 0.0) -> list[Detection]:
         if rgb is None:
@@ -135,30 +154,44 @@ class YoloDetector:
                 label, thr = self.by_prompt[self.prompts[int(cls)]]
                 if conf >= thr:
                     cand.append((float(conf / thr), box, label, float(conf)))
-            kept = []   # one object gets one label: the most confident (relative to its threshold)
+            kept = []   # one object gets one label: the model's most confident (relative to its threshold)
             for score, box, label, conf in sorted(cand, key=lambda c: -c[0]):
                 if all(_iou(box, k[1]) < 0.5 for k in kept):
-                    kept.append((score, box, label, conf))
-            for _, box, label, conf in kept:
-                if label not in best or conf > best[label][1]:
-                    best[label] = (unrotate_box(box, w), float(conf))
+                    alts = sorted({(l2, round(c2, 2)) for s2, b2, l2, c2 in cand if _iou(box, b2) >= 0.5 and l2 != label},
+                                  key=lambda a: -a[1])
+                    kept.append((score, box, label, conf, alts))
             dets, boxes = [], {}
-            f = _focal(fovy, h)
-            reshaped: dict[str, tuple] = {}
-            for label, (b, conf) in best.items():
+            for _, box, label, conf, alts in kept:
+                b = unrotate_box(box, w)
                 z = box_depth(depth, b)
                 if z <= 0:
                     continue
-                if label in CUP_LIKE:   # raw camera is sideways: u-extent is the object's height
-                    label = _by_shape((b[2] - b[0]) * z / f, (b[3] - b[1]) * z / f)
-                if label not in reshaped or conf > reshaped[label][1]:
-                    reshaped[label] = (b, conf, z)
-            for label, (b, conf, z) in reshaped.items():
+                runner = alts[0] if alts else None
+                unsure = conf < UNSURE_CONF or (runner is not None and runner[1] > conf - UNSURE_MARGIN)
+                why = f"YOLO-World '{self.labels[label][0]}' {conf:.2f}" + (
+                    f"; runner-up '{self.labels[runner[0]][0]}' {runner[1]:.2f}" if runner else "")
+                if label in CONFUSABLE:
+                    if self.clip is None:
+                        self.clip = ClipCheck()
+                    u0, v0, u1, v1 = b
+                    key = tuple(np.round(to_world((u0 + u1) / 2, (v0 + v1) / 2, z, pos, mat, fovy, w, h)[:2] / 0.1).astype(int))
+                    pad = max(6, (u1 - u0) // 2)
+                    crop = np.ascontiguousarray(np.rot90(rgb[max(0, v0 - pad):v1 + pad, max(0, u0 - pad):u1 + pad], 1))
+                    ranked = self._clip_cache.get(key)
+                    if ranked is None and crop.size:
+                        ranked = self._clip_cache[key] = self.clip(crop)   # once per object position
+                    if ranked:
+                        (top, pt), (_, p2) = ranked[0], ranked[1]
+                        why += f"; CLIP: {top} {pt:.2f}, next {ranked[1][0]} {p2:.2f}"
+                        label, conf = top, float(min(conf, pt) if top == label else pt)
+                        unsure = pt - p2 < 0.25
                 xyz = to_world((b[0] + b[2]) / 2, (b[1] + b[3]) / 2, z, pos, mat, fovy, w, h)
                 if label != "person":
                     xyz = xyz + np.array([0, 0, -0.02])  # centre of a small object, not its front skin
-                dets.append(Detection(label, conf, tuple(int(x) for x in b), xyz, source="yolo-world"))
-                boxes[label] = b
+                d = Detection(label, conf, tuple(int(x) for x in b), xyz, source="yolo-world", why=why, unsure=unsure)
+                if label not in boxes or conf > next(x.conf for x in dets if x.label == label):
+                    dets = [x for x in dets if x.label != label] + [d]
+                    boxes[label] = b
             self.latest, self.boxes, self.latest_t = dets, boxes, t
         finally:
             self.ms = (time.time() - t0) * 1000

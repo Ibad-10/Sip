@@ -85,6 +85,31 @@ def second_opinion(rgb: np.ndarray, transcript: str, map_summary: str, labels: l
     return _call(run, timeout_s)
 
 
+def identify(crop_rgb: np.ndarray, options: list[str], timeout_s: float = 10.0) -> dict | None:
+    """Second opinion on an object the local detector is unsure about: which of `options` is it, and why."""
+    client = _client()
+    if client is None or crop_rgb is None or crop_rgb.size == 0:
+        return None
+    import cv2
+    from google.genai import types
+    ok, jpg = cv2.imencode(".jpg", crop_rgb[:, :, ::-1])
+    if not ok:
+        return None
+    prompt = (f"A home robot's camera crop. Which one is it: {', '.join(options)}, or none? Reply ONLY JSON "
+              '{"label": <one option or "none">, "confidence": <0-1>, "why": "<visual reason, max 12 words>"}')
+
+    def run():
+        r = client.models.generate_content(model=MODEL, contents=[
+            types.Part.from_bytes(data=jpg.tobytes(), mime_type="image/jpeg"), prompt])
+        raw = r.text or ""
+        out = json.loads(raw[raw.find("{"):raw.rfind("}") + 1])
+        if out.get("label") in options + ["none"]:
+            return {"label": out["label"], "confidence": float(out.get("confidence", 0.5)), "why": str(out.get("why", ""))[:120]}
+        return None
+
+    return _call(run, timeout_s)
+
+
 def read_compartment(rgb: np.ndarray, timeout_s: float = 8.0) -> str | None:
     """Read which day's compartment of a weekly pill organiser is in view. One word or None."""
     client = _client()

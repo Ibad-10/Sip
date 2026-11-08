@@ -7,13 +7,26 @@ from sip.types import Detection
 CAM = "d435i_camera_rgb"
 
 
-def render_head(model, data, renderer: mujoco.Renderer, cam: str = CAM, rgb: bool = True):
-    """Returns rgb (h,w,3 uint8, or None if rgb=False), depth (h,w metres), seg (h,w geom id, -1 = none)."""
+def fast_renderer(model, h: int, w: int) -> mujoco.Renderer:
+    """Offscreen renderer for robot cameras: no shadows/reflections (much cheaper on laptop GPUs)."""
+    r = mujoco.Renderer(model, h, w)
+    r.scene.flags[mujoco.mjtRndFlag.mjRND_SHADOW] = 0
+    r.scene.flags[mujoco.mjtRndFlag.mjRND_REFLECTION] = 0
+    return r
+
+
+def render_head(model, data, renderer: mujoco.Renderer, cam: str = CAM, rgb: bool = True, seg: bool = True):
+    """Returns rgb (h,w,3 uint8, or None if rgb=False), depth (h,w metres), seg (h,w geom id, -1 = none;
+    None if seg=False: only the simulator-label test oracle needs it)."""
     renderer.update_scene(data, camera=cam)
+    renderer.scene.flags[mujoco.mjtRndFlag.mjRND_SHADOW] = 0
+    renderer.scene.flags[mujoco.mjtRndFlag.mjRND_REFLECTION] = 0
     rgb = renderer.render().copy() if rgb else None
     renderer.enable_depth_rendering()
     depth = renderer.render().copy()
     renderer.disable_depth_rendering()
+    if not seg:
+        return rgb, depth, None
     renderer.enable_segmentation_rendering()
     s = renderer.render()
     renderer.disable_segmentation_rendering()

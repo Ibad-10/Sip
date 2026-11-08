@@ -215,7 +215,7 @@ class WaterTask:
 
     def _perceive(self) -> None:
         want_rgb = self.real or self.tick_n % (4 * PERCEIVE_EVERY) == 0 or self.bb.get("want_frame", False)
-        rgb, depth, seg = render_head(self.m, self.d, self.renderer, rgb=want_rgb)
+        rgb, depth, seg = render_head(self.m, self.d, self.renderer, rgb=want_rgb, seg=not self.real)
         if rgb is not None:
             self.last_frame = rgb
         if self.real:
@@ -223,6 +223,7 @@ class WaterTask:
         else:
             dets = self.det.detect(self.m, self.d, rgb, depth, seg)
             dets = dets + self._person_det.detect(self.m, self.d, rgb, depth, seg)
+        dets = self._second_opinions(rgb, dets)
         self.last_dets = dets
         for det in dets:
             if det.label == "person":
@@ -254,6 +255,45 @@ class WaterTask:
             f = self.face.resting_facing
             if f is not None and self._person_where in self.places:
                 self.places[self._person_where]["facing"] = f
+
+    _NAMES = {"glass": "drinking glass", "mug": "mug", "jug": "water jug", "straw2": "cup of straws",
+              "organiser": "pill organiser"}
+
+    def _second_opinions(self, rgb, dets):
+        """Unsure detections: ask Gemini once per object (by place) what it is and why; remember the answer.
+        Offline: keep the detector's best guess, marked unsure, and look again from closer."""
+        if not hasattr(self, "_ids"):
+            self._ids, self._id_jobs = {}, {}
+        out = []
+        for det in dets:
+            key = None if det.xyz is None else tuple(np.round(det.xyz[:2] / 0.15).astype(int))
+            if key in self._ids:
+                label, why = self._ids[key]
+                if label == "none":
+                    continue
+                det.why = f"{det.why}; Gemini: {label} ({why})"
+                det.label, det.unsure = label, False
+            elif det.unsure and det.label in self._NAMES and rgb is not None and self.cloud is not None:
+                job = self._id_jobs.get(key)
+                if job is None:
+                    from sip.cloud.gemini import identify
+                    u0, v0, u1, v1 = det.box
+                    crop = rgb[max(0, v0 - 10):v1 + 10, max(0, u0 - 10):u1 + 10]
+                    self._id_jobs[key] = self._POOL.submit(identify, np.ascontiguousarray(np.rot90(crop, 1)),
+                                                           list(self._NAMES.values()))
+                    self.log("cloud", f"unsure what this is ({det.why}) -> asking Gemini")
+                elif job.done():
+                    r = job.result()
+                    inv = {v: k for k, v in self._NAMES.items()}
+                    if r:
+                        lab = inv.get(r["label"], "none")
+                        self._ids[key] = (lab, r["why"])
+                        self.log("cloud", f"Gemini: it's {'not one of mine' if lab == 'none' else 'a ' + r['label']}"
+                                          f" ({r['why']}); detector said {det.label}")
+                    else:
+                        self._ids[key] = (det.label, "offline: kept detector's guess")
+            out.append(det)
+        return out
 
     def _saw_person(self, xyz: np.ndarray) -> None:
         """Remember where she is; nearby sightings refine the same place."""
@@ -306,7 +346,8 @@ class WaterTask:
         if self.last_mouth is not None and (pl is None or np.linalg.norm(self.last_mouth[1][:2] - pl["xyz"][:2]) < 0.8):
             return self.last_mouth[1]
         if pl is None:
-            return np.array([*self.pose()[:2], 1.0])
+            p = self.pose()
+            return np.array([p.x, p.y, 1.0])
         x, y = pl["xyz"][:2]
         return np.array([x, y, max(pl["xyz"][2] + 0.35, 0.95)])
 
