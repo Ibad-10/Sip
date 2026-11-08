@@ -887,6 +887,13 @@ class WaterTask:
         if tgt is None:
             return
         err = tgt - self.tip()
+        lateral = float(np.linalg.norm((err - (err @ self.io.arm_dir()) * self.io.arm_dir())[:2]))
+        if (self.io.arm_extension() > 0.48 and err @ self.io.arm_dir() > 0.01) or lateral > 0.04 and self.t - self._timer > 8.0:
+            if getattr(self, "_reparks", 0) < 2:
+                self._reparks = getattr(self, "_reparks", 0) + 1
+                self.io.set_arm(arm=0.0)
+                self.log("plan", "mouth is out of the arm's reach from here -> moving the base closer")
+                return self._go_person("re-parking closer")
         step = dec.max_speed_mps * dt
         # step from where the joints actually are, so a lagging joint can't overshoot into the slow zone
         ext = self.io.arm_extension()

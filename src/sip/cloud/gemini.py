@@ -23,7 +23,19 @@ def _client():
         return None
 
 
+# Fair-use guard (organisers: no abuse): hard cap per session and minimum spacing between calls.
+MAX_CALLS = int(os.environ.get("GEMINI_MAX_CALLS", "30"))
+MIN_GAP_S = 5.0
+_usage = {"calls": 0, "last": 0.0}
+
+
 def _call(fn, timeout_s: float):
+    import time
+    now = time.time()
+    if _usage["calls"] >= MAX_CALLS or now - _usage["last"] < MIN_GAP_S:
+        return None   # robot carries on with local models
+    _usage["calls"] += 1
+    _usage["last"] = now
     fut = _POOL.submit(fn)
     try:
         return fut.result(timeout=timeout_s)

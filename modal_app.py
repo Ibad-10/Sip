@@ -17,7 +17,7 @@ image = (
     modal.Image.debian_slim(python_version="3.12")
     .apt_install("libegl1", "libgl1", "libglib2.0-0", "libosmesa6", "ffmpeg")
     .pip_install("mujoco==4.0.0", "numpy", "opencv-python-headless", "pytest", "rerun-sdk==0.42.0",
-                 "mediapipe", "trimesh", "pillow")
+                 "mediapipe", "trimesh", "pillow", "gymnasium", "stable-baselines3")
     .env({"MUJOCO_GL": "osmesa", "PYOPENGL_PLATFORM": "osmesa", "PYTHONPATH": "/root/sip/src", "SIP_LLM": "0"})
     .add_local_dir(ROOT / "src", "/root/sip/src", ignore=IGNORE)
     .add_local_dir(ROOT / "tests", "/root/sip/tests", ignore=IGNORE)
@@ -98,10 +98,7 @@ def video(scenario: str = "chaos", seconds: float = 240):
 
 
 # ---------- learned straw-reach policy (PPO, many parallel simulations) ----------
-train_image = image.pip_install("gymnasium", "stable-baselines3")
-
-
-@app.function(image=train_image, cpu=32, memory=16384, timeout=3600)
+@app.function(cpu=32, memory=16384, timeout=3600)
 def train_policy(steps: int = 3_000_000) -> tuple[bytes, dict]:
     import sys
     sys.path.insert(0, "/root/sip/src")
