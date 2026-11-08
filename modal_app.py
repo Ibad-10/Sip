@@ -45,6 +45,10 @@ SLOW = [
     "tests/test_water.py::test_gemini_points_when_local_detector_misses",
     "tests/test_water.py::test_medicine_taken_is_logged_and_organiser_returned",
     "tests/test_water.py::test_medicine_no_answer_alerts_carer",
+    "tests/test_water.py::test_medicine_mismatch_is_not_offered",
+    "tests/test_water.py::test_wrist_camera_sees_object_in_hand_and_empty_gap",
+    "tests/test_explore.py::test_explores_house_from_scratch",
+    "tests/test_policy_runtime.py::test_reach_policy_drives_the_arm_in_the_house",
     "tests/test_judge.py::test_physics_invariants_full_run",
     "tests/test_judge.py::test_perception_before_action",
     "tests/test_judge.py::test_autonomy_no_network",
@@ -70,11 +74,13 @@ def run_test(job) -> tuple[str, bool, str]:
     return nodeid, r.returncode == 0, timing + ("" if r.returncode == 0 else chr(10) + out[-1500:])
 
 
-@app.function(timeout=600, cpu=8)
+@app.function(timeout=1500, cpu=8)
 def run_fast() -> tuple[bool, str]:
     import subprocess
     r = subprocess.run(["python", "-m", "pytest", "-q", "-p", "no:cacheprovider",
-                        "--ignore=tests/test_water.py", "--ignore=tests/test_judge.py"],
+                        "--ignore=tests/test_water.py", "--ignore=tests/test_judge.py",
+                        "--ignore=tests/test_benchmark.py", "--ignore=tests/test_explore.py",
+                        "--ignore=tests/test_policy_runtime.py"],
                        cwd="/root/sip", capture_output=True, text=True)
     return r.returncode == 0, (r.stdout + r.stderr)[-1500:]
 

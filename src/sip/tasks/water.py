@@ -651,8 +651,22 @@ class WaterTask:
                 return
             yield
 
+    def _policy(self, skill: str):
+        """Trained arm policy for a skill, or None (missing, disabled with SIP_POLICY=0)."""
+        if os.environ.get("SIP_POLICY", "1") != "1":
+            return None
+        if not hasattr(self, "_policies"):
+            self._policies = {}
+        if skill not in self._policies:
+            try:
+                from sip.learn.runtime import PolicyArm
+                self._policies[skill] = PolicyArm(skill)
+            except Exception:
+                self._policies[skill] = None
+        return self._policies[skill]
+
     def _g_reach(self, xyz: np.ndarray, tol: float = 0.03, timeout: float = 12.0, wrist_yaw: float = 0.0,
-                 touch: str | None = None):
+                 touch: str | None = None, skill: str | None = None):
         dt = TICK_STEPS * self.m.opt.timestep
         if abs(self.io.arm_targets()["wrist_yaw"] - wrist_yaw) > 0.3:
             # swing the wrist out above everything on the table, then come down to the object
@@ -666,13 +680,35 @@ class WaterTask:
         while abs(self.io.grasp_center()[2] - xyz[2]) > 0.03 and self.t - t0 < 3.0:
             yield
         t0 = self.t
+        pol = self._policy(skill or ("grasp" if touch else "pour"))
+        best, best_t = 9.0, self.t
+        self.arm_driver = f"learned policy ({pol.skill}, {pol.path.parent.name or 'v1'})" if pol else "classic controller"
+        if pol:
+            self.log("plan", f"arm driven by the trained {pol.skill} policy ({pol.path.name}); safety layer caps speed")
         while self.t - t0 < timeout:
             err = xyz - self.io.grasp_center()
-            if np.linalg.norm(err) < tol or (touch and np.linalg.norm(err) < 0.08 and self._object_in_hand()):
+            d = float(np.linalg.norm(err))
+            if d < tol or (touch and d < 0.08 and self._object_in_hand()):
                 self.io.drive(0, 0)
                 return
-            arm = self.io.arm_targets()["arm"] + float(np.clip(err @ self.io.arm_dir(), -0.15 * dt, 0.15 * dt))
-            self.io.set_arm(arm=arm, lift=self.io.arm_targets()["lift"] + 0.5 * err[2])
+            if d < best - 0.01:
+                best, best_t = d, self.t
+            if pol and self.t - best_t > 3.0:            # policy stalled: hand over to the classic controller
+                self.log("plan", f"{pol.skill} policy stalled at {d * 100:.0f} cm -> classic controller takes over")
+                pol, self.arm_driver = None, "classic controller (policy stalled)"
+            p = self.pose()
+            ad = self.io.arm_dir()
+            lateral = float(abs(err[0] * ad[1] - err[1] * ad[0]))       # sideways error, out of the policy's range
+            if pol and lateral > 0.03:
+                self._base_bearing_fix(xyz)                              # line the base up first
+                best_t = self.t
+                yield
+                continue
+            if pol:
+                pol.act(self.io, xyz, dt, max_speed=0.15)
+            else:
+                arm = self.io.arm_targets()["arm"] + float(np.clip(err @ self.io.arm_dir(), -0.15 * dt, 0.15 * dt))
+                self.io.set_arm(arm=arm, lift=self.io.arm_targets()["lift"] + 0.5 * err[2])
             self._base_bearing_fix(xyz)
             yield
         self.io.drive(0, 0)
