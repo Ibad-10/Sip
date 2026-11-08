@@ -60,8 +60,10 @@ class PolicyArm:
             obs = self.norm.normalize_obs(obs)
         a, _ = self.model.predict(obs, deterministic=True)
         a = np.clip(np.asarray(a, float), -1, 1)
-        scale = min(1.0, max_speed * dt / MAX_DELTA)           # never faster than the safety layer allows
-        cmd = {n: q[i] + a[i] * MAX_DELTA * scale for i, n in enumerate(NAMES)}
+        from sip.learn.reach_env import TASKS
+        step = TASKS[self.skill].get("max_step", MAX_DELTA)     # same action limit as in training
+        scale = min(1.0, max_speed * dt / step)                 # never faster than the safety layer allows
+        cmd = {n: q[i] + a[i] * step * scale for i, n in enumerate(NAMES)}
         io.set_arm(**cmd)
         self.prev = a
         return dist
