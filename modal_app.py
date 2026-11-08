@@ -171,7 +171,7 @@ def train_policy(job: tuple) -> tuple[str, int, bytes, dict]:
     env, ok, fast, errs, n = StrawReachEnv(seed=10_000 + seed, task=task, randomise=dr), 0, [], [], 200
     for _ in range(n):
         o, _ = env.reset()
-        for _ in range(900):
+        for _ in range(1500):
             a, _ = model.predict(envs.normalize_obs(o), deterministic=True)
             o, r, done, trunc, info = env.step(a)
             if info["dist"] < env.cfg["near"]:

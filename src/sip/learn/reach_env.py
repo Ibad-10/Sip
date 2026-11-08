@@ -24,8 +24,8 @@ GOAL = 0.02
 #   pour:  jug spout above the glass, precise 1.5 cm goal, no face rule
 TASKS = {
     # near the face the ACTION itself is limited (max_step): it cannot be too fast, so no speed penalty needed
-    "straw": {"dy": (0.15, 0.45), "dz": (-0.15, 0.15), "goal": 0.02, "near": 0.30, "slow": 0.03, "max_step": 0.0025},
-    "offer": {"dy": (0.15, 0.45), "dz": (-0.35, -0.05), "goal": 0.04, "near": 0.30, "slow": 0.05, "max_step": 0.004},
+    "straw": {"dy": (0.15, 0.45), "dz": (-0.15, 0.15), "goal": 0.02, "near": 0.30, "slow": 0.03, "max_step": 0.0012},
+    "offer": {"dy": (0.15, 0.45), "dz": (-0.35, -0.05), "goal": 0.04, "near": 0.30, "slow": 0.05, "max_step": 0.002},
     "pour":  {"dy": (0.10, 0.40), "dz": (-0.05, 0.25), "goal": 0.015, "near": 0.0, "slow": 1.0},
     # grasp: objects anywhere from a low side table to a high shelf, either side of the arm line
     "grasp": {"dy": (0.05, 0.50), "dz": (-0.45, 0.30), "dx": 0.10, "goal": 0.02, "near": 0.0, "slow": 1.0},
@@ -125,4 +125,4 @@ class StrawReachEnv(gym.Env):
             r -= 2.0
         self.prev, self.dist = a, dist
         self.k += 1
-        return self._obs(), float(r), bool(done), self.k >= (900 if c["near"] > 0 else 300), {"dist": dist}
+        return self._obs(), float(r), bool(done), self.k >= (1500 if c["near"] > 0 else 500), {"dist": dist}
