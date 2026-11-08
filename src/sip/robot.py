@@ -66,8 +66,8 @@ class StretchIO:
         return float(np.linalg.norm(self.d.body(body).xpos - self.grasp_center())) < tol + radius
 
     def attach(self, body: str) -> bool:
-        if not self.can_grasp(body):
-            return False
+        """Close the gripper and hold. Whether something is really in the hand is the task's
+        perception decision (wrist camera), not checked here against simulator truth."""
         eq = self.m.equality(f"grasp_weld_{body}").id
         # weld at the current relative pose: relpose = object (body2) pose in the grasp (body1)
         # frame, anchor at the body origin (the spec default anchor is not zero).

@@ -288,3 +288,33 @@ def test_medicine_mismatch_is_not_offered(monkeypatch):
     assert not h.bb.get("dose_waiting")
     assert not any("Here are your" in t for t in h.kinds("say"))
     assert any("not offered" in t for t in h.kinds("alert"))
+
+
+def test_grasp_success_comes_from_the_wrist_camera(monkeypatch):
+    """The robot must not use the simulator's object position to decide a grasp worked."""
+    h = Harness()
+    calls = []
+    real = h.task._object_in_hand
+
+    def spy():
+        calls.append(1)
+        return real()
+    monkeypatch.setattr(h.task, "_object_in_hand", spy)
+    monkeypatch.setattr(h.io, "can_grasp", lambda *a, **k: (_ for _ in ()).throw(AssertionError("sim truth used")))
+    request_water(h)
+    assert h.run(80, until=lambda h, s: s == "NAV_TO_PERSON" or s == "FIND_PERSON"), h.states
+    assert calls and h.io.held == "glass"
+
+
+def test_wrist_camera_sees_object_in_hand_and_empty_gap():
+    """In-hand check is a sensor reading: true with the glass between the fingers, false once it is gone."""
+    h = Harness()
+    request_water(h)
+    assert h.run(80, until=lambda h, s: h.io.held == "glass"), h.states
+    assert h.task._object_in_hand()
+    h.io.release()
+    h.move_free("glass_free", h.d.body("glass").xpos + np.array([0.0, 2.0, 0.0]))
+    h.io.d.ctrl[h.io.act["gripper"]] = 0.01          # fingers closed on nothing
+    for _ in range(200):
+        mujoco.mj_step(h.m, h.d)
+    assert not h.task._object_in_hand()

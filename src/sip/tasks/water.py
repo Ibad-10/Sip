@@ -83,6 +83,16 @@ class WaterTask:
             self._show_straw(False)
 
     # ---------- helpers ----------
+    def _object_in_hand(self) -> bool:
+        """Wrist depth camera (D405, looks between the fingers): something solid fills the gap within 30 cm.
+        This is how the robot knows a grasp worked; it never reads where the object really is."""
+        if not hasattr(self, "_wrist_r"):
+            from sip.perception.objects import fast_renderer
+            self._wrist_r = fast_renderer(self.m, 120, 160)
+        _, dep, _ = render_head(self.m, self.d, self._wrist_r, cam=WRIST_CAM, rgb=False, seg=False)
+        gap = dep[50:120, 55:105]
+        return float((gap < 0.30).mean()) > 0.35
+
     def _room_of(self, x: float, y: float) -> str:
         """Name of the nearest known room centre (learned while exploring, or set up by the carer)."""
         return min(self.rooms, key=lambda r: np.hypot(self.rooms[r][0] - x, self.rooms[r][1] - y))
@@ -547,11 +557,11 @@ class WaterTask:
             arm = self.io.arm_targets()["arm"] + float(np.clip(err @ self.io.arm_dir(), -0.15 * dt, 0.15 * dt))
             self.io.set_arm(arm=arm, lift=self.io.arm_targets()["lift"] + 0.5 * err[2])
             self._base_bearing_fix(obj)
-            if np.linalg.norm(err) < 0.03 or self.io.can_grasp(self.label, tol=0.02):
+            if np.linalg.norm(err) < 0.03 or (np.linalg.norm(err) < 0.08 and self._object_in_hand()):
                 self.io.drive(0, 0)
-                if not self.io.attach(self.label):
+                if not (self._object_in_hand() and self.io.attach(self.label)):
                     self.io.drive(0, 0)
-                    self.log("perceive", f"fingers closed on nothing: the {self.label} is not where I saw it")
+                    self.log("perceive", f"wrist camera: nothing between the fingers - the {self.label} is not where I saw it")
                     self.io.set_arm(arm=0.0)
                     return self.goto("VERIFY", "grasp missed, looking again")
                 self._turn_straw_to_arm()
@@ -645,7 +655,7 @@ class WaterTask:
         t0 = self.t
         while self.t - t0 < timeout:
             err = xyz - self.io.grasp_center()
-            if np.linalg.norm(err) < tol or (touch and self.io.can_grasp(touch, tol=0.02)):  # fingers touch it
+            if np.linalg.norm(err) < tol or (touch and np.linalg.norm(err) < 0.08 and self._object_in_hand()):
                 self.io.drive(0, 0)
                 return
             arm = self.io.arm_targets()["arm"] + float(np.clip(err @ self.io.arm_dir(), -0.15 * dt, 0.15 * dt))
@@ -699,7 +709,7 @@ class WaterTask:
         for attempt in range(3):
             target = self.seen[label] + np.array(offset)
             yield from self._g_reach(target, touch=label)
-            if self.io.attach(label):
+            if self._object_in_hand() and self.io.attach(label):
                 self.log("plan", f"picked up the {what}")
                 return
             self.log("perceive", f"missed the {what}; looking again")
