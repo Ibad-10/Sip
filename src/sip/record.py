@@ -26,6 +26,7 @@ def main(argv=None):
     ap.add_argument("--hd", action="store_true", help="1920x1080 at 30 fps (for GPU rendering)")
     ap.add_argument("--seed", type=int, default=None, help="random home layout")
     ap.add_argument("--task", default="water", choices=["water", "medicine"])
+    ap.add_argument("--voice", action="store_true", help="add the robot's voice (ElevenLabs or offline)")
     a = ap.parse_args(argv)
     global W, H, FPS
     if a.hd:
@@ -124,7 +125,42 @@ def main(argv=None):
         if state == "IDLE" and "RETURN" in "".join(e.text for e in evs[-3:]):
             break
     vw.release()
+    if a.voice:
+        _add_voice(a.out, [(e.t, e.text) for e in sim.bb.events() if e.kind == "say"], step_s=1.0 / FPS * every)
     print("wrote", a.out)
+
+
+def _add_voice(video: str, lines: list[tuple[float, str]], step_s: float) -> None:
+    """Voice each sentence the robot said and mix it in at the moment it said it (ffmpeg)."""
+    import shutil
+    import subprocess
+    import tempfile
+    from sip.voice.speech import synth_wav
+    ff = shutil.which("ffmpeg")
+    if not ff:
+        try:
+            import imageio_ffmpeg
+            ff = imageio_ffmpeg.get_ffmpeg_exe()
+        except Exception:
+            ff = None
+    if not ff or not lines:
+        print("voice: skipped (no ffmpeg or nothing said)")
+        return
+    tmp = tempfile.mkdtemp()
+    inputs, filters = [], []
+    for i, (t, text) in enumerate(lines[:40]):
+        wav = os.path.join(tmp, f"l{i}.wav")
+        if synth_wav(text, wav):
+            inputs += ["-i", wav]
+            filters.append(f"[{len(inputs) // 2}:a]adelay={int(t * 1000)}|{int(t * 1000)}[a{i}]")
+    if not filters:
+        return
+    mix = "".join(f"[a{i}]" for i in range(len(filters)))
+    graph = ";".join(filters) + f";{mix}amix=inputs={len(filters)}:normalize=0[aout]"
+    out = video.replace(".mp4", "_voice.mp4")
+    subprocess.run([ff, "-y", "-i", video, *inputs, "-filter_complex", graph, "-map", "0:v", "-map", "[aout]",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", out], capture_output=True)
+    print("voice track:", out if os.path.exists(out) else "failed")
 
 
 if __name__ == "__main__":

@@ -86,3 +86,29 @@ def transcribe(audio_bytes: bytes, suffix: str = ".webm") -> str:
         return " ".join(s.text.strip() for s in segs).strip()
     finally:
         os.unlink(path)
+
+
+def synth_wav(text: str, path: str) -> bool:
+    """Write the robot's voice for `text` to a 16 kHz mono WAV (for the video). ElevenLabs, else offline."""
+    import wave
+    key = os.environ.get("ELEVENLABS_API_KEY")
+    if key:
+        try:
+            req = urllib.request.Request(
+                f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVEN_VOICE}?output_format=pcm_16000",
+                data=json.dumps({"text": text, "model_id": ELEVEN_MODEL}).encode(),
+                headers={"xi-api-key": key, "Content-Type": "application/json", "Accept": "audio/pcm"})
+            pcm = urllib.request.urlopen(req, timeout=10).read()
+            with wave.open(path, "wb") as w:
+                w.setnchannels(1), w.setsampwidth(2), w.setframerate(16000), w.writeframes(pcm)
+            return True
+        except Exception:
+            pass
+    if os.name == "nt":
+        safe = text.replace("'", "''")
+        p = path.replace("'", "''")
+        r = subprocess.run(["powershell", "-NoProfile", "-Command",
+                            "Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+                            f"$s.SetOutputToWaveFile('{p}'); $s.Speak('{safe}'); $s.Dispose()"], capture_output=True, timeout=30)
+        return r.returncode == 0 and os.path.exists(path)
+    return False
