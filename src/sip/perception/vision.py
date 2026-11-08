@@ -36,7 +36,8 @@ CUP_LIKE = {"glass", "mug", "jug"}
 def _by_shape(height_m: float, width_m: float) -> str:
     """Decide glass / mug / jug from the real size measured with depth (not from the name alone)."""
     if height_m >= 0.16:
-        return "jug"                    # tall container (water jug ~20 cm)
+        # tall: a wide one is the water jug (~13 cm across), a slim one is the cup of straws (~6 cm)
+        return "jug" if width_m >= 0.09 else "straw2"
     if height_m >= 1.3 * width_m:
         return "glass"                  # tall and slim (tumbler ~11-13 cm with water)
     return "mug"                        # squat

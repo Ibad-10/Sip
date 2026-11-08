@@ -28,6 +28,7 @@ image = (
     .add_local_dir(ROOT / "third_party", "/root/sip/third_party", ignore=IGNORE)
 )
 app = modal.App("sip-care-robot", image=image)
+results = modal.Volume.from_name("sip-results", create_if_missing=True)   # survives detached runs
 
 SLOW = [
     "tests/test_water.py::test_full_water_run",
@@ -51,7 +52,7 @@ SLOW = [
 ]
 
 
-@app.function(timeout=1800, cpu=4, memory=6144)
+@app.function(timeout=1800, cpu=4, memory=6144, volumes={"/results": results})
 def run_test(job) -> tuple[str, bool, str]:
     import os
     import subprocess
@@ -61,6 +62,11 @@ def run_test(job) -> tuple[str, bool, str]:
                        cwd="/root/sip", capture_output=True, text=True, env=env)
     out = r.stdout + r.stderr
     timing = " | ".join(l for l in out.splitlines() if l.startswith("TIMING"))
+    import pathlib as _p
+    d = _p.Path("/results/tests") / ("real" if real else "oracle")
+    d.mkdir(parents=True, exist_ok=True)
+    (d / (nodeid.split("::")[-1] + ".txt")).write_text(("PASS" if r.returncode == 0 else "FAIL") + chr(10) + timing + chr(10) + out[-6000:])
+    results.commit()
     return nodeid, r.returncode == 0, timing + ("" if r.returncode == 0 else chr(10) + out[-1500:])
 
 
@@ -118,7 +124,7 @@ train_image = (
 )
 
 
-@app.function(image=train_image, cpu=32, memory=16384, timeout=3600, retries=0)
+@app.function(image=train_image, cpu=32, memory=16384, timeout=3600, retries=0, volumes={"/results": results})
 def train_policy(job: tuple) -> tuple[str, int, bytes, dict]:
     task, seed, steps = job[:3]
     nenv, dr = (job[3], job[4]) if len(job) > 3 else (8, False)
@@ -158,10 +164,16 @@ def train_policy(job: tuple) -> tuple[str, int, bytes, dict]:
         ok += int(done)
         errs.append(info["dist"])
     model.save("/tmp/p")
+    import json as _j, os as _o, shutil as _s
+    ver = job[5] if len(job) > 5 else "v1"
+    _o.makedirs(f"/results/policy/{ver}", exist_ok=True)
+    _s.copy("/tmp/p.zip", f"/results/policy/{ver}/{task}_seed{seed}.zip")
     stats = {"task": task, "seed": seed, "steps": steps, "success_rate": ok / n,
              "median_final_error_cm": float(np.median(errs) * 100),
              "p95_close_speed_near_face_mps": float(np.percentile(fast, 95)) if fast else None,
              "parallel_worlds": nenv, "domain_randomisation": dr, "learning_curve": curve}
+    _j.dump(stats, open(f"/results/policy/{ver}/{task}_seed{seed}.json", "w"))
+    results.commit()
     return task, seed, Path("/tmp/p.zip").read_bytes(), stats
 
 
@@ -170,7 +182,7 @@ def train(steps: int = 2_000_000, version: str = "v1", worlds: int = 8, dr: bool
     import json
     out = ROOT / "assets" / "policy"
     out.mkdir(parents=True, exist_ok=True)
-    jobs = [(t, s, steps, worlds, dr) for t in ("straw", "offer", "pour", "grasp") for s in (0, 1, 2)]
+    jobs = [(t, s, steps, worlds, dr, version) for t in ("straw", "offer", "pour", "grasp") for s in (0, 1, 2)]
     out = out / version
     out.mkdir(parents=True, exist_ok=True)
     table = []
