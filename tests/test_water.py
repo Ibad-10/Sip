@@ -85,7 +85,9 @@ class Harness:
                     return True
             return False
         finally:
-            print(f"TIMING sim={self.t:.1f}s wall={time.time() - w0:.1f}s real_models={REAL}")
+            tp, ep = self.io.true_pose(), self.io.base_pose()
+            print(f"TIMING sim={self.t:.1f}s wall={time.time() - w0:.1f}s real_models={REAL} "
+                  f"loc_error={np.hypot(tp.x - ep.x, tp.y - ep.y) * 100:.1f}cm")
 
     def kinds(self, kind):
         return [e.text for e in self.bb.events() if e.kind == kind]

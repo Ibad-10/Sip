@@ -36,6 +36,8 @@ class WaterTask:
     def __init__(self, io: StretchIO, bb: Blackboard, grid: OccupancyGrid, memory: ObjectMemory,
                  detector, face, label: str = "glass", prepare: bool = False, cloud=None, rooms=None):
         self.io, self.bb, self.grid, self.memory = io, bb, grid, memory
+        if io.loc is None:
+            io.enable_localisation()      # position from wheel odometry + lidar scan matching
         self.det, self.face, self.label = detector, face, label
         self.m, self.d = io.m, io.d
         self.renderer = mujoco.Renderer(self.m, 240, 320)
@@ -158,7 +160,11 @@ class WaterTask:
         nav = self._nav
         p = self.pose()
         if self.tick_n % LIDAR_EVERY == 0:
-            new = update_map(self.grid, p, scan(self.m, self.d, p), 4.0)
+            ranges = scan(self.m, self.d, p)
+            if self.io.loc is not None:
+                self.io.loc.correct(ranges, self.grid)
+                p = self.pose()
+            new = update_map(self.grid, p, ranges, 4.0)
             if new and not nav["follower"].done and self._path_blocked(nav["follower"]):
                 path = self._plan(nav["goal"])
                 if path is None:
@@ -380,6 +386,10 @@ class WaterTask:
     def step(self, t: float) -> str:
         self.t = t
         self.tick_n += 1
+        if self.io.loc is not None:          # where am I: wheel odometry (scan matching in _nav_step)
+            from sip.perception.objects import set_frame
+            self.io.loc.update()
+            set_frame(self.io.true_pose(), self.io.loc.pose)
         every = PERCEIVE_EVERY if self.state in ("APPROACH", "HOLD", "GRASP", "VERIFY", "SEARCH") else 2 * PERCEIVE_EVERY
         if self.tick_n % every == 0:
             self._perceive()

@@ -36,9 +36,18 @@ def scan(model, data, pose: Pose2D, n_rays: int = 180, max_range: float = 4.0,
     """Planar lidar using one batched mj_multiRay call; the few rays that hit the robot's own
     geoms are re-cast past them."""
     robot = _robot_geom_mask(model)
-    ang = pose.yaw + ray_angles(n_rays)
+    # physics: rays leave from where the lidar really is; the caller interprets the ranges with its own
+    # (estimated) pose. `pose` only matters when no robot base exists (unit tests with a bare scene).
+    try:
+        b = model.body("base_link").id
+        bx, by = data.xpos[b][:2]
+        qw, qz = data.xquat[b][0], data.xquat[b][3]
+        byaw = float(2 * np.arctan2(qz, qw))
+    except KeyError:
+        bx, by, byaw = pose.x, pose.y, pose.yaw
+    ang = byaw + ray_angles(n_rays)
     dirs = np.c_[np.cos(ang), np.sin(ang), np.zeros(n_rays)]
-    origin = np.array([pose.x, pose.y, height])
+    origin = np.array([bx, by, height])
     geomid = np.zeros(n_rays, dtype=np.int32)
     dist = np.zeros(n_rays)
     # cutoff applies to geom bounding spheres: long walls have far centres, so use a big cutoff and clamp

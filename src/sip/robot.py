@@ -17,7 +17,19 @@ class StretchIO:
         self.gc = model.body("link_grasp_center").id
         self._held: str | None = None
 
+    loc = None   # Localiser: when set, base_pose() is the robot's own estimate (odometry + scan matching)
+
+    def enable_localisation(self) -> None:
+        from sip.nav.localise import Localiser
+        self.loc = Localiser(self.m, self.d, self.true_pose())   # start = the dock pose given at setup
+
     def base_pose(self) -> Pose2D:
+        if self.loc is not None:
+            return self.loc.pose
+        return self.true_pose()
+
+    def true_pose(self) -> Pose2D:
+        """Simulator ground truth: for tests, the judge monitor and the kinematic frame transform only."""
         q = self.d.qpos
         w, z = q[3], q[6]
         return Pose2D(float(q[0]), float(q[1]), float(2 * np.arctan2(z, w)))

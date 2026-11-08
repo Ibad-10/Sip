@@ -205,3 +205,14 @@ def one(nodeid: str, real: bool = True):
     name, ok, out = run_test.remote((nodeid, real))
     print(("PASS " if ok else "FAIL ") + name)
     print(out)
+
+
+@app.local_entrypoint()
+def train_spawn(steps: int = 3_000_000, version: str = "v4", worlds: int = 16, dr: bool = True,
+                skills: str = "straw,offer,pour,grasp"):
+    """Fire-and-forget: each policy trains in its own call and saves to the sip-results volume.
+    Use with `modal run --detach`; closing this terminal does not cancel the jobs."""
+    for t in skills.split(","):
+        for s in (0, 1, 2):
+            call = train_policy.spawn((t, s, steps, worlds, dr, version))
+            print("spawned", t, s, call.object_id, flush=True)

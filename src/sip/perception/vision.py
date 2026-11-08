@@ -127,9 +127,10 @@ class YoloDetector:
     def detect(self, model, data, rgb, depth, seg=None, t: float = 0.0) -> list[Detection]:
         if rgb is None:
             return list(self.latest)
+        from sip.perception.objects import cam_pose
         c = model.camera(self.cam).id
-        job = (rgb.copy(), depth.copy(), data.cam_xpos[c].copy(), data.cam_xmat[c].reshape(3, 3).copy(),
-               float(model.cam_fovy[c]), t)
+        pos, mat = cam_pose(model, data, self.cam)          # in the robot's map frame
+        job = (rgb.copy(), depth.copy(), pos, mat, float(model.cam_fovy[c]), t)
         if not self.asynchronous:
             self._run(job)
             return list(self.latest)
@@ -270,7 +271,9 @@ class MediaPipeFace:
         if vals.size == 0:
             return none
         c = model.camera(cam).id
-        xyz = to_world(mu, mv, float(np.median(vals)), data.cam_xpos[c], data.cam_xmat[c].reshape(3, 3),
+        from sip.perception.objects import cam_pose
+        cpos, cmat = cam_pose(model, data, cam)
+        xyz = to_world(mu, mv, float(np.median(vals)), cpos, cmat,
                        float(model.cam_fovy[c]), w, h)
         gap = np.hypot(lm[13].x - lm[14].x, lm[13].y - lm[14].y)
         face_h = np.hypot(lm[10].x - lm[152].x, lm[10].y - lm[152].y) + 1e-6

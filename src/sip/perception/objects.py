@@ -34,6 +34,51 @@ def render_head(model, data, renderer: mujoco.Renderer, cam: str = CAM, rgb: boo
     return rgb, depth, seg
 
 
+# Map-frame correction. Camera poses come from the robot's kinematic chain (joint encoders) relative to its
+# base; the base is placed at the localiser's ESTIMATE, not at the simulator's true position.
+_FRAME: tuple | None = None   # (true_x, true_y, true_yaw, est_x, est_y, est_yaw)
+
+
+def set_frame(true_pose, est_pose) -> None:
+    global _FRAME
+    _FRAME = (true_pose.x, true_pose.y, true_pose.yaw, est_pose.x, est_pose.y, est_pose.yaw)
+
+
+def _rz(a: float) -> np.ndarray:
+    c, s_ = np.cos(a), np.sin(a)
+    return np.array([[c, -s_, 0], [s_, c, 0], [0, 0, 1.0]])
+
+
+def to_map(p: np.ndarray) -> np.ndarray:
+    if _FRAME is None:
+        return p
+    tx, ty, tyaw, ex, ey, eyaw = _FRAME
+    q = np.array(p, float)
+    flat = q.reshape(-1, 3)
+    d = flat - np.array([tx, ty, 0.0])
+    out = d @ _rz(eyaw - tyaw).T + np.array([ex, ey, 0.0])
+    return out.reshape(q.shape)
+
+
+def to_true(p: np.ndarray) -> np.ndarray:
+    if _FRAME is None:
+        return p
+    tx, ty, tyaw, ex, ey, eyaw = _FRAME
+    q = np.array(p, float).reshape(-1, 3)
+    out = (q - np.array([ex, ey, 0.0])) @ _rz(tyaw - eyaw).T + np.array([tx, ty, 0.0])
+    return out.reshape(np.shape(p))
+
+
+def cam_pose(model, data, cam: str) -> tuple[np.ndarray, np.ndarray]:
+    """Camera position and rotation in the robot's map frame."""
+    c = model.camera(cam).id
+    pos, mat = data.cam_xpos[c].copy(), data.cam_xmat[c].reshape(3, 3).copy()
+    if _FRAME is None:
+        return pos, mat
+    tyaw, eyaw = _FRAME[2], _FRAME[5]
+    return to_map(pos), _rz(eyaw - tyaw) @ mat
+
+
 def _focal(model, cam: str, h: int) -> float:
     fovy = np.deg2rad(model.cam_fovy[model.camera(cam).id])
     return (h / 2) / np.tan(fovy / 2)
@@ -42,17 +87,17 @@ def _focal(model, cam: str, h: int) -> float:
 def pixel_to_world(model, data, cam: str, u, v, depth_m, w: int = 320, h: int = 240) -> np.ndarray:
     """Scalars -> (3,); arrays of N -> (N, 3)."""
     f = _focal(model, cam, h)
-    c = model.camera(cam).id
+    pos, mat = cam_pose(model, data, cam)
     u, v, z = np.asarray(u, float), np.asarray(v, float), np.asarray(depth_m, float)
     local = np.stack([(u - w / 2) / f * z, -(v - h / 2) / f * z, -z], axis=-1)
-    return data.cam_xpos[c] + local @ data.cam_xmat[c].reshape(3, 3).T
+    return pos + local @ mat.T
 
 
 def project(model, data, cam: str, xyz: np.ndarray, w: int = 320, h: int = 240):
     """World point -> (u, v, depth). depth <= 0 means behind the camera."""
     f = _focal(model, cam, h)
-    c = model.camera(cam).id
-    local = data.cam_xmat[c].reshape(3, 3).T @ (np.asarray(xyz) - data.cam_xpos[c])
+    pos, mat = cam_pose(model, data, cam)
+    local = mat.T @ (np.asarray(xyz) - pos)
     z = -local[2]
     if z <= 1e-6:
         return -1.0, -1.0, z
@@ -60,9 +105,9 @@ def project(model, data, cam: str, xyz: np.ndarray, w: int = 320, h: int = 240):
 
 
 def _view_error(model, data, target, cam=CAM):
-    c = model.camera(cam).id
-    fwd = -data.cam_xmat[c].reshape(3, 3)[:, 2]
-    d = np.asarray(target) - data.cam_xpos[c]
+    pos, mat = cam_pose(model, data, cam)
+    fwd = -mat[:, 2]
+    d = np.asarray(target) - pos
     yaw_err = np.angle(np.exp(1j * (np.arctan2(d[1], d[0]) - np.arctan2(fwd[1], fwd[0]))))
     pitch_err = np.arctan2(d[2], np.hypot(d[0], d[1])) - np.arctan2(fwd[2], np.hypot(fwd[0], fwd[1]))
     return np.array([yaw_err, pitch_err])
