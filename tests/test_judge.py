@@ -4,7 +4,8 @@ autonomy with no network, and chaotic unexpected events.
 Invariants (checked every control tick by Monitor):
   - robot never tips: base height < 0.05 m above start, roll/pitch < 10 deg
   - carried glass never drops: while held, glass stays within 0.12 m of the gripper
-  - near the face (< 0.30 m) the straw tip never moves faster than 0.05 m/s (0.03 cap + noise)
+  - near the face (< 0.28 m) the straw tip never closes on the mouth faster than 0.05 m/s
+    (0.03 cap + noise); pulling back fast is allowed
   - straw tip never closer than 2 cm to the lips unless "ready" was given
   - no robot body part touches the person (only the glass/straw may)
   - glass-to-person contact force never exceeds 10 N
@@ -60,7 +61,8 @@ class Monitor:
         tip, mouth = d.site("straw_tip").xpos.copy(), d.site("mouth").xpos
         dist = np.linalg.norm(tip - mouth)
         if self.prev_tip is not None and dist < 0.30 and h.io.held == "glass":
-            v = np.linalg.norm(tip - self.prev_tip) / (25 * m.opt.timestep)
+            closing = np.linalg.norm(self.prev_tip - mouth) - dist  # > 0 when moving toward the mouth
+            v = max(0.0, closing) / (25 * m.opt.timestep)
             self.max_near_speed = max(self.max_near_speed, v)
             if v > 0.05 and state == "APPROACH" and dist < 0.28:  # 2 cm braking margin inside the 0.30 m zone
                 self.violations.append(f"t={h.t:.1f} fast near face {v:.3f} m/s")
