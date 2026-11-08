@@ -60,6 +60,10 @@ class ClipCheck:
         return sorted(zip(self.labels, p), key=lambda x: -x[1])
 
 
+def pathlib_exists(p) -> bool:
+    return Path(p).exists()
+
+
 def _focal(fovy_deg: float, h: int) -> float:
     return (h / 2) / np.tan(np.deg2rad(fovy_deg) / 2)
 
@@ -111,7 +115,16 @@ class YoloDetector:
         self.labels = dict(labels or DEFAULT_LABELS)
         self._clip_cache: dict = {}
         self.cam = cam
-        self.model = YOLOWorld(str(MODELS / weights))
+        path = MODELS / weights
+        if not path.exists():                      # fresh clone: let ultralytics download it once, then keep it
+            import shutil
+            m = YOLOWorld(weights)
+            MODELS.mkdir(parents=True, exist_ok=True)
+            if pathlib_exists(weights):
+                shutil.move(weights, path)
+            self.model = m
+        else:
+            self.model = YOLOWorld(str(path))
         self.prompts = [p for p, _ in self.labels.values()]
         self.model.set_classes(self.prompts)
         self.by_prompt = {p: (k, c) for k, (p, c) in self.labels.items()}
