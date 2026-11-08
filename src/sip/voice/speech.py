@@ -72,21 +72,29 @@ def speak(text: str) -> None:
 _whisper = {}
 
 
+def _to_pcm16k(audio_bytes: bytes) -> "np.ndarray":
+    """Browser recording (webm/ogg/wav) -> 16 kHz mono float32, via the bundled ffmpeg (no PyAV)."""
+    import numpy as np
+    import shutil
+    ff = shutil.which("ffmpeg")
+    if not ff:
+        import imageio_ffmpeg
+        ff = imageio_ffmpeg.get_ffmpeg_exe()
+    r = subprocess.run([ff, "-hide_banner", "-loglevel", "error", "-i", "pipe:0", "-f", "s16le", "-ac", "1",
+                        "-ar", "16000", "pipe:1"], input=audio_bytes, capture_output=True, timeout=30)
+    return np.frombuffer(r.stdout, dtype=np.int16).astype(np.float32) / 32768.0
+
+
 def transcribe(audio_bytes: bytes, suffix: str = ".webm") -> str:
     """Local speech-to-text (faster-whisper 'base.en', CPU int8)."""
-    import tempfile
     from faster_whisper import WhisperModel
     if "m" not in _whisper:
         _whisper["m"] = WhisperModel(os.environ.get("SIP_WHISPER", "base.en"), device="cpu", compute_type="int8")
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as f:
-        f.write(audio_bytes)
-        path = f.name
-    try:
-        segs, _ = _whisper["m"].transcribe(path, language="en", vad_filter=True)
-        return " ".join(s.text.strip() for s in segs).strip()
-    finally:
-        os.unlink(path)
-
+    audio = _to_pcm16k(audio_bytes)
+    if audio.size < 1600:           # less than 0.1 s: nothing said
+        return ""
+    segs, _ = _whisper["m"].transcribe(audio, language="en", vad_filter=True)
+    return " ".join(s.text.strip() for s in segs).strip()
 
 def synth_wav(text: str, path: str) -> bool:
     """Write the robot's voice for `text` to a 16 kHz mono WAV (for the video). ElevenLabs, else offline."""

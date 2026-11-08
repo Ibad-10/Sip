@@ -196,6 +196,8 @@ class YoloDetector:
             for box, cls, conf in zip(res.boxes.xyxy.cpu().numpy(), res.boxes.cls.cpu().numpy(),
                                       res.boxes.conf.cpu().numpy()):
                 label, thr = self.by_prompt[self.prompts[int(cls)]]
+                if label in CONFUSABLE:
+                    thr = 0.05        # cup-like proposals: let the trained classifier decide, not YOLO's name
                 if conf >= thr:
                     cand.append((float(conf / thr), box, label, float(conf)))
             kept = []   # one object gets one label: the model's most confident (relative to its threshold)
@@ -228,8 +230,11 @@ class YoloDetector:
                             self._clip_cache[key] = ranked
                     if ranked:
                         (top, pt), (_, p2) = ranked[0], ranked[1]
-                        why += f"; CLIP: {top} {pt:.2f}, next {ranked[1][0]} {p2:.2f}"
-                        label, conf = top, float(min(conf, pt) if top == label else pt)
+                        src = "classifier" if self.clip.probe is not None else "CLIP"
+                        why += f"; {src}: {top} {pt:.2f}, next {ranked[1][0]} {p2:.2f}"
+                        if top == "other" or pt < 0.45:
+                            continue          # the classifier says it is not one of our objects
+                        label, conf = top, float(pt)
                         unsure = pt - p2 < 0.25
                 xyz = to_world((b[0] + b[2]) / 2, (b[1] + b[3]) / 2, z, pos, mat, fovy, w, h)
                 if label != "person":

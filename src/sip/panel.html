@@ -114,7 +114,7 @@ dialog ul{margin:0;padding-left:18px}dialog li{margin:3px 0}kbd{font:500 12px va
         <button data-c="I'm thirsty, can I have some water?">Water please</button><button data-c="ready">Ready</button>
         <button data-c="that's enough">That's enough</button><button data-c="go">Go on</button><button class="stop" data-c="stop">■ Stop</button>
       </div>
-      <div class="row"><button class="primary" id="talk" aria-label="Hold to talk">🎙 Hold to talk</button><span class="tm" id="heard" aria-live="polite"></span></div>
+      <div class="row"><button class="primary" id="talk" aria-pressed="false" aria-label="Tap to talk, tap again to send">🎙 Tap to talk</button><span class="tm" id="heard" aria-live="polite"></span></div>
       <div class="row"><input type="text" id="txt" placeholder="…or type what she says" aria-label="What she says"><button id="send">Say</button></div>
     </section>
     <section class="card" aria-label="Live changes">
@@ -180,10 +180,9 @@ let rec=null,chunks=[];
 async function startTalk(){try{const st=await navigator.mediaDevices.getUserMedia({audio:true});rec=new MediaRecorder(st);chunks=[];
  rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=async()=>{st.getTracks().forEach(t=>t.stop());$('heard').textContent='listening…';
  const r=await fetch('/audio',{method:'POST',body:new Blob(chunks,{type:'audio/webm'})});const j=await r.json();$('heard').textContent=j.text?'heard: "'+j.text+'"':'(did not catch that)'};
- rec.start();$('talk').textContent='● Recording… release to send'}catch(e){$('heard').textContent='microphone not available'}}
-function stopTalk(){if(rec&&rec.state==='recording'){rec.stop();$('talk').textContent='🎙 Hold to talk'}}
-$('talk').onpointerdown=startTalk;$('talk').onpointerup=stopTalk;$('talk').onpointerleave=stopTalk;
-$('talk').onkeydown=e=>{if(e.key===' '&&!e.repeat){e.preventDefault();startTalk()}};$('talk').onkeyup=e=>{if(e.key===' ')stopTalk()};
+ rec.start();$('talk').textContent='● Listening… tap to send';$('talk').setAttribute('aria-pressed','true')}catch(e){$('heard').textContent='microphone not available'}}
+function stopTalk(){if(rec&&rec.state==='recording'){rec.stop();$('talk').textContent='🎙 Tap to talk';$('talk').setAttribute('aria-pressed','false')}}
+$('talk').onclick=()=>{if(rec&&rec.state==='recording')stopTalk();else startTalk()};
 let cam='head';const names={head:'Robot head camera: what it sees',wrist:'Robot wrist camera: close-up at the face',person:'Her view: what she sees'};
 document.querySelectorAll('.thumbs button').forEach(b=>b.onclick=()=>{cam=b.dataset.cam;document.querySelectorAll('.thumbs button').forEach(x=>x.setAttribute('aria-pressed',x===b));$('viewName').textContent=names[cam]});
 let n=0;setInterval(()=>{n++;$('big').src='/frame/'+cam+'.jpg?'+n;if(n%3==0)for(const k of ['head','wrist','person'])$('t_'+k).src='/frame/'+k+'.jpg?'+n},350);
