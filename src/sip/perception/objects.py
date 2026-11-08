@@ -68,7 +68,26 @@ def aim_head(model, data, io, target: np.ndarray, snap: bool = True) -> tuple[fl
     jp, jt = model.joint("joint_head_pan").qposadr[0], model.joint("joint_head_tilt").qposadr[0]
     lo_p, hi_p = model.jnt_range[model.joint("joint_head_pan").id]
     lo_t, hi_t = model.jnt_range[model.joint("joint_head_tilt").id]
-    q = np.array([scratch.qpos[jp], scratch.qpos[jt]])
+    best = None
+    q0 = scratch.qpos[jp]
+    for start in (q0, q0 - 2 * np.pi, q0 + 2 * np.pi, lo_p + 0.3):   # some views need "the other way round"
+        if not (lo_p - 1.0 <= start <= hi_p + 1.0):
+            continue
+        q, err = _solve_view(model, scratch, target, jp, jt, np.array([np.clip(start, lo_p, hi_p), scratch.qpos[jt]]),
+                             (lo_p, hi_p, lo_t, hi_t))
+        if best is None or err < best[1]:
+            best = (q, err)
+    q = best[0]
+    io.d.ctrl[io.act["head_pan"]], io.d.ctrl[io.act["head_tilt"]] = q
+    if snap:
+        data.qpos[jp], data.qpos[jt] = q
+        mujoco.mj_forward(model, data)
+    return float(q[0]), float(q[1])
+
+
+def _solve_view(model, scratch, target, jp, jt, q, lim):
+    lo_p, hi_p, lo_t, hi_t = lim
+    e = np.zeros(2)
     for _ in range(25):
         scratch.qpos[jp], scratch.qpos[jt] = q
         mujoco.mj_kinematics(model, scratch)
@@ -86,11 +105,10 @@ def aim_head(model, data, io, target: np.ndarray, snap: bool = True) -> tuple[fl
             J[:, k] = (e - _view_error(model, scratch, target)) / 1e-3
         q = q + np.linalg.lstsq(J, e, rcond=None)[0]
         q = np.array([np.clip(q[0], lo_p, hi_p), np.clip(q[1], lo_t, hi_t)])
-    io.d.ctrl[io.act["head_pan"]], io.d.ctrl[io.act["head_tilt"]] = q
-    if snap:
-        data.qpos[jp], data.qpos[jt] = q
-        mujoco.mj_forward(model, data)
-    return float(q[0]), float(q[1])
+    scratch.qpos[jp], scratch.qpos[jt] = q
+    mujoco.mj_kinematics(model, scratch)
+    mujoco.mj_camlight(model, scratch)
+    return q, float(np.abs(_view_error(model, scratch, target)).max())
 
 
 def _body_geoms(model, body: str) -> np.ndarray:

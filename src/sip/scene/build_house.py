@@ -114,6 +114,9 @@ def _items(world):
     b = world.add_body(name="organiser", pos=[-2.2, 2.66, 0.93])   # weekly pill organiser (pharmacist-filled)
     b.add_freejoint(name="organiser_free")
     _box(b, "organiser_geom", (0, 0, 0), (0.1, 0.058, 0.023), (0.1, 0.55, 0.35, 1), mass=0.3)
+    for i, (dx, dy) in enumerate(((-0.012, -0.008), (0.006, 0.01), (0.014, -0.012))):   # today's tablets
+        b.add_geom(name=f"pill{i}", type=CAP, pos=[0.07 + dx, dy, 0.03], size=[0.006, 0.006, 0],
+                   euler=[0, 1.5708, 0.6 * i], rgba=[0.98, 0.45, 0.1, 1], contype=0, conaffinity=0, mass=0)
 
 
 def _person(spec, world):

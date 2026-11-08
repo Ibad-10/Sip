@@ -259,14 +259,17 @@ def _med_harness():
 
 
 def test_medicine_taken_is_logged_and_organiser_returned():
+    """She takes the tablets herself (simulated person); the robot confirms by camera + her word."""
+    from sip.person import Person
     h = _med_harness()
+    person = Person(h.m, h.d, h.bb, seed=0)
+    person.p_distract = 0.0
 
     def on(h, s):
-        if h.bb.get("dose_waiting") and h.bb.get("dose_reply") is None:
-            h.bb.set("dose_reply", "taken")
+        person.step(h.t, s)
 
     assert h.run(260, until=lambda h, s: bool(h.kinds("dose")) and s == "IDLE", on=on), h.states
-    assert any(t.startswith("taken") for t in h.kinds("dose"))
+    assert any(t.startswith("taken") and "camera" in t for t in h.kinds("dose")), h.kinds("dose")
     assert not h.kinds("alert")
     assert np.linalg.norm(h.d.body("organiser").xpos[:2] - np.array([-2.2, 2.66])) < 0.2
 

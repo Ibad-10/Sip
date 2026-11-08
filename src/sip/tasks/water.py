@@ -757,6 +757,48 @@ class WaterTask:
             return day, f"MISMATCH: camera shows {seen}"
         return day, f"clock + Gemini read '{seen}' on the organiser"
 
+    def _pills_seen(self) -> int:
+        """Count tablet pixels in the head camera around the organiser it is holding (it knows where
+        its own gripper is). Pure camera measurement."""
+        from sip.perception.objects import project
+        from sip.perception.vision import pill_pixels
+        aim = self.io.grasp_center()
+        rgb, _, _ = render_head(self.m, self.d, self.renderer, rgb=True)
+        h, w = rgb.shape[:2]
+        u, v, z = project(self.m, self.d, CAM, aim, w, h)
+        if z <= 0:
+            return 0
+        r = int(0.18 * (h / 2) / np.tan(np.deg2rad(self.m.cam_fovy[self.m.camera(CAM).id]) / 2) / z)
+        return pill_pixels(rgb, (u - r, v - r, u + r, v + r))
+
+    def _hand_at_mouth(self) -> bool:
+        if not self.real:
+            return False
+        if not hasattr(self, "_h2m"):
+            from sip.perception.vision import HandToMouth
+            self._h2m = HandToMouth()
+        rgb, _, _ = render_head(self.m, self.d, self.renderer, rgb=True)
+        return bool(self._h2m.check(rgb, self.det.boxes.get("person")))
+
+    def _streak_up(self) -> int:
+        """Days in a row with the dose taken (kept on the robot, runs/streak.json)."""
+        import datetime
+        import json
+        path = os.path.join("runs", "streak.json")
+        today = datetime.date.today()
+        try:
+            data = json.load(open(path))
+        except (OSError, ValueError):
+            data = {"last": None, "count": 0}
+        last = datetime.date.fromisoformat(data["last"]) if data.get("last") else None
+        if last == today:
+            return data["count"]
+        data["count"] = data["count"] + 1 if last == today - datetime.timedelta(days=1) else max(1, data.get("count", 0) and 1)
+        data["last"] = today.isoformat()
+        os.makedirs("runs", exist_ok=True)
+        json.dump(data, open(path, "w"))
+        return data["count"]
+
     def _medicine_seq(self):
         self.say("It's time for your tablets. I'll bring your pill organiser.")
         self._grab_failed = None
@@ -801,15 +843,34 @@ class WaterTask:
         mouth = self._mouth_guess()
         offer = mouth + 0.30 * np.array([np.cos(facing), np.sin(facing), 0]) + np.array([0, 0, -0.30])
         yield from self._g_reach(offer, tol=0.05)
+        for _ in range(30):   # look at the organiser in its hand (and her, just above it)
+            aim_head(self.m, self.d, self.io, self.io.grasp_center(), snap=False)
+            yield
         self.say(f"Here are your {day} tablets. Say 'taken' when you've had them, or 'not now'.")
-        self.bb.set("dose_waiting", True)
         self.bb.set("dose_reply", None)
-        asked, declines = self.t, 0
+        self.bb.set("dose_waiting", True)
+        before = self._pills_seen()
+        self.log("perceive", f"camera: {before} tablet pixels in today's compartment")
+        asked, declines, hand_seen = self.t, 0, False
         while True:
+            aim_head(self.m, self.d, self.io, self.io.grasp_center() + np.array([0, 0, 0.12]), snap=False)
+            if not hand_seen and self.tick_n % 6 == 0 and self._hand_at_mouth():
+                hand_seen = True
+                self.log("perceive", "camera: her hand is at her mouth (taking the tablets)")
             reply = self.bb.get("dose_reply")
             if reply == "taken":
-                self.log("dose", f"taken: {day} dose at t={self.t:.0f}s")
-                self.say("Well done. I'll put it back.")
+                after = self._pills_seen()
+                empty = before > 0 and after < 0.3 * before
+                self.log("perceive", f"camera: {after} tablet pixels left ({'empty' if empty else 'tablets still there'})")
+                if before > 0 and not empty:
+                    self.log("dose", f"unconfirmed: she said taken but tablets are still in the {day} compartment")
+                    self.alert(f"{day} tablets still in the organiser after 'taken' - please check")
+                    self.say("It looks like the tablets are still in the box. I've let your carer know.")
+                    break
+                how = ("camera (compartment empty)" if before > 0 else "her word (camera could not see the tablets)")                     + (" + hand seen at mouth" if hand_seen else "")
+                streak = self._streak_up()
+                self.log("dose", f"taken: {day} dose at t={self.t:.0f}s (confirmed by {how})")
+                self.say(f"Well done! That's {streak} day{'s' if streak != 1 else ''} in a row. Keep the streak going!")
                 break
             if reply == "declined":
                 declines += 1

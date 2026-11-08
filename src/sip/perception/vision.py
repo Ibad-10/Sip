@@ -266,3 +266,48 @@ class MediaPipeFace:
             return None
         a = np.array(self._facing)
         return float(np.arctan2(np.sin(a).mean(), np.cos(a).mean()))
+
+
+class HandToMouth:
+    """MediaPipe Pose on the person's crop: is a wrist at her mouth? (she is taking her tablets)"""
+
+    def __init__(self):
+        import mediapipe as mp
+        self.mp = mp
+        opts = mp.tasks.vision.PoseLandmarkerOptions(
+            base_options=mp.tasks.BaseOptions(model_asset_path=str(MODELS / "pose_landmarker_lite.task")), num_poses=1)
+        self.pl = mp.tasks.vision.PoseLandmarker.create_from_options(opts)
+
+    def check(self, rgb, person_box) -> bool | None:
+        """True/False if a pose was found, None if not."""
+        import cv2
+        if rgb is None or person_box is None:
+            return None
+        u0, v0, u1, v1 = person_box
+        pad = 20
+        crop = rgb[max(0, v0 - pad):v1 + pad, max(0, u0 - pad):u1 + pad]
+        if crop.size == 0:
+            return None
+        up = np.ascontiguousarray(np.rot90(crop, 1))
+        s = max(1.0, 384 / max(up.shape[:2]))
+        up = cv2.resize(up, None, fx=s, fy=s)
+        res = self.pl.detect(self.mp.Image(image_format=self.mp.ImageFormat.SRGB, data=up))
+        if not res.pose_landmarks:
+            return None
+        lm = res.pose_landmarks[0]
+        p = lambda i: np.array([lm[i].x, lm[i].y])
+        mouth = (p(9) + p(10)) / 2
+        shoulder_w = np.linalg.norm(p(11) - p(12)) + 1e-6
+        return bool(min(np.linalg.norm(p(15) - mouth), np.linalg.norm(p(16) - mouth)) < 0.6 * shoulder_w)
+
+
+def pill_pixels(rgb, box) -> int:
+    """Orange tablet pixels inside a box of the camera image (today's compartment)."""
+    if rgb is None:
+        return 0
+    u0, v0, u1, v1 = (int(x) for x in box)
+    roi = rgb[max(0, v0):v1, max(0, u0):u1].astype(int)
+    if roi.size == 0:
+        return 0
+    r, g, b = roi[..., 0], roi[..., 1], roi[..., 2]
+    return int(((r > 180) & (g > 60) & (g < 170) & (b < 90)).sum())

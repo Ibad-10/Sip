@@ -15,7 +15,8 @@ IGNORE = ["**/.venv/**", "**/raw/**", "**/__pycache__/**", "**/runs/**", "**/.gi
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
-    .apt_install("libegl1", "libgl1", "libglib2.0-0", "libosmesa6", "ffmpeg", "git")
+    .apt_install("libegl1", "libgl1", "libglib2.0-0", "libosmesa6", "ffmpeg", "git", "libgles2", "libegl-mesa0")
+    .pip_install("torch", "torchvision", index_url="https://download.pytorch.org/whl/cpu")   # CPU build: the CUDA one segfaults here
     .pip_install("mujoco==4.0.0", "numpy", "opencv-python-headless", "pytest", "rerun-sdk==0.42.0",
                  "mediapipe", "trimesh", "pillow", "gymnasium", "stable-baselines3", "ultralytics",
                  "git+https://github.com/ultralytics/CLIP.git")

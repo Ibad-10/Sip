@@ -406,6 +406,16 @@
     <mesh name="link_SG3_gripper_left_fingertip" content_type="model/stl" file="link_SG3_gripper_left_fingertip.stl"/>
     <mesh name="m_grandma_body" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body.obj" inertia="shell"/>
     <mesh name="m_grandma_head" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\head.obj" inertia="shell"/>
+    <mesh name="m_grandma_drink0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body_drink0.obj" inertia="shell"/>
+    <mesh name="m_grandma_drink1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body_drink1.obj" inertia="shell"/>
+    <mesh name="m_grandma_drink2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body_drink2.obj" inertia="shell"/>
+    <mesh name="m_grandma_drink3" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body_drink3.obj" inertia="shell"/>
+    <mesh name="m_grandma_drink4" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body_drink4.obj" inertia="shell"/>
+    <mesh name="m_grandma_drink5" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body_drink5.obj" inertia="shell"/>
+    <mesh name="m_grandma_drink6" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body_drink6.obj" inertia="shell"/>
+    <mesh name="m_grandma_drink7" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body_drink7.obj" inertia="shell"/>
+    <mesh name="m_grandma_drink8" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body_drink8.obj" inertia="shell"/>
+    <mesh name="m_grandma_drink9" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body_drink9.obj" inertia="shell"/>
     <mesh name="m_pic_living_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\hanging_picture_frame_02\part0.obj" refpos="0.0003 -0.01857 -0.27865" inertia="shell"/>
     <mesh name="m_pic_living_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\hanging_picture_frame_02\part1.obj" refpos="0.0003 -0.01857 -0.27865" inertia="shell"/>
     <mesh name="m_pic_living_2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\hanging_picture_frame_02\part2.obj" refpos="0.0003 -0.01857 -0.27865" inertia="shell"/>
@@ -908,6 +918,9 @@
     <body name="organiser" pos="-2.2 2.66 0.93">
       <joint name="organiser_free" type="free"/>
       <geom name="organiser_geom" size="0.1 0.058 0.023" type="box" group="3" rgba="0.1 0.55 0.35 1" mass="0.3"/>
+      <geom name="pill0" size="0.006 0.006" pos="0.058 -0.008 0.03" quat="0.707105 0 0.707108 0" type="capsule" contype="0" conaffinity="0" rgba="0.98 0.45 0.1 1" mass="0"/>
+      <geom name="pill1" size="0.006 0.006" pos="0.076 0.01 0.03" quat="0.675524 0.208965 0.675526 0.208964" type="capsule" contype="0" conaffinity="0" rgba="0.98 0.45 0.1 1" mass="0"/>
+      <geom name="pill2" size="0.006 0.006" pos="0.084 -0.012 0.03" quat="0.583599 0.399263 0.583601 0.399262" type="capsule" contype="0" conaffinity="0" rgba="0.98 0.45 0.1 1" mass="0"/>
       <body name="vis_pillbox_vis" pos="0 0 -0.023">
         <geom name="g_pillbox_vis_0" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_pillbox_vis_0" mesh="m_pillbox_vis_0"/>
       </body>
@@ -921,6 +934,16 @@
       <geom name="shin1" size="0.05 0.210535" pos="0.435 0.1 -0.21" quat="0.999364 0 -0.0356462 0" type="capsule" group="3" rgba="0.87 0.72 0.6 1"/>
       <geom name="uarm1" size="0.045 0.137659" pos="0.025 0.21 0.285" quat="0.995159 0.0364983 -0.0912458 0" type="capsule" group="3" rgba="0.3 0.5 0.35 1"/>
       <geom name="grandma_body" pos="0.16 0 0.555" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_grandma" mesh="m_grandma_body"/>
+      <geom name="grandma_drink0" pos="0.16 0 0.555" type="mesh" contype="0" conaffinity="0" group="5" mass="0" material="mat_grandma" mesh="m_grandma_drink0"/>
+      <geom name="grandma_drink1" pos="0.16 0 0.555" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="5" mass="0" material="mat_grandma" mesh="m_grandma_drink1"/>
+      <geom name="grandma_drink2" pos="0.16 0 0.555" type="mesh" contype="0" conaffinity="0" group="5" mass="0" material="mat_grandma" mesh="m_grandma_drink2"/>
+      <geom name="grandma_drink3" pos="0.16 0 0.555" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="5" mass="0" material="mat_grandma" mesh="m_grandma_drink3"/>
+      <geom name="grandma_drink4" pos="0.16 0 0.555" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="5" mass="0" material="mat_grandma" mesh="m_grandma_drink4"/>
+      <geom name="grandma_drink5" pos="0.16 0 0.555" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="5" mass="0" material="mat_grandma" mesh="m_grandma_drink5"/>
+      <geom name="grandma_drink6" pos="0.16 0 0.555" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="5" mass="0" material="mat_grandma" mesh="m_grandma_drink6"/>
+      <geom name="grandma_drink7" pos="0.16 0 0.555" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="5" mass="0" material="mat_grandma" mesh="m_grandma_drink7"/>
+      <geom name="grandma_drink8" pos="0.16 0 0.555" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="5" mass="0" material="mat_grandma" mesh="m_grandma_drink8"/>
+      <geom name="grandma_drink9" pos="0.16 0 0.555" type="mesh" contype="0" conaffinity="0" group="5" mass="0" material="mat_grandma" mesh="m_grandma_drink9"/>
       <body name="person_head" pos="0.06 0 0.6">
         <joint name="head_yaw" range="-1.2 1.2" damping="2"/>
         <geom name="head" size="0.1" group="3" rgba="0.87 0.72 0.6 1" mass="4"/>

@@ -86,6 +86,15 @@ def _dress_person(spec) -> None:
         spec.body(body).add_geom(name=f"grandma_{part}", type=MESH, meshname=f"m_grandma_{part}", material=mat,
                                  pos=list(pos), contype=0, conaffinity=0, group=1, mass=0)
     _hide(spec, {"torso", "thigh-1", "thigh1", "shin-1", "shin1", "uarm-1", "uarm1", "head", "face_plate"})
+    # taking-tablets motion (Mixamo 'Sitting Drinking', retargeted): keyframes kept hidden (group 5)
+    # and shown one at a time by sip.person while she takes her tablets
+    k = 0
+    while (d / f"body_drink{k}.obj").exists():
+        spec.add_mesh(name=f"m_grandma_drink{k}", file=str(d / f"body_drink{k}.obj"),
+                      inertia=mujoco.mjtMeshInertia.mjMESH_INERTIA_SHELL)
+        spec.body("person").add_geom(name=f"grandma_drink{k}", type=MESH, meshname=f"m_grandma_drink{k}",
+                                     material=mat, pos=list(mouth), contype=0, conaffinity=0, group=5, mass=0)
+        k += 1
 
 
 def dress(spec, world) -> None:
