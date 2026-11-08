@@ -117,6 +117,30 @@ def identify(crop_rgb: np.ndarray, options: list[str], timeout_s: float = 10.0) 
     return _call(run, timeout_s)
 
 
+def name_objects(rgb: np.ndarray, timeout_s: float = 10.0) -> list[str] | None:
+    """New home: which household objects are in view (for the robot's detector vocabulary)."""
+    client = _client(images=True)
+    if client is None:
+        return None
+    import cv2
+    from google.genai import types
+    ok, jpg = cv2.imencode(".jpg", rgb[:, :, ::-1])
+    if not ok:
+        return None
+    prompt = ("A home-care robot is exploring a new home. List up to 8 distinct household objects visible here that "
+              "matter for helping an older person (furniture, cups, containers, medicine, obstacles). "
+              'Reply ONLY JSON {"objects": ["short noun phrase", ...]}')
+
+    def run():
+        r = client.models.generate_content(model=MODEL, contents=[
+            types.Part.from_bytes(data=jpg.tobytes(), mime_type="image/jpeg"), prompt])
+        raw = r.text or ""
+        out = json.loads(raw[raw.find("{"):raw.rfind("}") + 1]).get("objects", [])
+        return [str(o).strip().lower()[:30] for o in out if str(o).strip()][:8]
+
+    return _call(run, timeout_s)
+
+
 def read_compartment(rgb: np.ndarray, timeout_s: float = 8.0) -> str | None:
     """Read which day's compartment of a weekly pill organiser is in view. One word or None."""
     client = _client(images=True)

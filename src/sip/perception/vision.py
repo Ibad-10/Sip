@@ -137,6 +137,20 @@ class YoloDetector:
         self.ms = 0.0
         self.clip = None
 
+    def learn_words(self, words: list[str]) -> list[str]:
+        """Add new things to look for (e.g. named by Gemini while exploring a new home). Returns the new ones."""
+        new = [w for w in words if w and w not in self.prompts and len(self.prompts) < 40]
+        if not new:
+            return []
+        with self._lock:
+            for w in new:
+                key = w.replace(" ", "_")
+                self.labels[key] = (w, 0.30)
+            self.prompts = [p for p, _ in self.labels.values()]
+            self.by_prompt = {p: (k, c) for k, (p, c) in self.labels.items()}
+            self.model.set_classes(self.prompts)
+        return new
+
     def detect(self, model, data, rgb, depth, seg=None, t: float = 0.0) -> list[Detection]:
         if rgb is None:
             return list(self.latest)

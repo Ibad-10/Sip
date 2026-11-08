@@ -56,6 +56,13 @@ def explore_steps(m, d, io, mb: MapBuilder, detector=None, log=print):
             ok = (z > 0.2) & (z < 3.0)
             pts = pixel_to_world(m, d, CAM, us.ravel()[ok], vs.ravel()[ok], z[ok], depth.shape[1], depth.shape[0])
             mb.add_points(pts)
+            if detector is not None and rgb is not None and hasattr(detector, "learn_words") and k % 160 == 0:
+                # every ~8 s: ask Gemini what household things are here; teach the detector those words
+                from sip.cloud.gemini import name_objects
+                words = name_objects(np.ascontiguousarray(np.rot90(rgb, 1))) or []
+                new = detector.learn_words(words)
+                if new:
+                    log(f"learned new things to look for in this home (Gemini): {', '.join(new)}")
             if detector is not None:
                 for det in detector.detect(m, d, rgb, depth, seg):
                     if det.label in ("stove", "sink", "bed", "sofa", "tv") and det.label not in mb.rooms:
