@@ -488,7 +488,8 @@ class WaterTask:
             aim_head(self.m, self.d, self.io, look, snap=False)
             if self._seen():
                 self.io.drive(0, 0)
-                self.log("perceive", f"found the {self.label} in the {self._room}")
+                why = next((d_.why for d_ in self.last_dets if d_.label == self.label and d_.why), "")
+                self.log("perceive", f"found the {self.label} in the {self._room}" + (f" ({why})" if why else ""))
                 return self._go_pick("found while searching")
             if self.cloud is not None and self._spun >= self._next_ask and self._spun < 2 * np.pi:
                 self._next_ask += np.pi / 2
