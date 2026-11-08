@@ -477,10 +477,11 @@ class WaterTask:
         self._visited = []
         self.goto("SEARCH", f"{self.label} missing")
 
-    def _base_bearing_fix(self, target: np.ndarray, gain=2.0, wmax=0.3) -> None:
+    def _base_bearing_fix(self, target: np.ndarray, gain=2.0, wmax=0.3, point=None) -> None:
+        """Turn the base so `point` (default: grasp centre) lines up with the target's bearing."""
         p = self.pose()
         b = np.array([p.x, p.y])
-        g, mth = self.io.grasp_center()[:2] - b, target[:2] - b
+        g, mth = (self.io.grasp_center() if point is None else point)[:2] - b, target[:2] - b
         ang = np.arctan2(g[0] * mth[1] - g[1] * mth[0], g @ mth)
         self.io.drive(0.0, float(np.clip(gain * ang, -wmax, wmax)))
 
@@ -903,7 +904,7 @@ class WaterTask:
                         lift=self.io.arm_targets()["lift"] + float(np.clip(err[2], -step, step)))
         p = self.pose()
         lever = max(0.3, float(np.hypot(self.tip()[0] - p.x, self.tip()[1] - p.y)))
-        self._base_bearing_fix(tgt, gain=1.5, wmax=min(0.15, 0.8 * dec.max_speed_mps / lever))
+        self._base_bearing_fix(tgt, gain=1.5, wmax=min(0.15, 0.8 * dec.max_speed_mps / lever), point=self.tip())
 
     def _s_hold(self):
         dec = self._gate()
