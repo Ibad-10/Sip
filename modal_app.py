@@ -37,6 +37,8 @@ SLOW = [
     "tests/test_water.py::test_person_moved_to_bed_retargets",
     "tests/test_water.py::test_done_during_hold_ends_drink",
     "tests/test_water.py::test_no_answer_raises_alert",
+    "tests/test_water.py::test_prepare_drink_pours_and_adds_straw",
+    "tests/test_water.py::test_gemini_points_when_local_detector_misses",
     "tests/test_judge.py::test_physics_invariants_full_run",
     "tests/test_judge.py::test_perception_before_action",
     "tests/test_judge.py::test_autonomy_no_network",
