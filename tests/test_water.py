@@ -279,3 +279,12 @@ def test_medicine_no_answer_alerts_carer():
     assert h.run(260, until=lambda h, s: bool(h.kinds("alert"))), h.states
     assert any("dose" in t or "answer" in t for t in h.kinds("alert"))
     assert any(t.startswith("missed") for t in h.kinds("dose"))
+
+
+def test_medicine_mismatch_is_not_offered(monkeypatch):
+    h = _med_harness()
+    monkeypatch.setattr(h.task, "_today_compartment", lambda: ("Sunday", "MISMATCH: camera shows Monday"))
+    assert h.run(200, until=lambda h, s: s == "IDLE" and bool(h.kinds("alert"))), h.states
+    assert not h.bb.get("dose_waiting")
+    assert not any("Here are your" in t for t in h.kinds("say"))
+    assert any("not offered" in t for t in h.kinds("alert"))

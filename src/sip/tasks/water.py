@@ -824,7 +824,14 @@ class WaterTask:
         day, how = self._today_compartment()
         self.log("perceive", f"today's compartment: {day} (checked by {how})")
         if how.startswith("MISMATCH"):
-            self.alert(f"organiser compartment does not match today ({day}): {how}")
+            # never offer tablets that may be the wrong day's: put the organiser back and alert
+            self.alert(f"organiser compartment does not match today ({day}): {how} - not offered")
+            self.say("This doesn't look like today's tablets, so I won't give them. I've raised an alert for your carer.")
+            yield from self._g_retract(lift_up=0.0)
+            yield from self._g_reach(home + np.array([0, 0, 0.01]))
+            self.io.release()
+            yield from self._g_retract(lift_up=0.04)
+            return
         yield from self._g_retract(lift_up=0.15)
         self.io.stow(lift=max(self.io.arm_targets()["lift"], 0.8))
         yield from self._g_wait(1.5)
@@ -870,7 +877,7 @@ class WaterTask:
                 if before > 0 and not empty:
                     self.log("dose", f"unconfirmed: she said taken but tablets are still in the {day} compartment")
                     self.alert(f"{day} tablets still in the organiser after 'taken' - please check")
-                    self.say("It looks like the tablets are still in the box. I've let your carer know.")
+                    self.say("It looks like the tablets are still in the box. I've raised an alert for your carer.")
                     break
                 how = ("camera (compartment empty)" if before > 0 else "her word (camera could not see the tablets)")                     + (" + hand seen at mouth" if hand_seen else "")
                 streak = self._streak_up()
@@ -882,15 +889,15 @@ class WaterTask:
                 self.bb.set("dose_reply", None)
                 self.log("dose", f"declined: {day} dose ({declines})")
                 if declines >= 2:
-                    self.alert(f"{day} dose declined twice - carer informed")
-                    self.say("That's okay. I've let your carer know.")
+                    self.alert(f"{day} dose declined twice")
+                    self.say("That's okay. I've raised an alert for your carer.")
                     break
                 self.say("Okay. I'll ask again in a little while.")
                 asked = self.t
             if self.t - asked > 30.0:
                 self.log("dose", f"missed: no answer for 30 s ({day} dose)")
-                self.alert(f"no answer at dose time ({day}) - carer notified")
-                self.say("I'll let your carer know.")
+                self.alert(f"no answer at dose time ({day})")
+                self.say("I've raised an alert for your carer.")
                 break
             yield
         self.bb.set("dose_waiting", False)
@@ -1157,13 +1164,17 @@ class WaterTask:
         self.goto("ASK", question)
 
     def alert(self, text: str) -> None:
-        self.log("alert", text)
+        """Raise a carer alert: always on the carer dashboard (with photo evidence saved by the app);
+        also sent to the carer's webhook (e.g. a phone notification service) if CARER_WEBHOOK_URL is set."""
+        from sip.notify import send_carer
+        sent = send_carer(text)
+        self.log("alert", f"{text} [{'sent to carer' if sent else 'carer dashboard only - no carer channel configured'}]")
         self.bb.set("alert", (self.t, text))
 
     def _s_ask(self):
         if self.t - self._timer > 30.0 and not getattr(self, "_alerted", False):
             self._alerted = True
-            self.alert(f"no answer for 30 s: {self._ask_q} - carer notified")
+            self.alert(f"no answer for 30 s: {self._ask_q}")
         if self.bb.get("go"):
             self._alerted = False
             self.bb.set("go", False)

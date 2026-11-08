@@ -1,0 +1,134 @@
+[
+ {
+  "task": "straw",
+  "seed": 0,
+  "steps": 2000000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 39.52647831645325,
+  "p95_close_speed_near_face_mps": 0.07542604845813317,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "straw",
+  "seed": 1,
+  "steps": 2000000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 49.68936876853146,
+  "p95_close_speed_near_face_mps": 0.07996981795609137,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "straw",
+  "seed": 2,
+  "steps": 2000000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 34.60911131892254,
+  "p95_close_speed_near_face_mps": 0.03337772208248396,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "offer",
+  "seed": 0,
+  "steps": 2000000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 65.04780061276729,
+  "p95_close_speed_near_face_mps": 0.09525896846590998,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "offer",
+  "seed": 1,
+  "steps": 2000000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 65.52181717489727,
+  "p95_close_speed_near_face_mps": 0.09439114915850477,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "offer",
+  "seed": 2,
+  "steps": 2000000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 63.48651349826012,
+  "p95_close_speed_near_face_mps": 0.1117974103138072,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "pour",
+  "seed": 0,
+  "steps": 2000000,
+  "success_rate": 0.01,
+  "median_final_error_cm": 100.2115691857665,
+  "p95_close_speed_near_face_mps": null,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "pour",
+  "seed": 1,
+  "steps": 2000000,
+  "success_rate": 0.005,
+  "median_final_error_cm": 91.51415596747941,
+  "p95_close_speed_near_face_mps": null,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "pour",
+  "seed": 2,
+  "steps": 2000000,
+  "success_rate": 0.0,
+  "median_final_error_cm": 72.4589958590657,
+  "p95_close_speed_near_face_mps": null,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "grasp",
+  "seed": 0,
+  "steps": 2000000,
+  "success_rate": 0.01,
+  "median_final_error_cm": 85.71771434770208,
+  "p95_close_speed_near_face_mps": null,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "grasp",
+  "seed": 1,
+  "steps": 2000000,
+  "success_rate": 0.015,
+  "median_final_error_cm": 48.620154401531195,
+  "p95_close_speed_near_face_mps": null,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ },
+ {
+  "task": "grasp",
+  "seed": 2,
+  "steps": 2000000,
+  "success_rate": 0.01,
+  "median_final_error_cm": 46.15593392126996,
+  "p95_close_speed_near_face_mps": null,
+  "parallel_worlds": 32,
+  "domain_randomisation": true,
+  "learning_curve": []
+ }
+]

@@ -56,3 +56,23 @@ def test_llm_valid_json_used(monkeypatch):
 def test_done_is_not_emergency_stop(text):
     kw = parse_keywords(text)
     assert "done" in kw and "stop" not in kw
+
+
+@pytest.mark.parametrize("text", ["I haven't taken them", "I have not taken them yet", "I didn't take them",
+                                  "no I haven't had them", "not taken"])
+def test_negated_taken_is_not_taken(text):
+    assert "taken" not in parse_keywords(text)
+
+
+@pytest.mark.parametrize("text", ["don't go", "do not go", "don't continue", "not ready", "I'm not ready yet"])
+def test_negated_motion_words_do_not_start_motion(text):
+    kw = parse_keywords(text)
+    assert not ({"go", "ready", "yes"} & kw), kw
+
+
+def test_dont_go_is_treated_as_stop():
+    assert "stop" in parse_keywords("don't go")
+
+
+def test_negated_done_is_not_done():
+    assert "done" not in parse_keywords("I'm not done")
