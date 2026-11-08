@@ -1,0 +1,21 @@
+{
+ "asset": "side_table_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 2756
+  }
+ ],
+ "min": [
+  -0.275,
+  -0.225,
+  -0.00236
+ ],
+ "max": [
+  0.275,
+  0.225,
+  0.54831
+ ],
+ "license": "CC0 (Poly Haven)"
+}

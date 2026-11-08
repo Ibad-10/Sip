@@ -1,0 +1,41 @@
+{
+ "asset": "drawer_cabinet",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 2052
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 2052
+  },
+  {
+   "obj": "part2.obj",
+   "png": "part2.png",
+   "faces": 2052
+  },
+  {
+   "obj": "part3.obj",
+   "png": "part3.png",
+   "faces": 2052
+  },
+  {
+   "obj": "part4.obj",
+   "png": "part4.png",
+   "faces": 18198
+  }
+ ],
+ "min": [
+  -0.57054,
+  -0.24043,
+  -0.0
+ ],
+ "max": [
+  0.57054,
+  0.24765,
+  1.88125
+ ],
+ "license": "CC0 (Poly Haven)"
+}

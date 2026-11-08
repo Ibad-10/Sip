@@ -1,0 +1,21 @@
+{
+ "asset": "WoodenTable_02",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 1514
+  }
+ ],
+ "min": [
+  -0.15034,
+  -0.15034,
+  -0.0
+ ],
+ "max": [
+  0.15034,
+  0.15034,
+  0.41766
+ ],
+ "license": "CC0 (Poly Haven)"
+}

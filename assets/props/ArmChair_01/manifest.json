@@ -1,0 +1,21 @@
+{
+ "asset": "ArmChair_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 5626
+  }
+ ],
+ "min": [
+  -0.42422,
+  -0.34845,
+  -0.00043
+ ],
+ "max": [
+  0.42422,
+  0.41731,
+  1.06466
+ ],
+ "license": "CC0 (Poly Haven)"
+}

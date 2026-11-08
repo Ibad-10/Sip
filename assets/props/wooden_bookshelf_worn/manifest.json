@@ -1,0 +1,21 @@
+{
+ "asset": "wooden_bookshelf_worn",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 10106
+  }
+ ],
+ "min": [
+  -0.68698,
+  -0.29065,
+  0.0
+ ],
+ "max": [
+  0.68698,
+  0.29065,
+  2.06344
+ ],
+ "license": "CC0 (Poly Haven)"
+}

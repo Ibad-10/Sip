@@ -1,0 +1,21 @@
+{
+ "asset": "Sofa_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 4101
+  }
+ ],
+ "min": [
+  -0.77811,
+  -0.29681,
+  -0.00059
+ ],
+ "max": [
+  0.79336,
+  0.3612,
+  0.79593
+ ],
+ "license": "CC0 (Poly Haven)"
+}

@@ -5,6 +5,11 @@
 
   <size nkey="2"/>
 
+  <visual>
+    <global offwidth="1280" offheight="720"/>
+    <headlight ambient="0.32 0.32 0.32" diffuse="0.35 0.35 0.35" specular="0.05 0.05 0.05"/>
+  </visual>
+
   <default>
     <default class="stretch">
       <geom solref="0.005"/>
@@ -84,6 +89,78 @@
     <texture type="2d" colorspace="linear" name="right_finger_aruco" file="right_finger_aruco.png"/>
     <texture type="2d" colorspace="linear" name="left_finger_aruco" file="left_finger_aruco.png"/>
     <texture type="2d" colorspace="linear" name="gripper_cam_aruco_sticker" file="gripper_cam_aruco_sticker.png"/>
+    <texture type="skybox" colorspace="auto" name="sky" builtin="gradient" rgb1="0.95 0.94 0.91" rgb2="0.86 0.84 0.8" width="256" height="1536"/>
+    <texture type="2d" colorspace="linear" name="tex_floor_laminate" file="D:\Projects\agentverse-hackathon-ucl\assets\textures\laminate_floor_02.png"/>
+    <texture type="2d" colorspace="linear" name="tex_floor_tiles" file="D:\Projects\agentverse-hackathon-ucl\assets\textures\floor_tiles_06.png"/>
+    <texture type="2d" colorspace="linear" name="tex_wall_plaster" file="D:\Projects\agentverse-hackathon-ucl\assets\textures\beige_wall_001.png"/>
+    <texture type="2d" colorspace="linear" name="tex_worktop" file="D:\Projects\agentverse-hackathon-ucl\assets\textures\kitchen_wood.png"/>
+    <texture type="2d" colorspace="linear" name="tex_carpet" file="D:\Projects\agentverse-hackathon-ucl\assets\textures\dirty_carpet.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_2" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part2.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_3" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part3.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_4" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part4.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_5" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part5.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_6" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part6.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_7" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part7.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_8" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part8.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_9" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part9.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_10" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part10.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_11" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part11.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_12" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part12.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_13" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part13.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_14" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part14.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_15" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part15.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_16" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part16.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_17" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part17.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_18" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part18.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_stove_19" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part19.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_tea_set_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_tea_set_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_tea_set_2" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part2.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_tea_set_3" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part3.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_tea_set_4" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part4.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_tea_set_5" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part5.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_tea_set_6" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part6.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_tea_set_7" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part7.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_tea_set_8" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part8.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_tea_set_9" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part9.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_bowl_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wooden_bowl_01\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_apple_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\food_apple_01\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_kitchen_plant_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_kitchen_plant_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_kitchen_plant_2" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part2.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_kitchen_plant_3" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part3.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_ArmChair_01_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\ArmChair_01\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_side_table_01_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\side_table_01\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_photo_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\standing_picture_frame_01\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_photo_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\standing_picture_frame_01\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_photo_2" file="D:\Projects\agentverse-hackathon-ucl\assets\props\standing_picture_frame_01\part2.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_table_plant_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_table_plant_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_table_plant_2" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part2.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_table_plant_3" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part3.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_sofa_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\Sofa_01\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_pillows_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\throw_pillows_01\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_pillows_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\throw_pillows_01\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_clock_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wall_clock\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_clock_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wall_clock\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_clock_2" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wall_clock\part2.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_clock_3" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wall_clock\part3.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_clock_4" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wall_clock\part4.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_reading_lamp_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\desk_lamp_arm_01\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_reading_lamp_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\desk_lamp_arm_01\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_old_bed_frame_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\old_bed_frame\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_nightstand_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\painted_wooden_nightstand\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_nightstand_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\painted_wooden_nightstand\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_spectacles_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\round_spectacles\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_spectacles_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\round_spectacles\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_wardrobe_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\drawer_cabinet\part0.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_wardrobe_1" file="D:\Projects\agentverse-hackathon-ucl\assets\props\drawer_cabinet\part1.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_wardrobe_2" file="D:\Projects\agentverse-hackathon-ucl\assets\props\drawer_cabinet\part2.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_wardrobe_3" file="D:\Projects\agentverse-hackathon-ucl\assets\props\drawer_cabinet\part3.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_wardrobe_4" file="D:\Projects\agentverse-hackathon-ucl\assets\props\drawer_cabinet\part4.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_bookshelf_0" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wooden_bookshelf_worn\part0.png"/>
     <material name="Caster_Rollers_Red" rgba="0.8 0.001381 0 1"/>
     <material name="Generic_Black" rgba="0.036889 0.036889 0.036889 1"/>
     <material name="3D_Print_Black" rgba="0.114435 0.114435 0.114435 1"/>
@@ -116,6 +193,104 @@
     <material name="Aruco_right_finger_Sticker" texture="right_finger_aruco"/>
     <material name="Aruco_left_finger_Sticker" texture="left_finger_aruco"/>
     <material name="Aruco_gripper_cam_Sticker" texture="gripper_cam_aruco_sticker"/>
+    <material name="floor_laminate" texture="tex_floor_laminate" texrepeat="1.2 1.2" texuniform="true" specular="0.2"/>
+    <material name="floor_tiles" texture="tex_floor_tiles" texrepeat="1.5 1.5" texuniform="true" specular="0.2" shininess="0.7"/>
+    <material name="wall_plaster" texture="tex_wall_plaster" texrepeat="0.5 0.5" texuniform="true" specular="0.2" shininess="0.1"/>
+    <material name="worktop" texture="tex_worktop" texrepeat="2 1" specular="0.2" shininess="0.6"/>
+    <material name="carpet" texture="tex_carpet" texuniform="true" specular="0.2" shininess="0" rgba="0.75 0.75 0.85 1"/>
+    <material name="mat_kitchenette_0" specular="0.2" shininess="0.4" rgba="0.07 0.07 0.08 1"/>
+    <material name="mat_kitchenette_1" specular="0.2" shininess="0.4" rgba="0.93 0.93 0.92 1"/>
+    <material name="mat_kitchenette_2" specular="0.6" shininess="0.75" rgba="0.65 0.66 0.68 1"/>
+    <material name="mat_kitchenette_3" specular="0.6" shininess="0.75" rgba="0.78 0.79 0.8 1"/>
+    <material name="mat_kitchenette_4" specular="0.6" shininess="0.75" rgba="0.07 0.07 0.08 1"/>
+    <material name="mat_kitchenette_5" specular="0.2" shininess="0.4" rgba="0.8 0.9 1 0.35"/>
+    <material name="mat_kitchenette_6" specular="0.2" shininess="0.4" rgba="0.8 0.9 1 0.35"/>
+    <material name="mat_kitchenette_7" specular="0.6" shininess="0.75" rgba="0.78 0.79 0.8 1"/>
+    <material name="mat_kitchenette_8" specular="0.6" shininess="0.75" rgba="0.78 0.79 0.8 1"/>
+    <material name="mat_kitchenette_9" specular="0.2" shininess="0.4" rgba="0.8 0.9 1 0.35"/>
+    <material name="mat_kitchenette_10" specular="0.6" shininess="0.75" rgba="0.07 0.07 0.08 1"/>
+    <material name="mat_kitchenette_11" specular="0.2" shininess="0.4" rgba="0.8 0.9 1 0.35"/>
+    <material name="mat_kitchenette_12" specular="0.6" shininess="0.75" rgba="0.78 0.79 0.8 1"/>
+    <material name="mat_kitchenette_13" specular="0.6" shininess="0.75" rgba="0.07 0.07 0.08 1"/>
+    <material name="mat_kitchenette_14" specular="0.6" shininess="0.75" rgba="0.78 0.79 0.8 1"/>
+    <material name="mat_kitchenette_15" specular="0.2" shininess="0.4" rgba="0.93 0.93 0.92 1"/>
+    <material name="mat_kitchenette_16" specular="0.6" shininess="0.75" rgba="0.78 0.79 0.8 1"/>
+    <material name="mat_kitchenette_17" specular="0.2" shininess="0.4" rgba="0.07 0.07 0.08 1"/>
+    <material name="mat_kitchenette_18" specular="0.6" shininess="0.75" rgba="0.93 0.93 0.92 1"/>
+    <material name="mat_kitchenette_19" specular="0.6" shininess="0.75" rgba="0.78 0.79 0.8 1"/>
+    <material name="mat_kitchenette_20" specular="0.6" shininess="0.75" rgba="0.07 0.07 0.08 1"/>
+    <material name="mat_kitchenette_21" specular="0.6" shininess="0.75" rgba="0.78 0.79 0.8 1"/>
+    <material name="mat_kitchenette_22" specular="0.2" shininess="0.4" rgba="0.07 0.07 0.08 1"/>
+    <material name="mat_kitchenette_23" specular="0.6" shininess="0.75" rgba="0.78 0.79 0.8 1"/>
+    <material name="mat_kitchenette_24" specular="0.6" shininess="0.75" rgba="0.07 0.07 0.08 1"/>
+    <material name="mat_glass_vis_0" specular="0.2" shininess="0.4" rgba="0.8 0.9 1 0.35"/>
+    <material name="mat_mug_0" specular="0.6" shininess="0.75" rgba="0.65 0.66 0.68 1"/>
+    <material name="mat_stove_0" texture="tex_mat_stove_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_1" texture="tex_mat_stove_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_2" texture="tex_mat_stove_2" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_3" texture="tex_mat_stove_3" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_4" texture="tex_mat_stove_4" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_5" texture="tex_mat_stove_5" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_6" texture="tex_mat_stove_6" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_7" texture="tex_mat_stove_7" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_8" texture="tex_mat_stove_8" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_9" texture="tex_mat_stove_9" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_10" texture="tex_mat_stove_10" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_11" texture="tex_mat_stove_11" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_12" texture="tex_mat_stove_12" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_13" texture="tex_mat_stove_13" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_14" texture="tex_mat_stove_14" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_15" texture="tex_mat_stove_15" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_16" texture="tex_mat_stove_16" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_17" texture="tex_mat_stove_17" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_18" texture="tex_mat_stove_18" specular="0.2" shininess="0.4"/>
+    <material name="mat_stove_19" texture="tex_mat_stove_19" specular="0.2" shininess="0.4"/>
+    <material name="mat_tea_set_0" texture="tex_mat_tea_set_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_tea_set_1" texture="tex_mat_tea_set_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_tea_set_2" texture="tex_mat_tea_set_2" specular="0.2" shininess="0.4"/>
+    <material name="mat_tea_set_3" texture="tex_mat_tea_set_3" specular="0.2" shininess="0.4"/>
+    <material name="mat_tea_set_4" texture="tex_mat_tea_set_4" specular="0.2" shininess="0.4"/>
+    <material name="mat_tea_set_5" texture="tex_mat_tea_set_5" specular="0.2" shininess="0.4"/>
+    <material name="mat_tea_set_6" texture="tex_mat_tea_set_6" specular="0.2" shininess="0.4"/>
+    <material name="mat_tea_set_7" texture="tex_mat_tea_set_7" specular="0.2" shininess="0.4"/>
+    <material name="mat_tea_set_8" texture="tex_mat_tea_set_8" specular="0.2" shininess="0.4"/>
+    <material name="mat_tea_set_9" texture="tex_mat_tea_set_9" specular="0.2" shininess="0.4"/>
+    <material name="mat_bowl_0" texture="tex_mat_bowl_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_apple_0" texture="tex_mat_apple_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_kitchen_plant_0" texture="tex_mat_kitchen_plant_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_kitchen_plant_1" texture="tex_mat_kitchen_plant_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_kitchen_plant_2" texture="tex_mat_kitchen_plant_2" specular="0.2" shininess="0.4"/>
+    <material name="mat_kitchen_plant_3" texture="tex_mat_kitchen_plant_3" specular="0.2" shininess="0.4"/>
+    <material name="mat_ArmChair_01_0" texture="tex_mat_ArmChair_01_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_side_table_01_0" texture="tex_mat_side_table_01_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_photo_0" texture="tex_mat_photo_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_photo_1" texture="tex_mat_photo_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_photo_2" texture="tex_mat_photo_2" specular="0.2" shininess="0.4"/>
+    <material name="mat_table_plant_0" texture="tex_mat_table_plant_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_table_plant_1" texture="tex_mat_table_plant_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_table_plant_2" texture="tex_mat_table_plant_2" specular="0.2" shininess="0.4"/>
+    <material name="mat_table_plant_3" texture="tex_mat_table_plant_3" specular="0.2" shininess="0.4"/>
+    <material name="mat_sofa_0" texture="tex_mat_sofa_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_pillows_0" texture="tex_mat_pillows_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_pillows_1" texture="tex_mat_pillows_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_clock_0" texture="tex_mat_clock_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_clock_1" texture="tex_mat_clock_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_clock_2" texture="tex_mat_clock_2" specular="0.2" shininess="0.4"/>
+    <material name="mat_clock_3" texture="tex_mat_clock_3" specular="0.2" shininess="0.4"/>
+    <material name="mat_clock_4" texture="tex_mat_clock_4" specular="0.2" shininess="0.4"/>
+    <material name="mat_reading_lamp_0" texture="tex_mat_reading_lamp_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_reading_lamp_1" texture="tex_mat_reading_lamp_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_old_bed_frame_0" texture="tex_mat_old_bed_frame_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_nightstand_0" texture="tex_mat_nightstand_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_nightstand_1" texture="tex_mat_nightstand_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_spectacles_0" texture="tex_mat_spectacles_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_spectacles_1" texture="tex_mat_spectacles_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_wardrobe_0" texture="tex_mat_wardrobe_0" specular="0.2" shininess="0.4"/>
+    <material name="mat_wardrobe_1" texture="tex_mat_wardrobe_1" specular="0.2" shininess="0.4"/>
+    <material name="mat_wardrobe_2" texture="tex_mat_wardrobe_2" specular="0.2" shininess="0.4"/>
+    <material name="mat_wardrobe_3" texture="tex_mat_wardrobe_3" specular="0.2" shininess="0.4"/>
+    <material name="mat_wardrobe_4" texture="tex_mat_wardrobe_4" specular="0.2" shininess="0.4"/>
+    <material name="mat_bookshelf_0" texture="tex_mat_bookshelf_0" specular="0.2" shininess="0.4"/>
     <mesh name="base_link_0" content_type="model/obj" file="base_link_0.obj"/>
     <mesh name="base_link_2" content_type="model/obj" file="base_link_2.obj" inertia="shell"/>
     <mesh name="base_link_3" content_type="model/obj" file="base_link_3.obj"/>
@@ -201,27 +376,136 @@
     <mesh name="link_SG3_gripper_right_finger_aruco" content_type="model/obj" file="link_SG3_gripper_right_finger_aruco.obj" inertia="shell"/>
     <mesh name="link_SG3_gripper_right_fingertip" content_type="model/stl" file="link_SG3_gripper_right_fingertip.stl"/>
     <mesh name="link_SG3_gripper_left_fingertip" content_type="model/stl" file="link_SG3_gripper_left_fingertip.stl"/>
+    <mesh name="m_kitchenette_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part0.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part1.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part2.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_3" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part3.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_4" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part4.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_5" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part5.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_6" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part6.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_7" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part7.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_8" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part8.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_9" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part9.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_10" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part10.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_11" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part11.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_12" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part12.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_13" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part13.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_14" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part14.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_15" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part15.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_16" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part16.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_17" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part17.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_18" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part18.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_19" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part19.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_20" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part20.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_21" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part21.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_22" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part22.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_23" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part23.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_kitchenette_24" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\facilitySystem_kitchenette_module_a01\part24.obj" refpos="0.00420096 -0.000246164 -0.00024177" scale="0.977089 1.20136 0.977089" inertia="shell"/>
+    <mesh name="m_glass_vis_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\dishware_glass_8oz_a01\part0.obj" refpos="-1.76951e-07 6.20261e-07 5.29706e-05" scale="1.05725 1.05725 1.1949" inertia="shell"/>
+    <mesh name="m_mug_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\dishware_mug_a01\part0.obj" refpos="0.0121225 -1.86265e-09 0.00233252" inertia="shell"/>
+    <mesh name="m_stove_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part0.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part1.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part2.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_3" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part3.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_4" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part4.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_5" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part5.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_6" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part6.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_7" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part7.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_8" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part8.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_9" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part9.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_10" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part10.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_11" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part11.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_12" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part12.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_13" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part13.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_14" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part14.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_15" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part15.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_16" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part16.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_17" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part17.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_18" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part18.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_stove_19" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\electric_stove\part19.obj" refpos="0 -0.02381 0" inertia="shell"/>
+    <mesh name="m_tea_set_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part0.obj" refpos="0.01861 0.041675 -0.00083" scale="0.598815 1 0.598815" inertia="shell"/>
+    <mesh name="m_tea_set_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part1.obj" refpos="0.01861 0.041675 -0.00083" scale="0.598815 1 0.598815" inertia="shell"/>
+    <mesh name="m_tea_set_2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part2.obj" refpos="0.01861 0.041675 -0.00083" scale="0.598815 1 0.598815" inertia="shell"/>
+    <mesh name="m_tea_set_3" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part3.obj" refpos="0.01861 0.041675 -0.00083" scale="0.598815 1 0.598815" inertia="shell"/>
+    <mesh name="m_tea_set_4" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part4.obj" refpos="0.01861 0.041675 -0.00083" scale="0.598815 1 0.598815" inertia="shell"/>
+    <mesh name="m_tea_set_5" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part5.obj" refpos="0.01861 0.041675 -0.00083" scale="0.598815 1 0.598815" inertia="shell"/>
+    <mesh name="m_tea_set_6" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part6.obj" refpos="0.01861 0.041675 -0.00083" scale="0.598815 1 0.598815" inertia="shell"/>
+    <mesh name="m_tea_set_7" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part7.obj" refpos="0.01861 0.041675 -0.00083" scale="0.598815 1 0.598815" inertia="shell"/>
+    <mesh name="m_tea_set_8" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part8.obj" refpos="0.01861 0.041675 -0.00083" scale="0.598815 1 0.598815" inertia="shell"/>
+    <mesh name="m_tea_set_9" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\tea_set_01\part9.obj" refpos="0.01861 0.041675 -0.00083" scale="0.598815 1 0.598815" inertia="shell"/>
+    <mesh name="m_bowl_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wooden_bowl_01\part0.obj" refpos="-0.00031 -0.000655 0.00055" inertia="shell"/>
+    <mesh name="m_apple_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\food_apple_01\part0.obj" refpos="0.0004 -0.00213 -2e-05" inertia="shell"/>
+    <mesh name="m_kitchen_plant_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part0.obj" refpos="0 -0.008435 0.00038" scale="2.08482 1 2.08482" inertia="shell"/>
+    <mesh name="m_kitchen_plant_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part1.obj" refpos="0 -0.008435 0.00038" scale="2.08482 1 2.08482" inertia="shell"/>
+    <mesh name="m_kitchen_plant_2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part2.obj" refpos="0 -0.008435 0.00038" scale="2.08482 1 2.08482" inertia="shell"/>
+    <mesh name="m_kitchen_plant_3" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part3.obj" refpos="0 -0.008435 0.00038" scale="2.08482 1 2.08482" inertia="shell"/>
+    <mesh name="m_ArmChair_01_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\ArmChair_01\part0.obj" refpos="0 0.03443 -0.00043" scale="0.942907 1.0186 0.942907" inertia="shell"/>
+    <mesh name="m_side_table_01_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\side_table_01\part0.obj" refpos="0 0 -0.00236" scale="0.763636 0.933333 1.08958" inertia="shell"/>
+    <mesh name="m_photo_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\standing_picture_frame_01\part0.obj" refpos="-0.011485 0 -0.00047" inertia="shell"/>
+    <mesh name="m_photo_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\standing_picture_frame_01\part1.obj" refpos="-0.011485 0 -0.00047" inertia="shell"/>
+    <mesh name="m_photo_2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\standing_picture_frame_01\part2.obj" refpos="-0.011485 0 -0.00047" inertia="shell"/>
+    <mesh name="m_table_plant_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part0.obj" refpos="0 -0.008435 0.00038" inertia="shell"/>
+    <mesh name="m_table_plant_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part1.obj" refpos="0 -0.008435 0.00038" inertia="shell"/>
+    <mesh name="m_table_plant_2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part2.obj" refpos="0 -0.008435 0.00038" inertia="shell"/>
+    <mesh name="m_table_plant_3" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\potted_plant_04\part3.obj" refpos="0 -0.008435 0.00038" inertia="shell"/>
+    <mesh name="m_sofa_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\Sofa_01\part0.obj" refpos="0.007625 0.032195 -0.00059" inertia="shell"/>
+    <mesh name="m_pillows_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\throw_pillows_01\part0.obj" refpos="0.0065 -0.050125 -0.00211" inertia="shell"/>
+    <mesh name="m_pillows_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\throw_pillows_01\part1.obj" refpos="0.0065 -0.050125 -0.00211" inertia="shell"/>
+    <mesh name="m_clock_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wall_clock\part0.obj" refpos="0 -0.02361 -0.16025" inertia="shell"/>
+    <mesh name="m_clock_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wall_clock\part1.obj" refpos="0 -0.02361 -0.16025" inertia="shell"/>
+    <mesh name="m_clock_2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wall_clock\part2.obj" refpos="0 -0.02361 -0.16025" inertia="shell"/>
+    <mesh name="m_clock_3" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wall_clock\part3.obj" refpos="0 -0.02361 -0.16025" inertia="shell"/>
+    <mesh name="m_clock_4" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wall_clock\part4.obj" refpos="0 -0.02361 -0.16025" inertia="shell"/>
+    <mesh name="m_reading_lamp_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\desk_lamp_arm_01\part0.obj" refpos="-0.017605 -0.0103 -0.08799" inertia="shell"/>
+    <mesh name="m_reading_lamp_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\desk_lamp_arm_01\part1.obj" refpos="-0.017605 -0.0103 -0.08799" inertia="shell"/>
+    <mesh name="m_old_bed_frame_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\old_bed_frame\part0.obj" refpos="0.00472 -0.00241 0" scale="1.10539 0.949184 1.10539" inertia="shell"/>
+    <mesh name="m_nightstand_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\painted_wooden_nightstand\part0.obj" refpos="-0.00113 -0.00511 0" inertia="shell"/>
+    <mesh name="m_nightstand_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\painted_wooden_nightstand\part1.obj" refpos="-0.00113 -0.00511 0" inertia="shell"/>
+    <mesh name="m_spectacles_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\round_spectacles\part0.obj" refpos="0 0.073635 -0.02314" inertia="shell"/>
+    <mesh name="m_spectacles_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\round_spectacles\part1.obj" refpos="0 0.073635 -0.02314" inertia="shell"/>
+    <mesh name="m_wardrobe_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\drawer_cabinet\part0.obj" refpos="0 0.00361 0" scale="0.876363 0.92198 0.850498" inertia="shell"/>
+    <mesh name="m_wardrobe_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\drawer_cabinet\part1.obj" refpos="0 0.00361 0" scale="0.876363 0.92198 0.850498" inertia="shell"/>
+    <mesh name="m_wardrobe_2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\drawer_cabinet\part2.obj" refpos="0 0.00361 0" scale="0.876363 0.92198 0.850498" inertia="shell"/>
+    <mesh name="m_wardrobe_3" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\drawer_cabinet\part3.obj" refpos="0 0.00361 0" scale="0.876363 0.92198 0.850498" inertia="shell"/>
+    <mesh name="m_wardrobe_4" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\drawer_cabinet\part4.obj" refpos="0 0.00361 0" scale="0.876363 0.92198 0.850498" inertia="shell"/>
+    <mesh name="m_bookshelf_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\wooden_bookshelf_worn\part0.obj" scale="0.727823 0.688113 0.775404" inertia="shell"/>
   </asset>
 
   <worldbody>
-    <geom name="floor" size="5 4 0.1" type="plane" rgba="0.75 0.7 0.62 1"/>
-    <geom name="wall_n" size="4 0.05 1.2" pos="0 3 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_s" size="4 0.05 1.2" pos="0 -3 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_w" size="0.05 3 1.2" pos="-4 0 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_e" size="0.05 3 1.2" pos="4 0 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_k1" size="0.75 0.05 1.2" pos="-3.25 0.8 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_k2" size="1.5 0.05 1.2" pos="0 0.8 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_k3" size="0.75 0.05 1.2" pos="3.25 0.8 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_b1" size="2.75 0.05 1.2" pos="-1.25 -0.8 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_b2" size="0.75 0.05 1.2" pos="3.25 -0.8 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_kl1" size="0.05 0.35 1.2" pos="0 1.15 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_kl2" size="0.05 0.25 1.2" pos="0 2.75 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
-    <geom name="wall_bs" size="0.05 1.1 1.2" pos="0 -1.9 1.2" type="box" rgba="0.93 0.91 0.86 1"/>
+    <geom name="floor" size="5 4 0.1" type="plane" rgba="1 1 1 1" material="floor_laminate"/>
+    <geom name="wall_n" size="4 0.05 1.2" pos="0 3 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_s" size="4 0.05 1.2" pos="0 -3 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_w" size="0.05 3 1.2" pos="-4 0 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_e" size="0.05 3 1.2" pos="4 0 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_k1" size="0.75 0.05 1.2" pos="-3.25 0.8 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_k2" size="1.5 0.05 1.2" pos="0 0.8 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_k3" size="0.75 0.05 1.2" pos="3.25 0.8 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_b1" size="2.75 0.05 1.2" pos="-1.25 -0.8 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_b2" size="0.75 0.05 1.2" pos="3.25 -0.8 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_kl1" size="0.05 0.35 1.2" pos="0 1.15 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_kl2" size="0.05 0.25 1.2" pos="0 2.75 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="wall_bs" size="0.05 1.1 1.2" pos="0 -1.9 1.2" type="box" rgba="1 1 1 1" material="wall_plaster"/>
+    <geom name="kitchen_tiles" size="1.95 1.05 0.001" pos="-2 1.9 0.001" type="box" contype="0" conaffinity="0" group="1" material="floor_tiles"/>
+    <geom name="bedroom_rug" size="0.9 0.6 0.002" pos="1.6 -1.9 0.002" type="box" contype="0" conaffinity="0" group="1" material="carpet"/>
+    <geom name="stove_col" size="0.26 0.26 0.43" pos="-1.1 2.72 0.43" type="box" group="3"/>
+    <geom name="sofa_col" size="0.8 0.34 0.4" pos="1.15 2.62 0.4" type="box" group="3"/>
+    <geom name="nightstand_col" size="0.25 0.25 0.31" pos="2.65 -2.7 0.31" type="box" group="3"/>
+    <geom name="wardrobe_col" size="0.5 0.23 0.8" pos="0.65 -2.7 0.8" type="box" group="3"/>
+    <geom name="bookshelf_col" size="0.2 0.5 0.8" pos="0.27 -1.75 0.8" type="box" group="3"/>
     <site name="kitchen" size="0.05" pos="-2 1.9 0.01" group="4" rgba="0 0 0 0"/>
     <site name="living" size="0.05" pos="2 1.9 0.01" group="4" rgba="0 0 0 0"/>
     <site name="bedroom" size="0.05" pos="2 -1.9 0.01" group="4" rgba="0 0 0 0"/>
     <site name="hall" size="0.05" pos="-1 0 0.01" group="4" rgba="0 0 0 0"/>
-    <light name="sun" pos="0 0 5" diffuse="0.8 0.8 0.8"/>
+    <camera name="cam_kitchen" target="base_link" pos="-3.7 0.95 2.1" mode="targetbody" fovy="70"/>
+    <camera name="cam_living" target="base_link" pos="3.8 0.95 2.1" mode="targetbody" fovy="70"/>
+    <camera name="cam_bedroom" target="base_link" pos="3.8 -0.95 2.1" mode="targetbody" fovy="70"/>
+    <camera name="cam_hall" target="base_link" pos="-3.8 0 1.9" mode="targetbody" fovy="70"/>
+    <camera name="cam_overview" quat="0.944146 0.329527 0 0" pos="0 -6 7.5" fovy="50"/>
+    <light name="sun" castshadow="false" pos="0 0 5" diffuse="0.35 0.35 0.35"/>
+    <light name="light_kitchen" pos="-2 1.9 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
+    <light name="light_living" pos="2 1.9 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
+    <light name="light_bedroom" pos="2 -1.9 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
+    <light name="light_hall" pos="0 0 2.3" cutoff="80" exponent="1" diffuse="0.45 0.43 0.4" specular="0.1 0.1 0.1"/>
     <body name="base_link" childclass="stretch">
       <joint type="free"/>
       <geom class="visual" pos="1.60982e-15 -1.33505e-17 -1.70003e-16" quat="1 0 0 0" mass="0" material="Caster_Rollers_Red" mesh="base_link_0"/>
@@ -450,17 +734,53 @@
       </body>
     </body>
     <body name="kitchen_counter" pos="-2.5 2.7 0">
-      <geom name="counter_top" size="1.1 0.3 0.45" pos="0 0 0.45" type="box" rgba="0.95 0.95 0.95 1"/>
+      <geom name="counter_top" size="1.1 0.3 0.45" pos="0 0 0.45" type="box" group="3" rgba="0.95 0.95 0.95 1"/>
+      <body name="vis_kitchenette" quat="0.707107 0 0 -0.707107">
+        <geom name="g_kitchenette_0" pos="-7.21645e-16 2.44249e-15 -2.10942e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_0" mesh="m_kitchenette_0"/>
+        <geom name="g_kitchenette_1" pos="-1.77636e-15 5.44009e-15 -4.38538e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_1" mesh="m_kitchenette_1"/>
+        <geom name="g_kitchenette_2" pos="1.94289e-16 -6.66134e-16 2.77556e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_2" mesh="m_kitchenette_2"/>
+        <geom name="g_kitchenette_3" pos="2.42861e-16 4.55191e-15 -2.10942e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_3" mesh="m_kitchenette_3"/>
+        <geom name="g_kitchenette_4" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_4" mesh="m_kitchenette_4"/>
+        <geom name="g_kitchenette_5" pos="-3.81639e-16 5.66214e-15 -1.11022e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_5" mesh="m_kitchenette_5"/>
+        <geom name="g_kitchenette_6" pos="-1.22125e-15 5.66214e-15 -4.88498e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_6" mesh="m_kitchenette_6"/>
+        <geom name="g_kitchenette_7" pos="5.55112e-16 -2.33147e-15 -2.55351e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_7" mesh="m_kitchenette_7"/>
+        <geom name="g_kitchenette_8" pos="-3.60822e-16 4.55191e-15 -1.55431e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_8" mesh="m_kitchenette_8"/>
+        <geom name="g_kitchenette_9" pos="-3.60822e-16 4.21885e-15 -1.44329e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_9" mesh="m_kitchenette_9"/>
+        <geom name="g_kitchenette_10" pos="-3.88578e-16 -3.88578e-16 -6.10623e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_10" mesh="m_kitchenette_10"/>
+        <geom name="g_kitchenette_11" pos="1.35525e-18 4.21885e-15 -1.94289e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_11" mesh="m_kitchenette_11"/>
+        <geom name="g_kitchenette_12" pos="4.71845e-16 -1.9984e-15 -2.88658e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_12" mesh="m_kitchenette_12"/>
+        <geom name="g_kitchenette_13" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_13" mesh="m_kitchenette_13"/>
+        <geom name="g_kitchenette_14" pos="8.60423e-16 -3.10862e-15 -3.88578e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_14" mesh="m_kitchenette_14"/>
+        <geom name="g_kitchenette_15" pos="-1.66533e-16 1.55431e-15 -1.33227e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_15" mesh="m_kitchenette_15"/>
+        <geom name="g_kitchenette_16" pos="-9.99201e-16 1.02696e-15 -4.88498e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_16" mesh="m_kitchenette_16"/>
+        <geom name="g_kitchenette_17" pos="8.60423e-16 2.66454e-15 -5.89806e-17" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_17" mesh="m_kitchenette_17"/>
+        <geom name="g_kitchenette_18" pos="-3.60822e-16 1.9984e-15 -3.88578e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_18" mesh="m_kitchenette_18"/>
+        <geom name="g_kitchenette_19" pos="-1.16573e-15 1.94289e-15 -5.66214e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_19" mesh="m_kitchenette_19"/>
+        <geom name="g_kitchenette_20" pos="1.31839e-16 -4.44089e-16 -1.4988e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_20" mesh="m_kitchenette_20"/>
+        <geom name="g_kitchenette_21" pos="1.08247e-15 -4.66294e-15 -5.10703e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_21" mesh="m_kitchenette_21"/>
+        <geom name="g_kitchenette_22" pos="9.15934e-16 5.55112e-15 -6.59195e-17" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_22" mesh="m_kitchenette_22"/>
+        <geom name="g_kitchenette_23" pos="-1.42247e-16 -3.9968e-15 -3.55271e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_23" mesh="m_kitchenette_23"/>
+        <geom name="g_kitchenette_24" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchenette_24" mesh="m_kitchenette_24"/>
+      </body>
     </body>
     <body name="side_table" pos="2.35 2.45 0">
-      <geom name="side_table_top" size="0.2 0.2 0.3" pos="0 0 0.3" type="box" rgba="0.55 0.38 0.24 1"/>
+      <geom name="side_table_top" size="0.2 0.2 0.3" pos="0 0 0.3" type="box" group="3" rgba="0.55 0.38 0.24 1"/>
+      <body name="vis_side_table_01">
+        <geom name="g_side_table_01_0" pos="6.88214e-22 -1.16467e-21 -1.4988e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_side_table_01_0" mesh="m_side_table_01_0"/>
+      </body>
     </body>
     <body name="armchair" pos="3 2.45 0">
-      <geom name="armchair_seat" size="0.38 0.35 0.225" pos="0 0 0.225" type="box" rgba="0.35 0.45 0.6 1"/>
-      <geom name="armchair_back" size="0.38 0.08 0.4" pos="0 0.3 0.6" type="box" rgba="0.35 0.45 0.6 1"/>
+      <geom name="armchair_seat" size="0.38 0.35 0.225" pos="0 0 0.225" type="box" group="3" rgba="0.35 0.45 0.6 1"/>
+      <geom name="armchair_back" size="0.38 0.08 0.4" pos="0 0.3 0.6" type="box" group="3" rgba="0.35 0.45 0.6 1"/>
+      <body name="vis_ArmChair_01" pos="0 0.03 0">
+        <geom name="g_ArmChair_01_0" pos="2.98156e-18 -3.60822e-16 -2.66454e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_ArmChair_01_0" mesh="m_ArmChair_01_0"/>
+      </body>
     </body>
     <body name="bed" pos="3.45 -1.95 0">
       <geom name="bed_base" size="0.5 0.95 0.25" pos="0 0 0.25" type="box" rgba="0.9 0.9 1 1"/>
+      <body name="vis_old_bed_frame">
+        <geom name="g_old_bed_frame_0" pos="-1.51788e-18 -8.32667e-17 -2.55351e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_old_bed_frame_0" mesh="m_old_bed_frame_0"/>
+      </body>
     </body>
     <body name="chair_hall" pos="-3.6 -0.5 0">
       <joint name="chair_hall_free" type="free"/>
@@ -473,9 +793,13 @@
     </body>
     <body name="glass" pos="-2.6 2.6 0.96">
       <joint name="glass_free" type="free"/>
-      <geom name="glass_geom" size="0.035 0.06" type="cylinder" friction="1.5 0.05 0.01" rgba="0.6 0.85 1 0.7" mass="0.25"/>
+      <geom name="glass_geom" size="0.035 0.06" type="cylinder" group="3" friction="1.5 0.05 0.01" rgba="0.6 0.85 1 0.7" mass="0.25"/>
       <geom name="straw" size="0.004 0.0782624" pos="0.035 0 0.07" quat="0.229753 0 -0.973249 0" type="capsule" contype="0" conaffinity="0" rgba="1 0.3 0.3 1" mass="0.001"/>
+      <geom name="water" size="0.03 0.04" pos="0 0 -0.015" type="cylinder" contype="0" conaffinity="0" group="1" rgba="0.55 0.75 0.95 0.55" mass="0"/>
       <site name="straw_tip" size="0.006" pos="0.07 0 0.14" group="4"/>
+      <body name="vis_glass_vis" pos="0 0 -0.06">
+        <geom name="g_glass_vis_0" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_glass_vis_0" mesh="m_glass_vis_0"/>
+      </body>
     </body>
     <body name="organiser" pos="-1.9 2.6 0.92">
       <joint name="organiser_free" type="free"/>
@@ -494,7 +818,104 @@
         <geom name="head" size="0.1" rgba="0.87 0.72 0.6 1" mass="4"/>
         <geom name="face_plate" size="0.012 0.07 0.08" pos="0.085 0 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.8 0.7 1" mass="0.01"/>
         <site name="mouth" size="0.01" pos="0.1 0 -0.045" group="4" rgba="0.8 0.2 0.2 1"/>
+        <camera name="person_eyes" quat="-0.5 -0.5 0.5 0.5" pos="0.09 0 0.03" fovy="75"/>
       </body>
+    </body>
+    <body name="vis_mug" pos="-3 2.62 0.9">
+      <geom name="g_mug_0" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_mug_0" mesh="m_mug_0"/>
+    </body>
+    <body name="vis_stove" pos="-1.1 2.72 0" quat="0 0 0 1">
+      <geom name="g_stove_0" pos="-6.38378e-16 6.10623e-16 -1.05471e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_0" mesh="m_stove_0"/>
+      <geom name="g_stove_1" pos="-7.21645e-16 7.21645e-16 -4.16334e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_1" mesh="m_stove_1"/>
+      <geom name="g_stove_2" pos="-6.38378e-16 6.66134e-16 -2.63678e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_2" mesh="m_stove_2"/>
+      <geom name="g_stove_3" pos="-6.38378e-16 6.66134e-16 -9.4369e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_3" mesh="m_stove_3"/>
+      <geom name="g_stove_4" pos="-5.82867e-16 8.88178e-16 -2.44249e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_4" mesh="m_stove_4"/>
+      <geom name="g_stove_5" pos="-2.22045e-16 4.996e-16 -1.44329e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_5" mesh="m_stove_5"/>
+      <geom name="g_stove_6" pos="-3.05311e-16 1.27676e-15 -3.55271e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_6" mesh="m_stove_6"/>
+      <geom name="g_stove_7" pos="-3.64292e-17 9.99201e-16 -2.77556e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_7" mesh="m_stove_7"/>
+      <geom name="g_stove_8" pos="2.15106e-16 1.27676e-15 -3.55271e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_8" mesh="m_stove_8"/>
+      <geom name="g_stove_9" pos="1.47726e-17 1.55431e-15 -3.21965e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_9" mesh="m_stove_9"/>
+      <geom name="g_stove_10" pos="0 1.33227e-15 -2.9976e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_10" mesh="m_stove_10"/>
+      <geom name="g_stove_11" pos="-1.85288e-21 1.38778e-15 -1.27676e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_11" mesh="m_stove_11"/>
+      <geom name="g_stove_12" pos="3.747e-16 9.99201e-16 -2.77556e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_12" mesh="m_stove_12"/>
+      <geom name="g_stove_13" pos="0 2.98372e-16 -4.88498e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_13" mesh="m_stove_13"/>
+      <geom name="g_stove_14" pos="6.38378e-16 6.66134e-16 -9.4369e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_14" mesh="m_stove_14"/>
+      <geom name="g_stove_15" pos="6.38378e-16 6.10623e-16 -1.05471e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_15" mesh="m_stove_15"/>
+      <geom name="g_stove_16" pos="6.38378e-16 6.10623e-16 -3.60822e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_16" mesh="m_stove_16"/>
+      <geom name="g_stove_17" pos="6.38378e-16 6.66134e-16 -2.63678e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_17" mesh="m_stove_17"/>
+      <geom name="g_stove_18" pos="0 3.19189e-16 -1.88738e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_18" mesh="m_stove_18"/>
+      <geom name="g_stove_19" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_stove_19" mesh="m_stove_19"/>
+    </body>
+    <body name="vis_tea_set" pos="-3.3 2.7 0.9" quat="0 0 0 1">
+      <geom name="g_tea_set_0" pos="1.44329e-15 6.80012e-16 -4.996e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_tea_set_0" mesh="m_tea_set_0"/>
+      <geom name="g_tea_set_1" pos="4.30211e-16 6.38378e-16 -2.77556e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_tea_set_1" mesh="m_tea_set_1"/>
+      <geom name="g_tea_set_2" pos="-4.996e-16 -9.15934e-16 -3.1225e-17" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_tea_set_2" mesh="m_tea_set_2"/>
+      <geom name="g_tea_set_3" pos="-1.33227e-15 5.82867e-16 -1.45717e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_tea_set_3" mesh="m_tea_set_3"/>
+      <geom name="g_tea_set_4" pos="1.36002e-15 6.52256e-16 -2.28983e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_tea_set_4" mesh="m_tea_set_4"/>
+      <geom name="g_tea_set_5" pos="4.57967e-16 6.80012e-16 -1.52656e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_tea_set_5" mesh="m_tea_set_5"/>
+      <geom name="g_tea_set_6" pos="4.02456e-16 -8.60423e-16 -3.20924e-17" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_tea_set_6" mesh="m_tea_set_6"/>
+      <geom name="g_tea_set_7" pos="-1.44329e-15 -9.15934e-16 -3.1225e-17" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_tea_set_7" mesh="m_tea_set_7"/>
+      <geom name="g_tea_set_8" pos="-4.30211e-16 5.41234e-16 -1.249e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_tea_set_8" mesh="m_tea_set_8"/>
+      <geom name="g_tea_set_9" pos="1.55431e-15 -1.05471e-15 -4.33681e-17" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_tea_set_9" mesh="m_tea_set_9"/>
+    </body>
+    <body name="vis_bowl" pos="-2.05 2.75 0.9">
+      <geom name="g_bowl_0" pos="-2.34188e-17 1.43115e-17 -2.28983e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_bowl_0" mesh="m_bowl_0"/>
+    </body>
+    <body name="vis_apple" pos="-2.05 2.75 0.93">
+      <geom name="g_apple_0" pos="-4.49944e-18 -5.31259e-18 -3.747e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_apple_0" mesh="m_apple_0"/>
+    </body>
+    <body name="vis_kitchen_plant" pos="-3.75 1 0">
+      <geom name="g_kitchen_plant_0" pos="9.36223e-19 -2.60209e-17 -5.82867e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchen_plant_0" mesh="m_kitchen_plant_0"/>
+      <geom name="g_kitchen_plant_1" pos="-6.245e-17 1.73472e-17 -6.66134e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchen_plant_1" mesh="m_kitchen_plant_1"/>
+      <geom name="g_kitchen_plant_2" pos="-6.15827e-17 -3.46945e-17 -2.77556e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchen_plant_2" mesh="m_kitchen_plant_2"/>
+      <geom name="g_kitchen_plant_3" pos="3.52366e-18 -1.02349e-16 -2.66454e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_kitchen_plant_3" mesh="m_kitchen_plant_3"/>
+    </body>
+    <body name="vis_photo" pos="2.3 2.5 0.6" quat="0.988771 0 0 -0.149438">
+      <geom name="g_photo_0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_photo_0" mesh="m_photo_0"/>
+      <geom name="g_photo_1" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_photo_1" mesh="m_photo_1"/>
+      <geom name="g_photo_2" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_photo_2" mesh="m_photo_2"/>
+    </body>
+    <body name="vis_table_plant" pos="2.42 2.38 0.6">
+      <geom name="g_table_plant_0" pos="-2.11758e-22 -2.60209e-17 -2.77556e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_table_plant_0" mesh="m_table_plant_0"/>
+      <geom name="g_table_plant_1" pos="-2.77556e-17 1.73472e-17 -4.16334e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_table_plant_1" mesh="m_table_plant_1"/>
+      <geom name="g_table_plant_2" pos="-2.25514e-17 -3.29597e-17 -1.19349e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_table_plant_2" mesh="m_table_plant_2"/>
+      <geom name="g_table_plant_3" pos="2.76472e-18 -9.36751e-17 -1.22125e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_table_plant_3" mesh="m_table_plant_3"/>
+    </body>
+    <body name="vis_sofa" pos="1.15 2.62 0">
+      <geom name="g_sofa_0" pos="1.95156e-17 -4.44089e-16 -3.05311e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_sofa_0" mesh="m_sofa_0"/>
+    </body>
+    <body name="vis_pillows" pos="1.15 2.7 0.42">
+      <geom name="g_pillows_0" pos="1.38778e-15 5.72459e-17 -1.38778e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_pillows_0" mesh="m_pillows_0"/>
+      <geom name="g_pillows_1" pos="-1.19349e-15 -2.91434e-16 -1.05471e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_pillows_1" mesh="m_pillows_1"/>
+    </body>
+    <body name="vis_clock" pos="2 2.94 1.7">
+      <geom name="g_clock_0" pos="8.13152e-20 -1.25767e-17 -5.82867e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_clock_0" mesh="m_clock_0"/>
+      <geom name="g_clock_1" pos="-2.06677e-18 4.85723e-17 -4.16334e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_clock_1" mesh="m_clock_1"/>
+      <geom name="g_clock_2" pos="1.8735e-16 2.77556e-17 -1.05471e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_clock_2" mesh="m_clock_2"/>
+      <geom name="g_clock_3" pos="-1.30104e-17 1.73472e-17 -3.60822e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_clock_3" mesh="m_clock_3"/>
+      <geom name="g_clock_4" pos="-2.01228e-16 2.34188e-17 -9.15934e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_clock_4" mesh="m_clock_4"/>
+    </body>
+    <body name="vis_reading_lamp" pos="3.75 2.75 0">
+      <geom name="g_reading_lamp_0" pos="-1.38778e-17 -3.46945e-17 -5.55112e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_reading_lamp_0" mesh="m_reading_lamp_0"/>
+      <geom name="g_reading_lamp_1" pos="-4.68375e-17 -5.82867e-16 -2.44249e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_reading_lamp_1" mesh="m_reading_lamp_1"/>
+    </body>
+    <body name="vis_nightstand" pos="2.65 -2.7 0" quat="0.707107 0 0 0.707107">
+      <geom name="g_nightstand_0" pos="-8.45678e-18 1.52656e-16 -2.66454e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_nightstand_0" mesh="m_nightstand_0"/>
+      <geom name="g_nightstand_1" pos="-4.66207e-18 -1.02349e-16 -4.82947e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_nightstand_1" mesh="m_nightstand_1"/>
+    </body>
+    <body name="vis_spectacles" pos="2.65 -2.65 0.63">
+      <geom name="g_spectacles_0" pos="-3.91753e-21 1.97758e-16 -2.42861e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_spectacles_0" mesh="m_spectacles_0"/>
+      <geom name="g_spectacles_1" pos="0 3.88578e-16 -1.21431e-16" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_spectacles_1" mesh="m_spectacles_1"/>
+    </body>
+    <body name="vis_wardrobe" pos="0.65 -2.7 0">
+      <geom name="g_wardrobe_0" pos="1.64799e-17 2.11636e-16 -2.88658e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_wardrobe_0" mesh="m_wardrobe_0"/>
+      <geom name="g_wardrobe_1" pos="1.86483e-17 2.35922e-16 -4.44089e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_wardrobe_1" mesh="m_wardrobe_1"/>
+      <geom name="g_wardrobe_2" pos="1.86483e-17 2.35922e-16 -5.66214e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_wardrobe_2" mesh="m_wardrobe_2"/>
+      <geom name="g_wardrobe_3" pos="1.86483e-17 2.35922e-16 -6.88338e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_wardrobe_3" mesh="m_wardrobe_3"/>
+      <geom name="g_wardrobe_4" pos="5.52943e-18 -9.36751e-17 -2.9976e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_wardrobe_4" mesh="m_wardrobe_4"/>
+    </body>
+    <body name="vis_bookshelf" pos="0.27 -1.75 0" quat="0.707107 0 0 -0.707107">
+      <geom name="g_bookshelf_0" pos="5.14996e-19 1.64799e-17 -2.88658e-15" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_bookshelf_0" mesh="m_bookshelf_0"/>
     </body>
   </worldbody>
 

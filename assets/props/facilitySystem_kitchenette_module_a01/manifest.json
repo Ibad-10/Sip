@@ -1,0 +1,316 @@
+{
+ "asset": "facilitySystem_kitchenette_module_a01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": null,
+   "rgba": [
+    0.07,
+    0.07,
+    0.08,
+    1.0
+   ],
+   "faces": 11281,
+   "material": "m_opaque__plastic__black_a01"
+  },
+  {
+   "obj": "part1.obj",
+   "png": null,
+   "rgba": [
+    0.93,
+    0.93,
+    0.92,
+    1.0
+   ],
+   "faces": 30,
+   "material": "m_opaque__plastic__glossy_white_a01"
+  },
+  {
+   "obj": "part2.obj",
+   "png": null,
+   "rgba": [
+    0.65,
+    0.66,
+    0.68,
+    1.0
+   ],
+   "faces": 14271,
+   "material": "m_opaque__metal__brushedAniso_clean_a01"
+  },
+  {
+   "obj": "part3.obj",
+   "png": null,
+   "rgba": [
+    0.78,
+    0.79,
+    0.8,
+    1.0
+   ],
+   "faces": 356,
+   "material": "m_opaque__metal__steelStainless_a02"
+  },
+  {
+   "obj": "part4.obj",
+   "png": null,
+   "rgba": [
+    0.07,
+    0.07,
+    0.08,
+    1.0
+   ],
+   "faces": 8890,
+   "material": "m_opaque__metal__painted_black_a01"
+  },
+  {
+   "obj": "part5.obj",
+   "png": null,
+   "rgba": [
+    0.8,
+    0.9,
+    1.0,
+    0.35
+   ],
+   "faces": 786,
+   "material": "m_trans__plexiglass__a01"
+  },
+  {
+   "obj": "part6.obj",
+   "png": null,
+   "rgba": [
+    0.8,
+    0.9,
+    1.0,
+    0.35
+   ],
+   "faces": 96,
+   "material": "m_trans__plexiglass__a01"
+  },
+  {
+   "obj": "part7.obj",
+   "png": null,
+   "rgba": [
+    0.78,
+    0.79,
+    0.8,
+    1.0
+   ],
+   "faces": 169,
+   "material": "m_opaque__metal__steelStainless_a02"
+  },
+  {
+   "obj": "part8.obj",
+   "png": null,
+   "rgba": [
+    0.78,
+    0.79,
+    0.8,
+    1.0
+   ],
+   "faces": 280,
+   "material": "m_opaque__metal__steelStainless_a02"
+  },
+  {
+   "obj": "part9.obj",
+   "png": null,
+   "rgba": [
+    0.8,
+    0.9,
+    1.0,
+    0.35
+   ],
+   "faces": 12,
+   "material": "m_trans__glass__clean_a01"
+  },
+  {
+   "obj": "part10.obj",
+   "png": null,
+   "rgba": [
+    0.07,
+    0.07,
+    0.08,
+    1.0
+   ],
+   "faces": 464,
+   "material": "m_opaque__metal__painted_black_a01"
+  },
+  {
+   "obj": "part11.obj",
+   "png": null,
+   "rgba": [
+    0.8,
+    0.9,
+    1.0,
+    0.35
+   ],
+   "faces": 12,
+   "material": "m_trans__glass__clean_a01"
+  },
+  {
+   "obj": "part12.obj",
+   "png": null,
+   "rgba": [
+    0.78,
+    0.79,
+    0.8,
+    1.0
+   ],
+   "faces": 546,
+   "material": "m_opaque__metal__steelStainless_a02"
+  },
+  {
+   "obj": "part13.obj",
+   "png": null,
+   "rgba": [
+    0.07,
+    0.07,
+    0.08,
+    1.0
+   ],
+   "faces": 464,
+   "material": "m_opaque__metal__painted_black_a01"
+  },
+  {
+   "obj": "part14.obj",
+   "png": null,
+   "rgba": [
+    0.78,
+    0.79,
+    0.8,
+    1.0
+   ],
+   "faces": 96,
+   "material": "m_opaque__metal__steelStainless_a02"
+  },
+  {
+   "obj": "part15.obj",
+   "png": null,
+   "rgba": [
+    0.93,
+    0.93,
+    0.92,
+    1.0
+   ],
+   "faces": 129,
+   "material": "m_opaque__plastic__glossy_white_a01"
+  },
+  {
+   "obj": "part16.obj",
+   "png": null,
+   "rgba": [
+    0.78,
+    0.79,
+    0.8,
+    1.0
+   ],
+   "faces": 84,
+   "material": "m_opaque__metal__steelStainless_a02"
+  },
+  {
+   "obj": "part17.obj",
+   "png": null,
+   "rgba": [
+    0.07,
+    0.07,
+    0.08,
+    1.0
+   ],
+   "faces": 492,
+   "material": "m_opaque__plastic__black_a01"
+  },
+  {
+   "obj": "part18.obj",
+   "png": null,
+   "rgba": [
+    0.93,
+    0.93,
+    0.92,
+    1.0
+   ],
+   "faces": 60,
+   "material": "m_opaque__metal__paintedRough_white_a01"
+  },
+  {
+   "obj": "part19.obj",
+   "png": null,
+   "rgba": [
+    0.78,
+    0.79,
+    0.8,
+    1.0
+   ],
+   "faces": 84,
+   "material": "m_opaque__metal__steelStainless_a02"
+  },
+  {
+   "obj": "part20.obj",
+   "png": null,
+   "rgba": [
+    0.07,
+    0.07,
+    0.08,
+    1.0
+   ],
+   "faces": 38489,
+   "material": "m_opaque__metal__painted_black_a01"
+  },
+  {
+   "obj": "part21.obj",
+   "png": null,
+   "rgba": [
+    0.78,
+    0.79,
+    0.8,
+    1.0
+   ],
+   "faces": 64,
+   "material": "m_opaque__metal__steelStainless_a02"
+  },
+  {
+   "obj": "part22.obj",
+   "png": null,
+   "rgba": [
+    0.07,
+    0.07,
+    0.08,
+    1.0
+   ],
+   "faces": 492,
+   "material": "m_opaque__plastic__black_a01"
+  },
+  {
+   "obj": "part23.obj",
+   "png": null,
+   "rgba": [
+    0.78,
+    0.79,
+    0.8,
+    1.0
+   ],
+   "faces": 934,
+   "material": "m_opaque__metal__steelStainless_a01"
+  },
+  {
+   "obj": "part24.obj",
+   "png": null,
+   "rgba": [
+    0.07,
+    0.07,
+    0.08,
+    1.0
+   ],
+   "faces": 438,
+   "material": "m_opaque__metal__painted_black_a01"
+  }
+ ],
+ "min": [
+  -0.3028336208100785,
+  -0.9158725645767237,
+  -0.00024177013999269768
+ ],
+ "max": [
+  0.31123554214880017,
+  0.9153802372663966,
+  1.2133545875549316
+ ],
+ "license": "CC-BY-4.0 (NVIDIA SimReady)"
+}

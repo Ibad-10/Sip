@@ -122,6 +122,8 @@ def grid_from_model(model, width_m: float = 8.0, height_m: float = 6.0,
     for gi in range(model.ngeom):
         if model.geom_bodyid[gi] in skip or model.geom_type[gi] != mujoco.mjtGeom.mjGEOM_BOX:
             continue
+        if model.geom_contype[gi] == 0 and model.geom_conaffinity[gi] == 0:
+            continue  # visual-only (decals, worktop trims)
         pos, rot, half = data.geom_xpos[gi], data.geom_xmat[gi].reshape(3, 3), model.geom_size[gi]
         if pos[2] - abs(rot[2] @ half) > 1.5:
             continue

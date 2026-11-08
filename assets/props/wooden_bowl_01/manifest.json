@@ -1,0 +1,21 @@
+{
+ "asset": "wooden_bowl_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 14122
+  }
+ ],
+ "min": [
+  -0.15685,
+  -0.15523,
+  0.00055
+ ],
+ "max": [
+  0.15623,
+  0.15392,
+  0.09424
+ ],
+ "license": "CC0 (Poly Haven)"
+}

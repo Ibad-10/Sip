@@ -1,0 +1,26 @@
+{
+ "asset": "painted_wooden_nightstand",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 290
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 180
+  }
+ ],
+ "min": [
+  -0.25341,
+  -0.25947,
+  0.0
+ ],
+ "max": [
+  0.25115,
+  0.24925,
+  0.61552
+ ],
+ "license": "CC0 (Poly Haven)"
+}

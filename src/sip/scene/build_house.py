@@ -118,6 +118,7 @@ def _person(spec, world):
     h.add_geom(name="head", type=SPH, size=[0.1, 0, 0], rgba=list(skin), mass=4.0)
     h.add_geom(name="face_plate", type=BOX, pos=[0.085, 0, 0], size=[0.012, 0.07, 0.08],
                rgba=[0.95, 0.8, 0.7, 1], contype=0, conaffinity=0, mass=0.01)
+    h.add_camera(name="person_eyes", pos=[0.09, 0, 0.03], xyaxes=[0, -1, 0, 0, 0, 1], fovy=75)
     h.add_site(name="mouth", pos=[0.1, 0, -0.045], size=[0.01, 0, 0], rgba=[0.8, 0.2, 0.2, 1], group=4)
     a = spec.add_actuator(name="head_yaw_act", target="head_yaw", trntype=mujoco.mjtTrn.mjTRN_JOINT)
     a.set_to_position(kp=20.0)
@@ -127,6 +128,7 @@ def _person(spec, world):
 def build_spec() -> mujoco.MjSpec:
     spec = mujoco.MjSpec.from_file(str(STRETCH))
     spec.modelname = "sip_house"
+    spec.visual.global_.offwidth, spec.visual.global_.offheight = 1280, 720
     # Menagerie wheel damping (30) with a 100 N.m force limit caps the base near 0.1 m/s;
     # real Stretch drives ~0.3 m/s, so soften it.
     for j in spec.joints:
@@ -138,13 +140,15 @@ def build_spec() -> mujoco.MjSpec:
             a.gainprm[0], a.biasprm[2] = 30.0, -30.0  # kv 100 rings and skids in turns
     world = spec.worldbody
     world.add_geom(name="floor", type=PLANE, size=[5, 4, 0.1], rgba=[0.75, 0.7, 0.62, 1])
-    world.add_light(name="sun", pos=[0, 0, 5], dir=[0, 0, -1], diffuse=[0.8, 0.8, 0.8])
+    world.add_light(name="sun", pos=[0, 0, 5], dir=[0, 0, -1], diffuse=[0.35, 0.35, 0.35], castshadow=False)
     for name, (x, y) in ROOMS.items():
         world.add_site(name=name, pos=[x, y, 0.01], size=[0.05, 0, 0], rgba=[0, 0, 0, 0], group=4)
     _walls(world)
     _furniture(world)
     _items(world)
     _person(spec, world)
+    from sip.scene.visuals import dress
+    dress(spec, world)
     for item in ("glass", "organiser"):
         spec.add_equality(name=f"grasp_weld_{item}", type=mujoco.mjtEq.mjEQ_WELD,
                           objtype=mujoco.mjtObj.mjOBJ_BODY, name1="link_grasp_center", name2=item,

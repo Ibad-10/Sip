@@ -1,0 +1,26 @@
+{
+ "asset": "round_spectacles",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 10474
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 1336
+  }
+ ],
+ "min": [
+  -0.07891,
+  -0.00088,
+  -0.02314
+ ],
+ "max": [
+  0.07891,
+  0.14815,
+  0.02312
+ ],
+ "license": "CC0 (Poly Haven)"
+}

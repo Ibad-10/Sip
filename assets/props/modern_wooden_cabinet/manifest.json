@@ -1,0 +1,31 @@
+{
+ "asset": "modern_wooden_cabinet",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 3288
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 3288
+  },
+  {
+   "obj": "part2.obj",
+   "png": "part2.png",
+   "faces": 18400
+  }
+ ],
+ "min": [
+  -1.22,
+  -0.25,
+  2e-05
+ ],
+ "max": [
+  1.22,
+  0.27,
+  0.68016
+ ],
+ "license": "CC0 (Poly Haven)"
+}

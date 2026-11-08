@@ -1,0 +1,31 @@
+{
+ "asset": "standing_picture_frame_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 2
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 2
+  },
+  {
+   "obj": "part2.obj",
+   "png": "part2.png",
+   "faces": 1630
+  }
+ ],
+ "min": [
+  -0.06162,
+  -0.1004,
+  -0.00047
+ ],
+ "max": [
+  0.03865,
+  0.1004,
+  0.24918
+ ],
+ "license": "CC0 (Poly Haven)"
+}

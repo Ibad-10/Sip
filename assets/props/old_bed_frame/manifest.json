@@ -1,0 +1,21 @@
+{
+ "asset": "old_bed_frame",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 49990
+  }
+ ],
+ "min": [
+  -0.44761,
+  -1.00327,
+  0.0
+ ],
+ "max": [
+  0.45705,
+  0.99845,
+  1.20148
+ ],
+ "license": "CC0 (Poly Haven)"
+}

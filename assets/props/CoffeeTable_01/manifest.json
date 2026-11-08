@@ -1,0 +1,21 @@
+{
+ "asset": "CoffeeTable_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 10404
+  }
+ ],
+ "min": [
+  -0.77,
+  -0.48642,
+  0.00193
+ ],
+ "max": [
+  0.77001,
+  0.48642,
+  0.52516
+ ],
+ "license": "CC0 (Poly Haven)"
+}

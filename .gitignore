@@ -6,3 +6,5 @@ runs/
 *.rrd
 .env
 tests/_dbg*.py
+assets/props/*/raw/
+assets/props/*/raw/

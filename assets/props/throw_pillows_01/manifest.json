@@ -1,0 +1,26 @@
+{
+ "asset": "throw_pillows_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 3238
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 3124
+  }
+ ],
+ "min": [
+  -0.46353,
+  -0.27606,
+  -0.00211
+ ],
+ "max": [
+  0.47653,
+  0.17581,
+  0.44805
+ ],
+ "license": "CC0 (Poly Haven)"
+}

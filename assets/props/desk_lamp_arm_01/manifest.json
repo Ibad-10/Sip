@@ -1,0 +1,26 @@
+{
+ "asset": "desk_lamp_arm_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 22598
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 1504
+  }
+ ],
+ "min": [
+  -0.11847,
+  -0.31724,
+  -0.08799
+ ],
+ "max": [
+  0.08326,
+  0.29664,
+  0.80462
+ ],
+ "license": "CC0 (Poly Haven)"
+}

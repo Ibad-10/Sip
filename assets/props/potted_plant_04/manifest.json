@@ -1,0 +1,36 @@
+{
+ "asset": "potted_plant_04",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 3744
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 3394
+  },
+  {
+   "obj": "part2.obj",
+   "png": "part2.png",
+   "faces": 411
+  },
+  {
+   "obj": "part3.obj",
+   "png": "part3.png",
+   "faces": 1380
+  }
+ ],
+ "min": [
+  -0.08394,
+  -0.10081,
+  0.00038
+ ],
+ "max": [
+  0.08394,
+  0.08394,
+  0.26783
+ ],
+ "license": "CC0 (Poly Haven)"
+}

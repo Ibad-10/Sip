@@ -1,0 +1,21 @@
+{
+ "asset": "wooden_spoon",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 6576
+  }
+ ],
+ "min": [
+  -0.04373,
+  -0.08387,
+  -0.01603
+ ],
+ "max": [
+  0.04293,
+  0.19376,
+  0.00908
+ ],
+ "license": "CC0 (Poly Haven)"
+}

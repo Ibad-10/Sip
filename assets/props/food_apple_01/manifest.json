@@ -1,0 +1,21 @@
+{
+ "asset": "food_apple_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 7012
+  }
+ ],
+ "min": [
+  -0.04838,
+  -0.05008,
+  -2e-05
+ ],
+ "max": [
+  0.04918,
+  0.04582,
+  0.08537
+ ],
+ "license": "CC0 (Poly Haven)"
+}

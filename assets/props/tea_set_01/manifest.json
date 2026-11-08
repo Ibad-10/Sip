@@ -1,0 +1,66 @@
+{
+ "asset": "tea_set_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 3712
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 2560
+  },
+  {
+   "obj": "part2.obj",
+   "png": "part2.png",
+   "faces": 2880
+  },
+  {
+   "obj": "part3.obj",
+   "png": "part3.png",
+   "faces": 4156
+  },
+  {
+   "obj": "part4.obj",
+   "png": "part4.png",
+   "faces": 8432
+  },
+  {
+   "obj": "part5.obj",
+   "png": "part5.png",
+   "faces": 5184
+  },
+  {
+   "obj": "part6.obj",
+   "png": "part6.png",
+   "faces": 3168
+  },
+  {
+   "obj": "part7.obj",
+   "png": "part7.png",
+   "faces": 2880
+  },
+  {
+   "obj": "part8.obj",
+   "png": "part8.png",
+   "faces": 4156
+  },
+  {
+   "obj": "part9.obj",
+   "png": "part9.png",
+   "faces": 3168
+  }
+ ],
+ "min": [
+  -0.44063,
+  -0.20026,
+  -0.00083
+ ],
+ "max": [
+  0.47785,
+  0.28361,
+  0.16416
+ ],
+ "license": "CC0 (Poly Haven)"
+}

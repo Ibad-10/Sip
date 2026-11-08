@@ -1,0 +1,21 @@
+{
+ "asset": "WoodenChair_01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 19992
+  }
+ ],
+ "min": [
+  -0.34409,
+  -0.29131,
+  -0.00137
+ ],
+ "max": [
+  0.34409,
+  0.36715,
+  2.27215
+ ],
+ "license": "CC0 (Poly Haven)"
+}

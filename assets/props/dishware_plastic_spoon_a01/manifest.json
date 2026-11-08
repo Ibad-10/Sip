@@ -1,0 +1,28 @@
+{
+ "asset": "dishware_plastic_spoon_a01",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": null,
+   "rgba": [
+    0.25,
+    0.4,
+    0.7,
+    1.0
+   ],
+   "faces": 10496,
+   "material": "m_opaque__plastic__blue_a01"
+  }
+ ],
+ "min": [
+  -0.07830212265253067,
+  -0.01732262410223484,
+  0.00010868768729233909
+ ],
+ "max": [
+  0.07830211520195007,
+  0.017322631552815437,
+  0.010721616985369118
+ ],
+ "license": "CC-BY-4.0 (NVIDIA SimReady)"
+}

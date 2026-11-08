@@ -1,0 +1,21 @@
+{
+ "asset": "television_02",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 2310
+  }
+ ],
+ "min": [
+  -0.20171,
+  -0.1219,
+  0.0
+ ],
+ "max": [
+  0.19804,
+  0.22829,
+  0.41141
+ ],
+ "license": "CC0 (Poly Haven)"
+}

@@ -1,0 +1,116 @@
+{
+ "asset": "electric_stove",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 160
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 160
+  },
+  {
+   "obj": "part2.obj",
+   "png": "part2.png",
+   "faces": 12
+  },
+  {
+   "obj": "part3.obj",
+   "png": "part3.png",
+   "faces": 12
+  },
+  {
+   "obj": "part4.obj",
+   "png": "part4.png",
+   "faces": 224
+  },
+  {
+   "obj": "part5.obj",
+   "png": "part5.png",
+   "faces": 224
+  },
+  {
+   "obj": "part6.obj",
+   "png": "part6.png",
+   "faces": 224
+  },
+  {
+   "obj": "part7.obj",
+   "png": "part7.png",
+   "faces": 224
+  },
+  {
+   "obj": "part8.obj",
+   "png": "part8.png",
+   "faces": 224
+  },
+  {
+   "obj": "part9.obj",
+   "png": "part9.png",
+   "faces": 2396
+  },
+  {
+   "obj": "part10.obj",
+   "png": "part10.png",
+   "faces": 28
+  },
+  {
+   "obj": "part11.obj",
+   "png": "part11.png",
+   "faces": 1944
+  },
+  {
+   "obj": "part12.obj",
+   "png": "part12.png",
+   "faces": 224
+  },
+  {
+   "obj": "part13.obj",
+   "png": "part13.png",
+   "faces": 512
+  },
+  {
+   "obj": "part14.obj",
+   "png": "part14.png",
+   "faces": 12
+  },
+  {
+   "obj": "part15.obj",
+   "png": "part15.png",
+   "faces": 160
+  },
+  {
+   "obj": "part16.obj",
+   "png": "part16.png",
+   "faces": 160
+  },
+  {
+   "obj": "part17.obj",
+   "png": "part17.png",
+   "faces": 12
+  },
+  {
+   "obj": "part18.obj",
+   "png": "part18.png",
+   "faces": 764
+  },
+  {
+   "obj": "part19.obj",
+   "png": "part19.png",
+   "faces": 6238
+  }
+ ],
+ "min": [
+  -0.2513,
+  -0.34762,
+  -0.0
+ ],
+ "max": [
+  0.2513,
+  0.3,
+  0.8587
+ ],
+ "license": "CC0 (Poly Haven)"
+}

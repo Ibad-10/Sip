@@ -1,0 +1,26 @@
+{
+ "asset": "vintage_microwave",
+ "parts": [
+  {
+   "obj": "part0.obj",
+   "png": "part0.png",
+   "faces": 8050
+  },
+  {
+   "obj": "part1.obj",
+   "png": "part1.png",
+   "faces": 70
+  }
+ ],
+ "min": [
+  -0.50376,
+  -0.3864,
+  -0.0
+ ],
+ "max": [
+  0.56995,
+  0.35916,
+  0.52583
+ ],
+ "license": "CC0 (Poly Haven)"
+}
