@@ -125,9 +125,9 @@ def test_person_on_the_floor_raises_emergency_alert():
     mujoco.mj_forward(m, d)
     task = WaterTask(StretchIO(m, d), Blackboard(), grid_from_model(m), ObjectMemory(), SegDetector(["glass"]),
                      FaceTracker("sim"))
-    for k in range(10):                      # body centre at 20 cm for 4.5 s
+    for k in range(10):                      # body centre at 12 cm for 4.5 s
         task.t = 0.5 * k
-        task._saw_person(np.array([1.0, 1.5, 0.2]))
+        task._saw_person(np.array([1.0, 1.5, 0.12]))
     alerts = [e.text for e in task.bb.events() if e.kind == "alert"]
     assert any("POSSIBLE FALL" in a for a in alerts)
     task2 = WaterTask(StretchIO(m, d), Blackboard(), grid_from_model(m), ObjectMemory(), SegDetector(["glass"]),

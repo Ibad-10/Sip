@@ -22,6 +22,8 @@ WHERE = {   # which surfaces each thing may be on (supplies stay in the kitchen,
     "straw_cup": ["kitchen counter"],
     "organiser": ["kitchen counter", "side table", "nightstand"],
 }
+# decor already standing on those surfaces (from scene/visuals.py): never place objects inside them
+DECOR = [(2.3, 2.5, 0.10), (2.42, 2.38, 0.12), (2.65, -2.65, 0.08), (-3.4, 2.62, 0.08), (-1.1, 2.72, 0.35)]
 ROBOT_STARTS = [(-1.0, 0.0), (0.5, 0.0), (1.5, 1.6), (-2.0, 1.4), (1.0, -1.5)]
 
 

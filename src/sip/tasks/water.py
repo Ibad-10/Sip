@@ -26,7 +26,7 @@ PICK_STANDOFF = 0.69         # base centre to object: grasp offset 0.44 + arm 0.
 LIFT_TO_GRASP_Z = 0.10       # grasp centre z = lift ctrl + 0.10
 STRAW_SHORT = 0.015          # straw tip target this far in front of the lips (gate stops at 0.02)
 HOLD_S = 3.0
-SPIN_W = 0.6
+SPIN_W = 0.4          # slow enough for the camera to sweep near and far at every heading
 WRIST_CAM = "d405_rgb"
 PERSON_STANDOFF = 0.42       # park so the wrist swing ends outside the 0.30 m slow zone
 WRIST_SWING = 0.6            # rad/s when swinging the glass out beside the person
@@ -85,6 +85,12 @@ class WaterTask:
             self._show_straw(False)
 
     # ---------- helpers ----------
+    def _sweep_point(self, p) -> np.ndarray:
+        """Search gaze: alternate near-and-low (side tables, 0.8 m) and far (counters, 1.8 m) every 0.6 s."""
+        near = int(self.t / 0.6) % 2 == 0
+        dist, z = (0.8, 0.55) if near else (1.8, 0.8)
+        return np.array([p.x + dist * np.cos(p.yaw), p.y + dist * np.sin(p.yaw), z])
+
     def _object_in_hand(self) -> bool:
         """Wrist depth camera (D405, looks between the fingers): something solid fills the gap within 30 cm.
         This is how the robot knows a grasp worked; it never reads where the object really is."""
@@ -316,7 +322,7 @@ class WaterTask:
 
     def _fall_check(self, xyz: np.ndarray) -> None:
         """Body centre seen near the floor for 3 s -> possible fall: emergency alert with a photo."""
-        low = xyz[2] < 0.35
+        low = xyz[2] < 0.20            # body centre at floor level (lying on a bed reads ~0.3 m)
         if not low:
             self._low_since = None
             return
@@ -472,7 +478,7 @@ class WaterTask:
             p = self.pose()
             self._spun += abs(wrap(p.yaw - self._spin0))
             self._spin0 = p.yaw
-            look = np.array([p.x + 1.5 * np.cos(p.yaw), p.y + 1.5 * np.sin(p.yaw), 0.6])
+            look = self._sweep_point(p)
             aim_head(self.m, self.d, self.io, look, snap=False)
             if self._seen():
                 self.io.drive(0, 0)
@@ -740,7 +746,7 @@ class WaterTask:
             p = self.pose()
             spun += abs(wrap(p.yaw - y0))
             y0 = p.yaw
-            aim_head(self.m, self.d, self.io, np.array([p.x + 1.0 * np.cos(p.yaw), p.y + 1.0 * np.sin(p.yaw), 0.9]), snap=False)
+            aim_head(self.m, self.d, self.io, self._sweep_point(p), snap=False)
             self.io.drive(0, SPIN_W)
             yield
         self.io.drive(0, 0)
