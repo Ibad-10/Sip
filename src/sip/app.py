@@ -70,6 +70,7 @@ def handle_command(text: str, bb: Blackboard, llm=None, sim=None) -> None:
         # small talk: Gemma 4 replies when online (capped); offline the robot just acknowledges
         def reply():
             from sip.cloud.gemini import chat_reply
+            bb.set("say", "Mm, let me think.")            # instant acknowledgement; the reply takes a few seconds
             bb.set("say", chat_reply(text) or "I'm here. Would you like a drink or your tablets?")
         threading.Thread(target=reply, daemon=True).start()
     if task:
