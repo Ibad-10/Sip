@@ -79,6 +79,8 @@ class Sim:
         self.task = WaterTask(self.io, self.bb, grid_from_model(self.m), ObjectMemory(),
                               SegDetector(["glass", "organiser", "jug", "straw2"], noise_m=0.005),
                               FaceTracker("sim"), prepare=os.environ.get("SIP_PREPARE", "1") == "1")
+        from sip.person import Person
+        self.person = Person(self.m, self.d, self.bb)
         self.t = 0.0
 
     def _move_free(self, joint, xyz):
@@ -99,7 +101,8 @@ class Sim:
             self._move_free("glass_free", [3.15, -1.2, 0.57])
         elif cmd == "/turn":
             a = self.io.act["head_yaw_act"]
-            self.d.ctrl[a] = 0.8 if self.d.ctrl[a] == 0 else 0.0
+            self.person.override = not self.person.override
+            self.d.ctrl[a] = 0.8 if self.person.override else 0.0
 
 
 _PANEL_R = {}
@@ -227,6 +230,7 @@ def main(argv=None):
 
     def tick():
         state = sim.task.step(sim.t)
+        sim.person.step(sim.t, state)
         for _ in range(TICK_STEPS):
             mujoco.mj_step(sim.m, sim.d)
         sim.t += TICK_STEPS * sim.m.opt.timestep

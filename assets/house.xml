@@ -90,6 +90,7 @@
     <texture type="2d" colorspace="linear" name="right_finger_aruco" file="right_finger_aruco.png"/>
     <texture type="2d" colorspace="linear" name="left_finger_aruco" file="left_finger_aruco.png"/>
     <texture type="2d" colorspace="linear" name="gripper_cam_aruco_sticker" file="gripper_cam_aruco_sticker.png"/>
+    <texture type="2d" colorspace="linear" name="tex_mat_grandma" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\base.png"/>
     <texture type="skybox" colorspace="auto" name="sky" builtin="gradient" rgb1="0.95 0.94 0.91" rgb2="0.86 0.84 0.8" width="256" height="1536"/>
     <texture type="2d" colorspace="linear" name="tex_floor_laminate" file="D:\Projects\agentverse-hackathon-ucl\assets\textures\laminate_floor_02.png"/>
     <texture type="2d" colorspace="linear" name="tex_floor_tiles" file="D:\Projects\agentverse-hackathon-ucl\assets\textures\floor_tiles_06.png"/>
@@ -202,6 +203,7 @@
     <material name="Aruco_right_finger_Sticker" texture="right_finger_aruco"/>
     <material name="Aruco_left_finger_Sticker" texture="left_finger_aruco"/>
     <material name="Aruco_gripper_cam_Sticker" texture="gripper_cam_aruco_sticker"/>
+    <material name="mat_grandma" texture="tex_mat_grandma" specular="0.1" shininess="0.3"/>
     <material name="floor_laminate" texture="tex_floor_laminate" texrepeat="1.2 1.2" texuniform="true" specular="0.2"/>
     <material name="floor_tiles" texture="tex_floor_tiles" texrepeat="1.5 1.5" texuniform="true" specular="0.2" shininess="0.7"/>
     <material name="wall_paint" specular="0.05" shininess="0.05" rgba="1 0.98 0.93 1"/>
@@ -401,6 +403,8 @@
     <mesh name="link_SG3_gripper_right_finger_aruco" content_type="model/obj" file="link_SG3_gripper_right_finger_aruco.obj" inertia="shell"/>
     <mesh name="link_SG3_gripper_right_fingertip" content_type="model/stl" file="link_SG3_gripper_right_fingertip.stl"/>
     <mesh name="link_SG3_gripper_left_fingertip" content_type="model/stl" file="link_SG3_gripper_left_fingertip.stl"/>
+    <mesh name="m_grandma_body" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\body.obj" inertia="shell"/>
+    <mesh name="m_grandma_head" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\grandma\head.obj" inertia="shell"/>
     <mesh name="m_pic_living_0" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\hanging_picture_frame_02\part0.obj" refpos="0.0003 -0.01857 -0.27865" inertia="shell"/>
     <mesh name="m_pic_living_1" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\hanging_picture_frame_02\part1.obj" refpos="0.0003 -0.01857 -0.27865" inertia="shell"/>
     <mesh name="m_pic_living_2" content_type="model/obj" file="D:\Projects\agentverse-hackathon-ucl\assets\props\hanging_picture_frame_02\part2.obj" refpos="0.0003 -0.01857 -0.27865" inertia="shell"/>
@@ -901,17 +905,19 @@
       <geom name="organiser_geom" size="0.14 0.06 0.02" type="box" rgba="0.9 0.9 0.3 1" mass="0.3"/>
     </body>
     <body name="person" pos="3 2.35 0.5" mocap="true">
-      <geom name="torso" size="0.12 0.2" pos="0 0 0.25" quat="0 1 0 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
-      <geom name="thigh-1" size="0.07 0.21" pos="0.21 -0.1 0.02" quat="0.707107 0 -0.707107 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
-      <geom name="shin-1" size="0.05 0.210535" pos="0.435 -0.1 -0.21" quat="0.999364 0 -0.0356462 0" type="capsule" rgba="0.87 0.72 0.6 1"/>
-      <geom name="uarm-1" size="0.045 0.137659" pos="0.025 -0.21 0.285" quat="0.995159 -0.0364983 -0.0912458 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
-      <geom name="thigh1" size="0.07 0.21" pos="0.21 0.1 0.02" quat="0.707107 0 -0.707107 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
-      <geom name="shin1" size="0.05 0.210535" pos="0.435 0.1 -0.21" quat="0.999364 0 -0.0356462 0" type="capsule" rgba="0.87 0.72 0.6 1"/>
-      <geom name="uarm1" size="0.045 0.137659" pos="0.025 0.21 0.285" quat="0.995159 0.0364983 -0.0912458 0" type="capsule" rgba="0.3 0.5 0.35 1"/>
+      <geom name="torso" size="0.12 0.2" pos="0 0 0.25" quat="0 1 0 0" type="capsule" group="3" rgba="0.3 0.5 0.35 1"/>
+      <geom name="thigh-1" size="0.07 0.21" pos="0.21 -0.1 0.02" quat="0.707107 0 -0.707107 0" type="capsule" group="3" rgba="0.3 0.5 0.35 1"/>
+      <geom name="shin-1" size="0.05 0.210535" pos="0.435 -0.1 -0.21" quat="0.999364 0 -0.0356462 0" type="capsule" group="3" rgba="0.87 0.72 0.6 1"/>
+      <geom name="uarm-1" size="0.045 0.137659" pos="0.025 -0.21 0.285" quat="0.995159 -0.0364983 -0.0912458 0" type="capsule" group="3" rgba="0.3 0.5 0.35 1"/>
+      <geom name="thigh1" size="0.07 0.21" pos="0.21 0.1 0.02" quat="0.707107 0 -0.707107 0" type="capsule" group="3" rgba="0.3 0.5 0.35 1"/>
+      <geom name="shin1" size="0.05 0.210535" pos="0.435 0.1 -0.21" quat="0.999364 0 -0.0356462 0" type="capsule" group="3" rgba="0.87 0.72 0.6 1"/>
+      <geom name="uarm1" size="0.045 0.137659" pos="0.025 0.21 0.285" quat="0.995159 0.0364983 -0.0912458 0" type="capsule" group="3" rgba="0.3 0.5 0.35 1"/>
+      <geom name="grandma_body" pos="0.16 0 0.555" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_grandma" mesh="m_grandma_body"/>
       <body name="person_head" pos="0.06 0 0.6">
         <joint name="head_yaw" range="-1.2 1.2" damping="2"/>
-        <geom name="head" size="0.1" rgba="0.87 0.72 0.6 1" mass="4"/>
-        <geom name="face_plate" size="0.012 0.07 0.08" pos="0.085 0 0" type="box" contype="0" conaffinity="0" rgba="0.95 0.8 0.7 1" mass="0.01"/>
+        <geom name="head" size="0.1" group="3" rgba="0.87 0.72 0.6 1" mass="4"/>
+        <geom name="face_plate" size="0.012 0.07 0.08" pos="0.085 0 0" type="box" contype="0" conaffinity="0" group="3" rgba="0.95 0.8 0.7 1" mass="0.01"/>
+        <geom name="grandma_head" pos="0.1 0 -0.045" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mass="0" material="mat_grandma" mesh="m_grandma_head"/>
         <site name="mouth" size="0.01" pos="0.1 0 -0.045" group="4" rgba="0.8 0.2 0.2 1"/>
         <camera name="person_eyes" quat="-0.5 -0.5 0.5 0.5" pos="0.09 0 0.03" fovy="75"/>
       </body>

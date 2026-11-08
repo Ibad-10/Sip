@@ -42,12 +42,13 @@ def main(argv=None):
     n = 0
     while sim.t < a.seconds:
         state = sim.task.step(sim.t)
+        sim.person.step(sim.t, state)
         if a.chair and 6.0 <= sim.t < 6.06:
             sim.special("/chair", sim.bb)
         if a.turn and state == "APPROACH" and turned is None and sim.task.dist_to_mouth() < 0.25:
             sim.special("/turn", sim.bb)
             turned = sim.t
-        if turned is not None and sim.t - turned > 3.0 and sim.d.ctrl[sim.io.act["head_yaw_act"]] != 0:
+        if turned is not None and sim.t - turned > 3.0 and sim.person.override:
             sim.special("/turn", sim.bb)
         for _ in range(TICK_STEPS):
             mujoco.mj_step(sim.m, sim.d)

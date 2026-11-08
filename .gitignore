@@ -8,3 +8,4 @@ runs/
 tests/_dbg*.py
 assets/props/*/raw/
 assets/props/*/raw/
+assets/sketchfab/

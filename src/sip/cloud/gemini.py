@@ -8,7 +8,7 @@ import numpy as np
 
 MODEL = os.environ.get("GEMINI_MODEL", "gemini-4-argon")  # builder-guide id; check in AI Studio
 # Gemini Robotics-ER: embodied-reasoning model that points at objects ([y, x] normalised to 0-1000)
-ER_MODEL = os.environ.get("GEMINI_ER_MODEL", "gemini-robotics-er-1.5-preview")
+ER_MODEL = os.environ.get("GEMINI_ER_MODEL", "gemini-4-argon")
 _POOL = ThreadPoolExecutor(max_workers=2)
 
 

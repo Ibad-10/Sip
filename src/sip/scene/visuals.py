@@ -72,7 +72,24 @@ def _hide(spec, names):
             g.group = HIDDEN
 
 
+def _dress_person(spec) -> None:
+    """Real seated grandma (Sketchfab CC-BY-4.0, posed by tools/pose_person.py). The simple capsules
+    stay as hidden colliders; the mesh frame origin is the mouth."""
+    d = PROPS / "grandma"
+    if not (d / "body.obj").exists():
+        return
+    mat = _material(spec, "mat_grandma", d / "base.png", rough=0.7, spec_=0.1)
+    mouth = np.array([0.06, 0, 0.6]) + np.array([0.1, 0, -0.045])
+    for part, body, pos in (("body", "person", mouth), ("head", "person_head", [0.1, 0, -0.045])):
+        spec.add_mesh(name=f"m_grandma_{part}", file=str(d / f"{part}.obj"),
+                      inertia=mujoco.mjtMeshInertia.mjMESH_INERTIA_SHELL)
+        spec.body(body).add_geom(name=f"grandma_{part}", type=MESH, meshname=f"m_grandma_{part}", material=mat,
+                                 pos=list(pos), contype=0, conaffinity=0, group=1, mass=0)
+    _hide(spec, {"torso", "thigh-1", "thigh1", "shin-1", "shin1", "uarm-1", "uarm1", "head", "face_plate"})
+
+
 def dress(spec, world) -> None:
+    _dress_person(spec)
     v = spec.visual
     v.quality.shadowsize, v.quality.offsamples = 2048, 4
     v.headlight.ambient, v.headlight.diffuse, v.headlight.specular = [0.32] * 3, [0.35] * 3, [0.05] * 3
