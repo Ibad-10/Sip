@@ -13,11 +13,14 @@ from sip.types import MouthState
 
 
 class FaceTracker:
+    """Test oracle: reads the simulator. The robot app uses perception.vision.MediaPipeFace."""
     def __init__(self, mode: Literal["mediapipe", "sim"] = "sim", noise_m: float = 0.005, seed: int = 0):
         self.mode = mode
         self.noise = noise_m
         self.rng = np.random.default_rng(seed)
         self._person = None
+
+    resting_facing = None   # set from the sim on first sighting (oracle only)
 
     def update(self, rgb, depth, seg, model, data, hand_raised: bool = False, cam: str = CAM,
                mouth_open: bool = True) -> MouthState:
@@ -38,4 +41,7 @@ class FaceTracker:
             ui, vi = int(u), int(v)
             visible = bool(np.isin(seg[vi, ui], self._person)) and abs(depth[vi, ui] - z) < 0.08
         xyz = mouth + self.rng.normal(0, self.noise, 3) if visible else None
+        if visible:
+            w_, x_, y_, z_ = data.xquat[model.body("person").id]
+            self.resting_facing = float(np.arctan2(2 * (w_ * z_ + x_ * y_), 1 - 2 * (y_ * y_ + z_ * z_)))
         return MouthState(visible, xyz, 0.5 if visible else 0.0, yaw_deg, hand_raised, f"sim:{cam}")

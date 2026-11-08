@@ -15,7 +15,7 @@ from sip.cloud.verify import verify_target
 from sip.perception.objects import CAM, aim_head, pixel_to_world, render_head
 from sip.robot import StretchIO
 from sip.safety import safety_gate
-from sip.scene.build_house import ROOMS, SEATS, park_pose_for, room_at
+from sip.scene.build_house import ROOMS, park_pose_for, room_at
 from sip.types import Event, MouthState, SafetyDecision, SafetyInput
 
 TICK_STEPS = 25              # physics steps per control tick (0.05 s)
@@ -62,7 +62,12 @@ class WaterTask:
         from sip.perception.objects import SegDetector
         self._person_det = SegDetector(["person"], noise_m=0.02, seed=7)
         self.person_seen: tuple[float, np.ndarray] | None = None
-        self._person_where, self._seats_tried = "armchair", []
+        self.places: dict[str, dict] = {}       # where she has been seen: name -> {xyz, facing}
+        self._person_where: str | None = None
+        self._seats_tried: list[str] = []
+        self.real = bool(getattr(detector, "needs_rgb", False))
+        if self.real:
+            self.renderer = mujoco.Renderer(self.m, 480, 640)
         # optional cloud second opinion (Gemini Robotics-ER); None = offline, robot still works
         if cloud is None and os.environ.get("GEMINI_API_KEY"):
             from sip.cloud.gemini import second_opinion as cloud
@@ -199,33 +204,59 @@ class WaterTask:
         return (best[1], best[2]) if best else None
 
     def _perceive(self) -> None:
-        want_rgb = self.tick_n % (4 * PERCEIVE_EVERY) == 0 or self.bb.get("want_frame", False)
+        want_rgb = self.real or self.tick_n % (4 * PERCEIVE_EVERY) == 0 or self.bb.get("want_frame", False)
         rgb, depth, seg = render_head(self.m, self.d, self.renderer, rgb=want_rgb)
         if rgb is not None:
             self.last_frame = rgb
-        self.last_dets = self.det.detect(self.m, self.d, rgb, depth, seg)
-        for det in self.last_dets:
+        if self.real:
+            dets = self.det.detect(self.m, self.d, rgb, depth, seg, t=self.t)
+        else:
+            dets = self.det.detect(self.m, self.d, rgb, depth, seg)
+            dets = dets + self._person_det.detect(self.m, self.d, rgb, depth, seg)
+        self.last_dets = dets
+        for det in dets:
+            if det.label == "person":
+                self._saw_person(det.xyz)
+                continue
             self.seen[det.label] = det.xyz
             if det.label == self.label:
                 self.obj_xyz = det.xyz
                 self.memory.see(self.label, det.xyz, self.t, room_at(*det.xyz[:2]))
                 if self.home is None:
                     self.home = det.xyz.copy()
-        for det in self._person_det.detect(self.m, self.d, rgb, depth, seg):
-            self.person_seen = (self.t, det.xyz)
-            near = min(SEATS, key=lambda k: np.linalg.norm(np.array(SEATS[k][0][:2]) - det.xyz[:2]))
-            if np.linalg.norm(np.array(SEATS[near][0][:2]) - det.xyz[:2]) < 1.0:
-                self._person_where = near
         hand = bool(self.bb.get("hand_raised", False))
-        mopen = self.bb.get("mouth_open", True) is not False
-        self.mouth = self.face.update(rgb, depth, seg, self.m, self.d, hand_raised=hand, mouth_open=mopen)
-        if not self.mouth.visible and self.state in ("APPROACH", "HOLD"):
-            # the arm and glass block the head camera near the face: use the wrist camera
-            rgb2, depth2, seg2 = render_head(self.m, self.d, self.renderer, cam=WRIST_CAM, rgb=False)
-            self.mouth = self.face.update(rgb2, depth2, seg2, self.m, self.d, hand_raised=hand,
-                                          cam=WRIST_CAM, mouth_open=mopen)
+        if self.real:
+            box = self.det.boxes.get("person") if self.det.latest_t > self.t - 1.0 else None
+            self.mouth = self.face.update(rgb, depth, self.m, self.d, CAM, person_box=box)
+            if not self.mouth.visible and self.state in ("APPROACH", "HOLD"):
+                rgb2, depth2, _ = render_head(self.m, self.d, self.renderer, cam=WRIST_CAM, rgb=True)
+                self.mouth = self.face.update(rgb2, depth2, self.m, self.d, WRIST_CAM)
+        else:
+            mopen = self.bb.get("mouth_open", True) is not False
+            self.mouth = self.face.update(rgb, depth, seg, self.m, self.d, hand_raised=hand, mouth_open=mopen)
+            if not self.mouth.visible and self.state in ("APPROACH", "HOLD"):
+                # the arm and glass block the head camera near the face: use the wrist camera
+                rgb2, depth2, seg2 = render_head(self.m, self.d, self.renderer, cam=WRIST_CAM, rgb=False)
+                self.mouth = self.face.update(rgb2, depth2, seg2, self.m, self.d, hand_raised=hand,
+                                              cam=WRIST_CAM, mouth_open=mopen)
         if self.mouth.visible:
             self.last_mouth = (self.t, self.mouth.xyz.copy())
+            f = self.face.resting_facing
+            if f is not None and self._person_where in self.places:
+                self.places[self._person_where]["facing"] = f
+
+    def _saw_person(self, xyz: np.ndarray) -> None:
+        """Remember where she is; nearby sightings refine the same place."""
+        self.person_seen = (self.t, xyz)
+        for name, pl in self.places.items():
+            if np.linalg.norm(pl["xyz"][:2] - xyz[:2]) < 1.0:
+                pl["xyz"] = 0.8 * pl["xyz"] + 0.2 * xyz
+                self._person_where = name
+                return
+        name = f"{room_at(*xyz[:2])} spot {len(self.places) + 1}"
+        self.places[name] = {"xyz": xyz.copy(), "facing": None}
+        self._person_where = name
+        self.log("perceive", f"saw the person in the {room_at(*xyz[:2])} -> remembered this place")
 
     def _seen(self) -> bool:
         return any(d.label == self.label for d in self.last_dets)
@@ -244,27 +275,46 @@ class WaterTask:
                 total += abs(f6[0])
         return total
 
+    def _facing(self) -> float:
+        pl = self.places.get(self._person_where) or {}
+        if pl.get("facing") is not None:
+            return pl["facing"]
+        # not seen her face yet: assume she faces the open side of the room (away from the wall)
+        xyz = pl.get("xyz", np.zeros(3))
+        best, best_free = 0.0, -1
+        for a in np.deg2rad(np.arange(0, 360, 30)):
+            free = sum(self.grid.is_free(xyz[0] + r * np.cos(a), xyz[1] + r * np.sin(a)) for r in (0.5, 0.8, 1.1))
+            if free > best_free:
+                best, best_free = a, free
+        return float(best)
+
     def _mouth_guess(self) -> np.ndarray:
-        """Best mouth estimate: live face track, else last sighting, else her seat's usual spot."""
+        """Best mouth estimate: live face track, else last sighting, else above where she was seen."""
         if self.mouth.visible and self.mouth.xyz is not None:
             return self.mouth.xyz
-        if self.last_mouth is not None and np.linalg.norm(
-                self.last_mouth[1][:2] - np.array(SEATS[self._person_where][0][:2])) < 0.6:
+        pl = self.places.get(self._person_where)
+        if self.last_mouth is not None and (pl is None or np.linalg.norm(self.last_mouth[1][:2] - pl["xyz"][:2]) < 0.8):
             return self.last_mouth[1]
-        (x, y, z), f, _ = SEATS[self._person_where]
-        return np.array([x + 0.16 * np.cos(f), y + 0.16 * np.sin(f), z + 0.555])
+        if pl is None:
+            return np.array([*self.pose()[:2], 1.0])
+        x, y = pl["xyz"][:2]
+        return np.array([x, y, max(pl["xyz"][2] + 0.35, 0.95)])
 
     def _person_park(self):
         where = self._person_where
-        facing = SEATS[where][1]
+        facing = self._facing()
         front = self._mouth_guess() + 0.05 * np.array([np.cos(facing), np.sin(facing), 0])
-        x, y, yaw = park_pose_for(front, PERSON_STANDOFF, facing, SEATS[where][2])
+        g = self._inflated()
+        for a in (55, -55, 35, -35, 75, -75, 0):
+            x, y, yaw = park_pose_for(front, PERSON_STANDOFF, facing, a)
+            if g.is_free(x, y):
+                break
         return np.array([x, y]), yaw, facing, where
 
     def _person_here(self) -> bool:
         if self.person_seen is None or self.t - self.person_seen[0] > 3.0:
             return False
-        return np.linalg.norm(self.person_seen[1][:2] - np.array(SEATS[self._person_where][0][:2])) < 1.0
+        return np.linalg.norm(self.person_seen[1][:2] - self.places[self._person_where]["xyz"][:2]) < 1.0
 
     # ---------- main step ----------
     def step(self, t: float) -> str:
@@ -615,7 +665,53 @@ class WaterTask:
         self.d.qpos[a + 3:a + 7] = [np.cos(yaw / 2), 0, 0, np.sin(yaw / 2)]
         mujoco.mj_forward(self.m, self.d)
 
+    def _start_find_person(self, why: str):
+        self._find_resume = why
+        self._gen = self._find_person_seq()
+        self.goto("FIND_PERSON", why)
+
+    def _s_find_person(self):
+        try:
+            next(self._gen)
+        except StopIteration:
+            if self._person_where is None:
+                self.alert("can't find the person anywhere in the house")
+                return self._ask("Where are you? I have your water.", resume="NAV_TO_PERSON")
+            self._go_person(self._find_resume)
+
+    def _find_person_seq(self):
+        """Visit rooms (living areas first) and look around until the camera sees a person."""
+        self.say("Where are you? I'm coming to find you.")
+        order = sorted(ROOMS, key=lambda r: {"living": 0, "bedroom": 1, "kitchen": 2, "hall": 3}.get(r, 9))
+        for room in order:
+            if not self._start_nav(ROOMS[room], None, f"looking for the person in the {room}"):
+                continue
+            while True:
+                if self._person_where is not None:
+                    self.io.drive(0, 0)
+                    return
+                p = self.pose()
+                aim_head(self.m, self.d, self.io, np.array([p.x + 1.5 * np.cos(p.yaw), p.y + 1.5 * np.sin(p.yaw), 0.9]), snap=False)
+                if self._nav_step() != "moving":
+                    break
+                yield
+            spun, y0 = 0.0, self.pose().yaw
+            while spun < 2 * np.pi:
+                if self._person_where is not None:
+                    self.io.drive(0, 0)
+                    self.log("perceive", f"found the person in the {room}")
+                    return
+                p = self.pose()
+                spun += abs(wrap(p.yaw - y0))
+                y0 = p.yaw
+                aim_head(self.m, self.d, self.io, np.array([p.x + 1.5 * np.cos(p.yaw), p.y + 1.5 * np.sin(p.yaw), 0.9]), snap=False)
+                self.io.drive(0, SPIN_W)
+                yield
+            self.io.drive(0, 0)
+
     def _go_person(self, why: str):
+        if self._person_where is None:
+            return self._start_find_person(why)
         goal, yaw, _, where = self._person_park()
         self._person_target = goal
         if not self._start_nav(goal, yaw, why):
@@ -643,16 +739,18 @@ class WaterTask:
                     self.io.drive(0, 0)
                     return
                 self._seats_tried.append(self._person_where)
-                left = [k for k in SEATS if k not in self._seats_tried]
+                left = [k for k in self.places if k not in self._seats_tried]
                 if not left:
                     self._seats_tried = []
-                    self.alert("can't find the person at any of her usual places")
-                    return self._ask("Where are you? I have your water.", resume="NAV_TO_PERSON")
+                    self._person_where = None
+                    return self._start_find_person("not at any place I've seen her")
                 self.log("plan", f"person moved: not at the {self._person_where}, checking the {left[0]}")
                 self._person_where = left[0]
                 self._sub = 0
                 return self._go_person("looking for the person")
             self._seats_tried = []
+            if hasattr(self.face, "set_reference"):
+                self.face.set_reference()
             self.say("Here's your water. Tell me when you're ready.")
             self.goto("APPROACH", "arrived beside the person")
 
@@ -662,7 +760,7 @@ class WaterTask:
             mouth = self.last_mouth[1]  # far away: last sighting is good enough; gate needs live view < 0.5 m
         if mouth is None:
             return None
-        yaw = SEATS[self._person_where][1] + np.deg2rad(self.mouth.yaw_deg)
+        yaw = self._facing() + np.deg2rad(self.mouth.yaw_deg)
         return mouth + STRAW_SHORT * np.array([np.cos(yaw), np.sin(yaw), 0])
 
     def _gate(self) -> SafetyDecision:
